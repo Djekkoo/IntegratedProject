@@ -4,6 +4,8 @@
  * and open the template in the editor.
  */
 
+package intproject;
+
 /**
  *
  * @author FlorianF
@@ -43,8 +45,8 @@ public class GUI extends javax.swing.JFrame {
         jPasswordField1.setText("jPasswordField1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximumSize(new java.awt.Dimension(800, 400));
-        setMinimumSize(new java.awt.Dimension(800, 450));
+        setMaximumSize(new java.awt.Dimension(800, 450));
+        setMinimumSize(new java.awt.Dimension(815, 450));
         setPreferredSize(new java.awt.Dimension(800, 450));
         getContentPane().setLayout(null);
 
