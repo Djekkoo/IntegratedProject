@@ -31,5 +31,5 @@ public interface RoutingInterface {
 	 * @param 	type Network Error type
 	 * @param 	node The node that caused the error
 	 */
-	public void networkError(NetworkError type, byte node);
+	public void networkError(NetworkError type, Byte node);
 }

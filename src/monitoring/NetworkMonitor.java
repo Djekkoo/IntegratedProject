@@ -9,4 +9,15 @@ package monitoring;
  */
 public class NetworkMonitor extends Thread {
 	
+	public NetworkMonitor(Callback send, Callback error){
+		
+	}
+	
+	public void run() {
+		
+	}
+	
+	public void messageReceived(DataPacket p) {
+		
+	}
 }
