@@ -9,7 +9,6 @@ import java.util.Random;
 
 import main.Callback;
 import main.CallbackException;
-import main.Communication;
 
 public class Networker implements Runnable {
 	public static final int PORT = 1337;
@@ -17,13 +16,13 @@ public class Networker implements Runnable {
 	DatagramSocket dSock;
 	byte self = 0;
 	
-	Callback router;
-	Communication com;
+	Callback routerGetRoute;
+	Callback routerPacketReceived;
 	
-	public Networker(Communication com) throws SocketException{
+	public Networker(Callback routerPacketReceived) throws SocketException{
 		dSock = new DatagramSocket(PORT);
 		self = dSock.getLocalAddress().getAddress()[3];
-		this.com = com;
+		this.routerPacketReceived = routerPacketReceived;
 	}
 	
 	public void broadcast(byte[] data){
@@ -31,7 +30,7 @@ public class Networker implements Runnable {
 	}
 	
 	public void setRouter(Callback router){
-		this.router = router;
+		this.routerGetRoute = router;
 	}
 
 	public void send(byte destination, byte[] data) {
@@ -41,11 +40,11 @@ public class Networker implements Runnable {
 		
 		byte connection = 0;
 		try {
-			connection = (byte) router.invoke(new Object());
+			// TODO give proper arguments
+			connection = (byte) routerGetRoute.invoke(new Byte(destination));
 		} catch (CallbackException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}// getRoute()
+		}
 		
 		if(data.length <= 1016){
 			DataPacket dp = new DataPacket(self, destination, hops, sequencenr, data, false, false, false);
@@ -81,10 +80,14 @@ public class Networker implements Runnable {
 			try {
 				dSock.receive(dpack);
 				packet = new DataPacket(dpack.getData());
+				if(packet.isRouting())
+					routerPacketReceived.invoke(packet);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (DatagramDataSizeException e) {
+				e.printStackTrace();
+			} catch (CallbackException e) {
 				e.printStackTrace();
 			}
 		}
