@@ -13,6 +13,10 @@ public class Client {
 		gui = new GUI(this);
 	}
 	
+	public GUI getGUI() {
+		return gui;
+	}
+	
 	//Communicatie functies:	
 
 	public void sendChat(String text) {
