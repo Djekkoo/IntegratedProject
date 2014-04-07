@@ -1,5 +1,6 @@
 package main;
 
+import java.net.SocketException;
 import java.util.LinkedList;
 
 import routing.RoutingInterface;
@@ -14,10 +15,15 @@ public class Communication {
 	
 	public Communication() {
 		
-		network = new networking.Networker();
-		router = new routing.LinkStateRouting(new Callback(this, "routerPolling"));
+		try {
+			network = new networking.Networker();
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		router = new routing.LinkStateRouting(new Callback(this, "routerPolling"), new Callback(network, "send"));
 		
-		router.initialize(new Callback(network, "send"));
+		router.initialize();
 		
 	}
 	
