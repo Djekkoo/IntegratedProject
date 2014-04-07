@@ -9,19 +9,21 @@ import java.util.Random;
 
 import main.Callback;
 import main.CallbackException;
+import main.Communication;
 
-public class Networker {
+public class Networker implements Runnable {
 	public static final int PORT = 1337;
 	
 	DatagramSocket dSock;
 	byte self = 0;
 	
 	Callback router;
+	Communication com;
 	
-	public Networker() throws SocketException{
+	public Networker(Communication com) throws SocketException{
 		dSock = new DatagramSocket(PORT);
 		self = dSock.getLocalAddress().getAddress()[3];
-		
+		this.com = com;
 	}
 	
 	public void broadcast(byte[] data){
@@ -67,5 +69,24 @@ public class Networker {
 			e.printStackTrace();
 		} 
 		return null;
+	}
+
+	@Override
+	public void run() {
+		byte[] buffer = new byte[1024];
+		DatagramPacket dpack=new DatagramPacket(buffer, buffer.length);
+		DataPacket packet;
+		
+		while(true){
+			try {
+				dSock.receive(dpack);
+				packet = new DataPacket(dpack.getData());
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (DatagramDataSizeException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
