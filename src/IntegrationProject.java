@@ -6,6 +6,7 @@ public class IntegrationProject {
 	public static int DEVICE = 1;
 	public static int GROUP = 13;
 	public static String WLAN = "Wlan1Groepje";
+	public Communication communication;
 
 	public static void main(String args[]) throws IOException {
 
@@ -25,9 +26,11 @@ public class IntegrationProject {
 	}
 
 	public IntegrationProject() {
+		communication = new Communication();
+		//Maak een GUI object aan met zijn eigen communication object.
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				new GUI().setVisible(true);
+				new GUI(communication).setVisible(true);
 			}
 		});
 	}

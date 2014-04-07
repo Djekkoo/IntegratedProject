@@ -7,11 +7,13 @@ import java.awt.event.KeyEvent;
  * @author FlorianF
  */
 public class GUI extends javax.swing.JFrame {
-
+	private Communication communication;
+	
 	/**
 	 * Creates new form GUI
 	 */
-	public GUI() {
+	public GUI(Communication communication) {
+		this.communication = communication;
 		initComponents();
 	}
 
@@ -312,7 +314,7 @@ public class GUI extends javax.swing.JFrame {
 		/* Create and display the form */
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				new GUI().setVisible(true);
+				new GUI(new Communication()).setVisible(true);
 			}
 		});
 	}
