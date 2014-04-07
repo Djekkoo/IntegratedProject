@@ -1,5 +1,8 @@
 package monitoring;
 
+import networking.DataPacket;
+import main.Callback;
+
 /**
  * Used for monitoring the network, communicates with RoutingInterface.
  * 
