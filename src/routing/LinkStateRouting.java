@@ -18,11 +18,17 @@ public class LinkStateRouting implements RoutingInterface {
 		
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void initialize() {
 		// TODO Auto-generated method stub
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public SimpleEntry<Byte, Byte> getRoute(Byte destination)
 			throws RouteNotFoundException {
@@ -30,6 +36,9 @@ public class LinkStateRouting implements RoutingInterface {
 		return null;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void networkError(NetworkError type, Byte node) {
 		// TODO Auto-generated method stub
