@@ -20,7 +20,7 @@ public class Communication {
 	public Communication() {
 		
 		try {
-			network = new networking.Networker();
+			network = new networking.Networker(new Callback(this, "newPacket"));
 		} catch (SocketException e) {
 			System.out.println("Something terrible happened, Sander screwed up his class: " + e.getMessage());
 			System.exit(0);
@@ -39,6 +39,10 @@ public class Communication {
 		
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
+		
+	}
+	
+	public void newPacket(DataPacket packter) {
 		
 	}
 	
