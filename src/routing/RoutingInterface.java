@@ -1,5 +1,7 @@
 package routing;
 
+import java.util.AbstractMap.SimpleEntry;
+
 import monitoring.NetworkError;
 
 /**
@@ -18,16 +20,15 @@ public interface RoutingInterface {
 	 * Gets the fastest route to a given destination.
 	 * 
 	 * @param 	destination Destination to find route to.
-	 * @return 	The last byte of the IP for the next hop.
+	 * @return 	The last byte of the IP for the next hop and the hop count.
 	 */
-	public byte getRoute(byte destination) throws RouteNotFoundException;
+	public SimpleEntry<Byte,Byte> getRoute(byte destination) throws RouteNotFoundException;
 	
 	/**
 	 * Called if a network error occurrs.
 	 * 
 	 * @param 	type Network Error type
 	 * @param 	node The node that caused the error
-	 * @return 	The last byte of the IP for the next hop.
 	 */
 	public void networkError(NetworkError type, byte node);
 }
