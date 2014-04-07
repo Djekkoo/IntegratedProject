@@ -1,11 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-package intproject;
-
 /**
  *
  * @author FlorianF
@@ -150,14 +142,14 @@ public class GUI extends javax.swing.JFrame {
         );
 
         getContentPane().add(MainPanel);
-        MainPanel.setBounds(10, 30, 780, 360);
+        MainPanel.setBounds(10, 40, 780, 360);
 
         Titel.setFont(new java.awt.Font("Mongolian Baiti", 1, 24)); // NOI18N
         Titel.setForeground(new java.awt.Color(255, 255, 255));
         Titel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         Titel.setText("Ad-Hoc Wifi Chat");
         getContentPane().add(Titel);
-        Titel.setBounds(0, 0, 800, 30);
+        Titel.setBounds(0, 0, 800, 40);
 
         backgroundLabel.setIcon(new javax.swing.ImageIcon("C:\\Users\\FlorianF\\Desktop\\intproject.jpg")); // NOI18N
         getContentPane().add(backgroundLabel);
