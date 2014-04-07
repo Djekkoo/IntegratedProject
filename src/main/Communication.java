@@ -18,11 +18,11 @@ public class Communication {
 		try {
 			network = new networking.Networker();
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Something terrible happened, Sander screwed his class: " + e.getMessage());
+			System.exit(0);
 		}
-		router = new routing.LinkStateRouting(new Callback(this, "routerPolling"), new Callback(network, "send"));
 		
+		router = new routing.LinkStateRouting(new Callback(this, "routerPolling"), new Callback(network, "send"));
 		router.initialize();
 		
 	}
