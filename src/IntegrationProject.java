@@ -16,7 +16,7 @@ public class IntegrationProject {
 			
 		// linux
 		} else {
-			Runtime.getRuntime().exec("adhoc_linux "+WLAN+" "+GROUP+" "+DEVICE);
+			Runtime.getRuntime().exec("sudo ./adhoc_linux.sh "+WLAN+" "+GROUP+" "+DEVICE);
 		}
 		
 		new IntegrationProject();
