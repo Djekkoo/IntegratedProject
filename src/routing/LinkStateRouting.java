@@ -5,6 +5,7 @@ package routing;
 
 import java.util.AbstractMap.SimpleEntry;
 
+import networking.Networker;
 import monitoring.NetworkError;
 
 /**
@@ -14,9 +15,9 @@ import monitoring.NetworkError;
 public class LinkStateRouting implements RoutingInterface {
 
 	@Override
-	public void initialize() {
+	public void initialize(Networker n) {
 		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
