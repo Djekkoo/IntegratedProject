@@ -14,10 +14,8 @@ public interface RoutingInterface {
 	
 	/**
 	 * Sets the routing system up.
-	 * 
-	 * @param	n The Networker class to do networking with
 	 */
-	public void initialize(Networker n);
+	public void initialize();
 	
 	/**
 	 * Gets the fastest route to a given destination.

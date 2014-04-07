@@ -18,12 +18,12 @@ public class LinkStateRouting implements RoutingInterface {
 	
 	NetworkMonitor m = new NetworkMonitor();
 	
-	public LinkStateRouting(Callback poll) {
+	public LinkStateRouting(Callback poll, Callback send) {
 		m.run();
 	}
 	
 	@Override
-	public void initialize(Networker n) {
+	public void initialize() {
 		// TODO Auto-generated method stub
 		
 	}
