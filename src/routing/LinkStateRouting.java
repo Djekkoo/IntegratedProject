@@ -24,7 +24,7 @@ public class LinkStateRouting implements RoutingInterface {
 	}
 
 	@Override
-	public SimpleEntry<Byte, Byte> getRoute(byte destination)
+	public SimpleEntry<Byte, Byte> getRoute(Byte destination)
 			throws RouteNotFoundException {
 		// TODO Auto-generated method stub
 		return null;

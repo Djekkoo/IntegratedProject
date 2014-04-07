@@ -23,7 +23,7 @@ public interface RoutingInterface {
 	 * @param 	destination Destination to find route to.
 	 * @return 	The last byte of the IP for the next hop and the hop count.
 	 */
-	public SimpleEntry<Byte,Byte> getRoute(byte destination) throws RouteNotFoundException;
+	public SimpleEntry<Byte,Byte> getRoute(Byte destination) throws RouteNotFoundException;
 	
 	/**
 	 * Called if a network error occurrs.
