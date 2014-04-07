@@ -1,10 +1,14 @@
 Which behavior do you expect of the system?
 
-- 
 
 What is the exact test setup? (make sure that the tests can be repeated
 based on your description!)
+
+
 How does the test scenario look like? What are the exact steps you should
 take during the test?
+
+
 What performance metrics do you consider for the system? what are the
 overall performance of the system?
+
