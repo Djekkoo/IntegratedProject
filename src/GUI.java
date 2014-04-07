@@ -1,4 +1,5 @@
 import javax.swing.ImageIcon;
+import java.awt.event.KeyEvent;
 
 /**
  *
@@ -85,6 +86,11 @@ public class GUI extends javax.swing.JFrame {
         );
 
         SendPanel.setOpaque(false);
+        SendPanel.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                SendPanelKeyPressed(evt);
+            }
+        });
 
         inputText.setFont(new java.awt.Font("Mongolian Baiti", 0, 14)); // NOI18N
         inputText.setText("Chat Input");
@@ -166,8 +172,29 @@ public class GUI extends javax.swing.JFrame {
     }                                         
 
     private void sendBtnActionPerformed(java.awt.event.ActionEvent evt) {                                        
-        // TODO add your handling code here:
-    }                                       
+    	sendChat(inputText.getText());
+    }
+    
+    private void SendPanelKeyPressed(java.awt.event.KeyEvent evt) {                                        
+    	if (evt.getKeyCode() == KeyEvent.VK_ENTER ) {
+			sendChat(inputText.getText());
+    	}
+    }
+    
+    
+    
+    //Chat Functions
+    
+    private void sendChat(String text) {
+    	
+    }
+    
+    
+    
+    
+    
+    
+    
 
     /**
      * @param args the command line arguments
