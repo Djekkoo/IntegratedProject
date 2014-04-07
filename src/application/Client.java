@@ -1,3 +1,6 @@
+package application;
+import main.Communication;
+
 //The door between GUI and Communication classes <3
 
 public class Client {

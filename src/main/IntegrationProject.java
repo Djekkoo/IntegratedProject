@@ -1,4 +1,8 @@
+package main;
+
 import java.io.IOException;
+
+import application.Client;
 
 public class IntegrationProject {
 
