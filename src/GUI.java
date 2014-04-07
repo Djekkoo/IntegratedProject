@@ -7,13 +7,14 @@ import java.awt.event.KeyEvent;
  * @author FlorianF
  */
 public class GUI extends javax.swing.JFrame {
-	private Communication communication;
+	private Client client;
 	
 	/**
 	 * Creates new form GUI
 	 */
-	public GUI(Communication communication) {
-		this.communication = communication;
+	public GUI(Client client) {
+		this.client = client;
+		this.setVisible(true);
 		initComponents();
 	}
 
@@ -255,11 +256,11 @@ public class GUI extends javax.swing.JFrame {
 	// Program Functions
 
 	private void sendChat(String text) {
-
+		
 	}
 
 	private void receiveChat(String text) {
-
+		
 	}
 
 	// Uitgaande van een string die de users splitst met ; zonder verdere
@@ -314,7 +315,7 @@ public class GUI extends javax.swing.JFrame {
 		/* Create and display the form */
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				new GUI(new Communication()).setVisible(true);
+				//new GUI(new Client()).setVisible(true);
 			}
 		});
 	}

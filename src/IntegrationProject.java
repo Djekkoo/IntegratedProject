@@ -27,12 +27,8 @@ public class IntegrationProject {
 
 	public IntegrationProject() {
 		communication = new Communication();
-		//Maak een GUI object aan met zijn eigen communication object.
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				new GUI(communication).setVisible(true);
-			}
-		});
+		//Maak een Client aan met zijn eigen communication object.
+		new Client(communication);
 	}
 
 }
