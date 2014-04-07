@@ -1,3 +1,5 @@
+import javax.swing.ImageIcon;
+
 /**
  *
  * @author FlorianF
@@ -19,6 +21,7 @@ public class GUI extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
+    	final ImageIcon plaatje = new ImageIcon(getClass().getResource("/intproject.jpg")); //user added
 
         jPasswordField1 = new javax.swing.JPasswordField();
         MainPanel = new javax.swing.JPanel();
@@ -151,7 +154,7 @@ public class GUI extends javax.swing.JFrame {
         getContentPane().add(Titel);
         Titel.setBounds(0, 0, 800, 40);
 
-        backgroundLabel.setIcon(new javax.swing.ImageIcon("C:\\Users\\FlorianF\\Desktop\\intproject.jpg")); // NOI18N
+        backgroundLabel.setIcon(plaatje); // useradded
         getContentPane().add(backgroundLabel);
         backgroundLabel.setBounds(0, -40, 920, 530);
 
