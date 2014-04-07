@@ -1,5 +1,7 @@
 package routing;
 
+import monitoring.NetworkError;
+
 /**
  * @author      Joey Haas <j.haas@student.utwente.nl>
  * @version     0.1
@@ -19,4 +21,13 @@ public interface RoutingInterface {
 	 * @return 	The last byte of the IP for the next hop.
 	 */
 	public byte getRoute(byte destination) throws RouteNotFoundException;
+	
+	/**
+	 * Called if a network error occurrs.
+	 * 
+	 * @param 	type Network Error type
+	 * @param 	node The node that caused the error
+	 * @return 	The last byte of the IP for the next hop.
+	 */
+	public void networkError(NetworkError type, byte node);
 }
