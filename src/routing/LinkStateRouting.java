@@ -31,7 +31,7 @@ public class LinkStateRouting implements RoutingInterface {
 	}
 
 	@Override
-	public void networkError(NetworkError type, byte node) {
+	public void networkError(NetworkError type, Byte node) {
 		// TODO Auto-generated method stub
 		
 	}
