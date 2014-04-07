@@ -3,12 +3,14 @@ package main;
 import java.net.SocketException;
 import java.util.LinkedList;
 
+import application.Client;
 import routing.RoutingInterface;
 import networking.DataPacket;
 import networking.Networker;
 
 public class Communication {
 
+	Client client;
 	Networker network;
 	RoutingInterface router;
 	LinkedList<DataPacket> routerQueue = new LinkedList<DataPacket>();
@@ -23,11 +25,23 @@ public class Communication {
 		}
 		
 		router = new routing.LinkStateRouting(new Callback(this, "routerPolling"), new Callback(network, "send"));
-		router.initialize();
+		
+		new Thread(new Runnable() {
+		     public void run()
+		     {
+		          router.initialize();
+		     }
+		}).start();
+		
+		this.client = new Client(new Callback(this, "sendMessage"));
 		
 	}
 	
-	public DataPacket routerPolling() {
+	public void sendMessage(String message) {
+		
+	}
+	
+	public synchronized DataPacket routerPolling() {
 		
 		if (this.routerQueue.size() == 0)
 			return null;

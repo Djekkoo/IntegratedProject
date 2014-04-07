@@ -29,9 +29,9 @@ public class IntegrationProject {
 	}
 
 	public IntegrationProject() {
-		communication = new Communication();
-		//Maak een Client aan met zijn eigen communication object.
-		new Client(communication);
+		
+		new Communication();
+
 	}
 
 }
