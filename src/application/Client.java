@@ -1,14 +1,15 @@
 package application;
-import main.Communication;
+import main.Callback;
+import main.CallbackException;
 
 //The door between GUI and Communication classes <3
 
 public class Client {
-	private Communication communication;
+	private Callback sendMsg;
 	private GUI gui;
 	
-	public Client(Communication communication) {
-		this.communication = communication;
+	public Client(Callback sendMsg) {
+		this.sendMsg = sendMsg;
 		//Start de GUI
 		gui = new GUI(this);
 	}
@@ -20,7 +21,13 @@ public class Client {
 	//Communicatie functies:	
 
 	public void sendChat(String text) {
-		//stuur naar communication
+		//TODO: Fix de naam erbij
+		gui.updateChat(text);
+		try {
+			sendMsg.invoke(text);
+		} catch (CallbackException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	public void receiveChat(String msg) {

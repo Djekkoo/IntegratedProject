@@ -105,11 +105,6 @@ public class GUI extends javax.swing.JFrame {
 				chatScrollpane));
 
 		SendPanel.setOpaque(false);
-		SendPanel.addKeyListener(new java.awt.event.KeyAdapter() {
-			public void keyPressed(java.awt.event.KeyEvent evt) {
-				SendPanelKeyPressed(evt);
-			}
-		});
 
 		inputText.setFont(standardFont); // NOI18N
 		inputText.setText("");
@@ -117,6 +112,11 @@ public class GUI extends javax.swing.JFrame {
 		inputText.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				inputTextActionPerformed(evt);
+			}
+		});
+		inputText.addKeyListener(new java.awt.event.KeyAdapter() {
+			public void keyPressed(java.awt.event.KeyEvent evt) {
+				SendPanelKeyPressed(evt);
 			}
 		});
 
@@ -251,17 +251,22 @@ public class GUI extends javax.swing.JFrame {
 	}
 
 	private void sendBtnActionPerformed(java.awt.event.ActionEvent evt) {
-		client.sendChat(inputText.getText());
+		sendChat(inputText.getText());
 	}
 
 	private void SendPanelKeyPressed(java.awt.event.KeyEvent evt) {
 		if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
-			client.sendChat(inputText.getText());
+			sendChat(inputText.getText());
 		}
 	}
 	
 	public void updateUserlist(String[] users) {
 		userList.setListData(users);
+	}
+	
+	private void sendChat(String text) {
+		inputText.setText("");
+		client.sendChat(text);
 	}
 	
 	public void updateChat(String lastmsg) {

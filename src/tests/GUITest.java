@@ -1,5 +1,6 @@
 package tests;
 
+import main.Callback;
 import main.Communication;
 import application.Client;
 import application.GUI;
@@ -12,7 +13,11 @@ public class GUITest extends TestCase {
 	GUI gui;
 	
     protected void setUp() {
-        gui = new Client(new Communication()).getGUI();
+        gui = new Client(new Callback(this,"empty")).getGUI();
+    }
+    
+    public void empty(String text) {
+    	System.out.println(text);
     }
 
     public int runTest() {
