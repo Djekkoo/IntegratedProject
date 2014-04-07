@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 import application.Client;
 import routing.RoutingInterface;
+import monitoring.NetworkMonitor;
 import networking.DataPacket;
 import networking.Networker;
 
@@ -13,6 +14,7 @@ public class Communication {
 	Client client;
 	Networker network;
 	RoutingInterface router;
+	NetworkMonitor monitor;
 	LinkedList<DataPacket> routerQueue = new LinkedList<DataPacket>();
 	
 	public Communication() {
@@ -25,13 +27,16 @@ public class Communication {
 		}
 		
 		router = new routing.LinkStateRouting(new Callback(this, "routerPolling"), new Callback(network, "send"));
-		
+		network.setRouter(new Callback(router, "getRoute"));
 		new Thread(new Runnable() {
 		     public void run()
 		     {
 		          router.initialize();
 		     }
 		}).start();
+		
+		monitor = new NetworkMonitor(new Callback(network, "send"), new Callback(router, "networkError"));
+		
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
 		
