@@ -26,7 +26,7 @@ public class GUI extends javax.swing.JFrame {
 	@SuppressWarnings("unchecked")
 	private void initComponents() {
 		//Eigen vars
-		final ImageIcon plaatje = new ImageIcon(getClass().getResource("/intproject.jpg")); // user added
+		final ImageIcon plaatje = new ImageIcon(getClass().getResource("intproject.jpg")); // user added
 		final java.awt.Font standardFont = new java.awt.Font("Comic Sans", 0, 14);
 		//Generated vars
 		jPasswordField1 = new javax.swing.JPasswordField();
@@ -52,7 +52,7 @@ public class GUI extends javax.swing.JFrame {
 		getContentPane().setLayout(null);
 
 		MainPanel.setBorder(javax.swing.BorderFactory.createLineBorder(
-				new java.awt.Color(30, 30, 30), 5));
+				new java.awt.Color(50, 50, 50), 5));
 		MainPanel.setOpaque(false);
 
 		userList.setFont(standardFont); // NOI18N
@@ -226,7 +226,7 @@ public class GUI extends javax.swing.JFrame {
 		MainPanel.setBounds(10, 40, 780, 360);
 
 		Titel.setFont(new java.awt.Font("Comic Sans", 1, 26)); // NOI18N
-		Titel.setForeground(new java.awt.Color(255,255,190));
+		Titel.setForeground(new java.awt.Color(255,255,230));
 		Titel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 		Titel.setText("Ad-Hoc Wifi Chat");
 		getContentPane().add(Titel);
