@@ -18,7 +18,7 @@ public class Communication {
 		try {
 			network = new networking.Networker();
 		} catch (SocketException e) {
-			System.out.println("Something terrible happened, Sander screwed his class: " + e.getMessage());
+			System.out.println("Something terrible happened, Sander screwed up his class: " + e.getMessage());
 			System.exit(0);
 		}
 		
