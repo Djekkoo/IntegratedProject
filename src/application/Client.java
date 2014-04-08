@@ -25,6 +25,7 @@ public class Client {
 
 		this.sendChat(new String(packet.getData()));
 		
+		
 	}
 
 	public void sendChat(String text) {

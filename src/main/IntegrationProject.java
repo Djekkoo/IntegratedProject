@@ -2,8 +2,6 @@ package main;
 
 import java.io.IOException;
 
-import application.Client;
-
 public class IntegrationProject {
 
 	public static int DEVICE = 1;
