@@ -1,7 +1,6 @@
 package main;
 
 import java.net.SocketException;
-import java.util.LinkedList;
 
 import application.Client;
 import routing.RoutingInterface;
