@@ -5,6 +5,11 @@ import main.CallbackException;
 
 //The door between GUI and Communication classes <3
 
+/** 
+ * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
+ */
 public class Client {
 	private Callback sendMsg;
 	private GUI gui;

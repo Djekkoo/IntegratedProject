@@ -4,9 +4,10 @@ import javax.swing.ListModel;
 
 import java.awt.event.KeyEvent;
 
-/**
- * 
- * @author FlorianF
+/** 
+ * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
  */
 public class GUI extends javax.swing.JFrame {
 	/**

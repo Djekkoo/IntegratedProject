@@ -4,6 +4,11 @@ import java.io.IOException;
 
 import application.Client;
 
+/** 
+ * @author      Jacco Brandt <j.h.brandt@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
+ */
 public class IntegrationProject {
 
 	public static byte DEVICE = 1;

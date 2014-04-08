@@ -18,6 +18,9 @@ import main.Callback;
 import monitoring.NetworkMessage;
 
 /**
+ * Implements a Link-State routing protocol to explore the network,
+ * then uses pathfinding to find the shortest paths.
+ * 
  * @author      Joey Haas <j.haas@student.utwente.nl>
  * @version     0.1
  * @since       2014-04-07

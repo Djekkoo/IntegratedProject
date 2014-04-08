@@ -1,5 +1,10 @@
 package main;
 
+/** 
+ * @author      Jacco Brandt <j.h.brandt@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
+ */
 public class CallbackException extends Exception {
 	/**
 	 * 
