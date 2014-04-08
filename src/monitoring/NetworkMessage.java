@@ -5,6 +5,6 @@ package monitoring;
  * @version     0.1
  * @since       2014-04-07
  */
-public enum NetworkError {
-	NOKEEPALIVE,DROPPED;
+public enum NetworkMessage {
+	NOKEEPALIVE, NEWKEEPALIVE, DROPPED;
 }
