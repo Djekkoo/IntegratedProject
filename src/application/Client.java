@@ -62,7 +62,7 @@ public class Client {
 	}
 
 	public void sendChat(String text) {
-		//TODO: Fix de naam erbij
+		//TODO: Stuur naar andere peers
 		gui.updateChat(text);
 		try {
 			sendMsg.invoke(text);
