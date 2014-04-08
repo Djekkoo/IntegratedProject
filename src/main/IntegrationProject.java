@@ -10,7 +10,7 @@ import java.io.IOException;
 public class IntegrationProject {
 
 	public static byte DEVICE = 1;
-	public static byte GROUP = 13;
+	public static byte GROUP = 14;
 	public static String WLAN = "Wlan1Groepje";
 	public static String BROADCAST = "266.0.0.0/8";
 	public Communication communication;
@@ -24,14 +24,14 @@ public class IntegrationProject {
 			// linux
 		} else {
 			
-			Runtime.getRuntime().exec("sudo route add -net "+BROADCAST+" dev "+WLAN);
-			System.out.println("Added route to routing table");
-			
 			Runtime.getRuntime().exec(
 					"sudo ./adhoc_linux.sh " + WLAN + " " + GROUP + " "
 							+ DEVICE);
 			
 			System.out.println("set up Ad-hoc connection");
+			
+			Runtime.getRuntime().exec("sudo route add -net "+BROADCAST+" dev "+WLAN);
+			System.out.println("Added route to routing table");
 			
 		}
 		
