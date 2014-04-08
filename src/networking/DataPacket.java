@@ -1,10 +1,17 @@
 package networking;
 
-/** 
+/**
+ * This class will form objects that form packets to be sent over UDP.
+ * 
+ * There are two constructors:
+ * 	One constructor takes all header fields and the data.
+ *  The other constructor takes the raw packet.
+ *
  * @author      Sander Koning <s.koning@student.utwente.nl>
- * @version     0.1
- * @since       2014-04-07
+ * @version     1.0-b
+ * @since       2014-04-08
  */
+
 public class DataPacket{
 	
 	public static final int HEADER_LENGTH = 4;
@@ -99,65 +106,5 @@ public class DataPacket{
 	
 	public boolean isKeepAlive(){
 		return ((packet[2] & KEEP_ALIVE) == KEEP_ALIVE);
-	}
-	
-	public static void main(String[] args) {
-		DataPacket dp = null;
-		try {
-			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true);
-		} catch (DatagramDataSizeException e1) {
-			e1.printStackTrace();
-		}
-		
-		System.out.println("--- New Datapacket ---");
-
-		if(!dp.isAck()) 		System.out.println("Faulty isAck state");
-		if(!dp.isRouting()) 	System.out.println("Faulty isRouting state");
-		if(!dp.isKeepAlive()) 	System.out.println("Faulty isKeepAlive state");
-		
-		if(!new String(dp.getData()).equals(new String(new byte[]{0, 5, 19})))
-								System.out.println("Faulty data stored");
-		
-		if(!(dp.getSequenceNumber() == (byte) 16))
-								System.out.println("Faulty sequencenumber stored");
-		if(!(dp.getHops() == (byte) 8))
-								System.out.println("Faulty hops stored");
-		
-		if(!(dp.getSource() == (byte) 12))
-								System.out.println("Faulty source stored");
-		
-		if(!(dp.getDestination() == (byte) 14))
-								System.out.println("Faulty destination stored");
-		
-		System.out.println("--- Test Complete ---");
-		
-		DataPacket test = null;
-		try {
-			test = new DataPacket(dp.getRaw());
-		} catch (DatagramDataSizeException e) {
-			e.printStackTrace();
-		}
-		
-		System.out.println("--- Copy Datapacket ---");
-
-		if(!test.isAck()) 		System.out.println("Faulty isAck state");
-		if(!test.isRouting()) 	System.out.println("Faulty isRouting state");
-		if(!test.isKeepAlive()) 	System.out.println("Faulty isKeepAlive state");
-		
-		if(!new String(test.getData()).equals(new String(new byte[]{0, 5, 19})))
-								System.out.println("Faulty data stored");
-		
-		if(!(test.getSequenceNumber() == (byte) 16))
-								System.out.println("Faulty sequencenumber stored");
-		if(!(test.getHops() == (byte) 8))
-								System.out.println("Faulty hops stored");
-		
-		if(!(test.getSource() == (byte) 12))
-								System.out.println("Faulty source stored");
-		
-		if(!(test.getDestination() == (byte) 14))
-								System.out.println("Faulty destination stored");
-		
-		System.out.println("--- Test Complete ---");
 	}
 }
