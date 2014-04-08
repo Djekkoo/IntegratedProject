@@ -2,7 +2,6 @@ package tests;
 
 import main.Callback;
 import application.Client;
-import application.GUI;
 
 /** 
  * Testklasse-interface voor <code>application.GUI</code>.
@@ -11,11 +10,11 @@ import application.GUI;
  * @version     0.1
  * @since       2014-04-07
  */
-public class GUITest extends TestCase {
-	GUI gui;
+public class ClientTest extends TestCase {
+	Client client;
 	
     protected void setUp() {
-        gui = new Client(new Callback(this,"empty")).getGUI();
+    	client = new Client(new Callback(this,"empty"));
     }
     
     public void empty(String text) {
@@ -26,27 +25,27 @@ public class GUITest extends TestCase {
         setUp();
         testChat();
         testUsers();
-        gui.dispose();
+        client.getGUI().dispose();
         return errors;
     }
 
     protected void testChat() {
         startTest("Chat test");
-        gui.updateChat("test");
-        assertEquals("Aantal berichten", 2, gui.getChat().length);
+        client.receiveChat("test");
+        assertEquals("Aantal berichten", 2, client.getGUI().getChat().length);
         try { Thread.sleep(1000);} catch (InterruptedException e) {	}
-        gui.updateChat("hoi Jacco");
+        client.receiveChat("hoi Jacco");
         try { Thread.sleep(1000);} catch (InterruptedException e) {	}
-        gui.updateChat("allemaal gechat");
-        assertEquals("Aantal berichten", 4, gui.getChat().length);
+        client.receiveChat("allemaal gechat");
+        assertEquals("Aantal berichten", 4, client.getGUI().getChat().length);
     }
     
     protected void testUsers() {
     	startTest("User test");
-    	gui.updateUserlist(new String[]{"Joey","Neger"});
-    	assertEquals("Players", " Joey Neger", gui.getUsers());
+    	client.updateUsers("Joey;Neger");
+    	assertEquals("Players", " Joey Neger", client.getGUI().getUsers());
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
-    	gui.updateUserlist(new String[]{"Joey","Neger","Jan Boerman","Zoe Haas","Koekoekjongen"});
-    	assertEquals("Players", " Joey Neger Jan Boerman Zoe Haas Koekoekjongen", gui.getUsers());
+    	client.updateUsers("Joey;Neger;Jan Boerman;Zoe Haas;Koekoekjongen");
+    	assertEquals("Players", " Joey Neger Jan Boerman Zoe Haas Koekoekjongen", client.getGUI().getUsers());
     }
 }

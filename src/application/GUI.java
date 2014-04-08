@@ -1,26 +1,32 @@
 package application;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.ListModel;
 
 import java.awt.event.KeyEvent;
 
 /** 
  * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
- * @version     0.1
+ * @version     0.7
  * @since       2014-04-07
  */
 public class GUI extends javax.swing.JFrame {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private Client client;
+	private String name;
 	
 	/**
 	 * Creates new form GUI
 	 */
 	public GUI(Client client) {
 		this.client = client;
+		name = "";
+		while (name.equals("")) {
+			name = JOptionPane.showInputDialog("Hoe wil je heten?","0779 Cappuchino");
+			if (name == null) {
+				System.exit(0);
+			}
+		}
 		this.setVisible(true);
 		initComponents();
 	}
@@ -64,7 +70,7 @@ public class GUI extends javax.swing.JFrame {
 
 		userList.setFont(standardFont); // NOI18N
 		userList.setModel(new javax.swing.AbstractListModel() {
-			String[] strings = { "Jacco", "Florian", "Joey", "Sander" };
+			String[] strings = { name };
 
 			public int getSize() {
 				return strings.length;

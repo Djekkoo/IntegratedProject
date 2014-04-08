@@ -1,4 +1,6 @@
 package application;
+import java.io.UnsupportedEncodingException;
+
 import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
@@ -25,14 +27,38 @@ public class Client {
 	}
 	
 	//Communicatie functies:	
+	/**
+	 * Packet data format:
+	 * CHAT Name Message
+	 * USER Name;Name;Name;..
+	 */
 
 	public void packetReceived(DataPacket packet) {
-		//String data = packet.getData();
+		String data = "";
+		try {
+			data = new String(packet.getData(), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			System.out.println(e.getMessage());
+		}
 		
-		
-		this.sendChat(new String(packet.getData()));
-		
-		
+		if (!data.equals("") && data.split(" ").length > 1) {
+			String[] splitdata = data.split(" ");
+			switch(splitdata[0]) {
+			case "CHAT":
+				String msg = splitdata[1] + ": ";
+				for(int i = 2; i < splitdata.length; i++) {
+					msg = msg + " " + splitdata[i];
+				}
+				this.receiveChat(msg);
+				break;
+			case "USER":
+				
+				break;
+			default:
+				System.out.println("The received command does not exist.");
+				break;
+			}
+		}
 	}
 
 	public void sendChat(String text) {
