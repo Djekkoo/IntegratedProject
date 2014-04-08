@@ -24,7 +24,7 @@ public class Test {
 		
 		DataPacket dp = null;
 		try {
-			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new Byte[]{0, 5, 19}, true, true, true);
+			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true);
 		} catch (DatagramDataSizeException e1) {
 			e1.printStackTrace();
 		}
@@ -86,7 +86,7 @@ public class Test {
 			
 			LinkedList<DataPacket> packets = new LinkedList<DataPacket>();
 			
-			Object networker = new Networker(new Callback(this, "getByte"));
+			Object networker = new Networker(new Callback(this, "getbyte"));
 			
 			Class[] args = new Class[2];
 			args[0] = byte.class;
@@ -105,10 +105,10 @@ public class Test {
 			
 			byte[] result = (byte[]) processPackets.invoke(networker, packets);
 			
-			if(!(stringFromBytes(data).equals(stringFromBytes(result))))
+			if(!(stringFrombytes(data).equals(stringFrombytes(result))))
 				System.out.println("Packets generating/decoding failed");
 			
-			System.out.println("Was: " + stringFromBytes(result) + "\nS2B: " + stringFromBytes(data));
+			System.out.println("Was: " + stringFrombytes(result) + "\nS2B: " + stringFrombytes(data));
 		} catch (SocketException e) {
 			e.printStackTrace();
 		} catch (NoSuchMethodException e) {
@@ -130,11 +130,11 @@ public class Test {
 		new Test();
 	}
 	
-	public Byte getByte(){
-		return new Byte((byte) 15);
+	public byte getbyte(){
+		return (byte) 15;
 	}
 	
-	public String stringFromBytes(byte[] b){
+	public String stringFrombytes(byte[] b){
 		if(b.length == 0) return "";
 		
 		String poo = new String(Byte.toString(b[0]));

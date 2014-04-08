@@ -30,7 +30,7 @@ public class DataPacket{
 		packet = raw;
 	}
 
-	public DataPacket(Byte source, Byte destination, Byte hops, Byte sequencenr, Byte[] data, Boolean ack, Boolean routing, Boolean keepalive) throws DatagramDataSizeException{
+	public DataPacket(byte source, byte destination, byte hops, byte sequencenr, byte[] data, Boolean ack, Boolean routing, Boolean keepalive) throws DatagramDataSizeException{
 
 		if(data.length > (1024 - HEADER_LENGTH)) throw new DatagramDataSizeException(data.length + HEADER_LENGTH);
 		
@@ -45,9 +45,9 @@ public class DataPacket{
 		
 		packet[2] = (byte) (hops & 0x0F);
 
-		if(ack) 		packet[2] |= ACK;
-		if(routing) 	packet[2] |= ROUTING;
-		if(keepalive) 	packet[2] |= KEEP_ALIVE;
+		if(ack) 		packet[2] = (byte) (packet[2] | ACK);
+		if(routing) 	packet[2] = (byte) (packet[2] | ROUTING);
+		if(keepalive) 	packet[2] = (byte) (packet[2] | KEEP_ALIVE);
 		
 		packet[3] = sequencenr;
 		

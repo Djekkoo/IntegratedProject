@@ -31,7 +31,7 @@ public class Networker implements Runnable {
 		this.routerPacketReceived = routerPacketReceived;
 	}
 	
-	public void broadcast(Byte[] data, Byte hops, Boolean ack, Boolean routing, Boolean keepalive) throws IOException, DatagramDataSizeException{
+	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing, Boolean keepalive) throws IOException, DatagramDataSizeException{
 		DataPacket dp = new DataPacket(self, (byte) 0xFF, hops, (byte) 0x0F, data, ack, routing, keepalive);
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, InetAddress.getByAddress(new byte[]{(byte) 226,0,0,0}), PORT));
 	}
@@ -40,7 +40,7 @@ public class Networker implements Runnable {
 		this.routerGetRoute = router;
 	}
 
-	public void send(byte destination, byte[] data) throws IOException {
+	public void send(Byte destination, byte[] data) throws IOException {
 		LinkedList<DataPacket> packets = processData(destination, data);
 		
 		byte connection = 0;
@@ -74,22 +74,22 @@ public class Networker implements Runnable {
 		return result;
 	}
 	
-	private LinkedList<DataPacket> processData(byte destination, byte[] data){
+	private LinkedList<DataPacket> processData(Byte destination, byte[] data){
 		LinkedList<DataPacket> result = new LinkedList<DataPacket>();
 		
 		DataPacket dp;
 		
-		byte hops = 0x0F;		
+		byte hops = 0x0F;
 		byte sequencenr = (byte) ((new Random()).nextInt() >>> 24);
 		
 		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
-		Byte[] chunk = new Byte[maxChunkSize];
+		byte[] chunk = new byte[maxChunkSize];
 		
-		for (int i = 0; i < Math.ceil(data.length / maxChunkSize); i++){
+		for (int i = 0; i <= Math.ceil(data.length / maxChunkSize); i++){
 			if(data.length >= (i+1) * maxChunkSize){
 				System.arraycopy(data, i * maxChunkSize, chunk, 0, maxChunkSize);
 			} else {
-				chunk = new Byte[data.length - i * maxChunkSize];
+				chunk = new byte[data.length - i * maxChunkSize];
 				System.arraycopy(data, i * maxChunkSize, chunk, 0, data.length - i * maxChunkSize);
 			}
 			
@@ -105,7 +105,7 @@ public class Networker implements Runnable {
 		
 	}
 	
-	private InetAddress getFullAddress(byte postfix){
+	private InetAddress getFullAddress(Byte postfix){
 		
 		byte[] myAddress = dSock.getLocalAddress().getAddress();
 		myAddress[3] = postfix;
