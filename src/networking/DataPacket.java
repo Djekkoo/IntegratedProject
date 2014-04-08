@@ -30,7 +30,7 @@ public class DataPacket{
 		packet = raw;
 	}
 
-	public DataPacket(byte source, byte destination, byte hops, byte sequencenr, byte[] data, boolean ack, boolean routing, boolean keepalive) throws DatagramDataSizeException{
+	public DataPacket(Byte source, Byte destination, Byte hops, Byte sequencenr, Byte[] data, Boolean ack, Boolean routing, Boolean keepalive) throws DatagramDataSizeException{
 
 		if(data.length > (1024 - HEADER_LENGTH)) throw new DatagramDataSizeException(data.length + HEADER_LENGTH);
 		

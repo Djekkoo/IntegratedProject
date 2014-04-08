@@ -24,7 +24,7 @@ public class Test {
 		
 		DataPacket dp = null;
 		try {
-			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true);
+			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new Byte[]{0, 5, 19}, true, true, true);
 		} catch (DatagramDataSizeException e1) {
 			e1.printStackTrace();
 		}
@@ -80,7 +80,7 @@ public class Test {
 		System.out.println("--- Networker Tests ---");
 		
 		try {
-			byte[] data = new byte[2048];
+			byte[] data = new byte[8];
 			(new SecureRandom()).nextBytes(data);
 			
 			

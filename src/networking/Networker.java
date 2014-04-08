@@ -31,7 +31,7 @@ public class Networker implements Runnable {
 		this.routerPacketReceived = routerPacketReceived;
 	}
 	
-	public void broadcast(byte[] data, byte hops, boolean ack, boolean routing, boolean keepalive) throws IOException, DatagramDataSizeException{
+	public void broadcast(Byte[] data, Byte hops, Boolean ack, Boolean routing, Boolean keepalive) throws IOException, DatagramDataSizeException{
 		DataPacket dp = new DataPacket(self, (byte) 0xFF, hops, (byte) 0x0F, data, ack, routing, keepalive);
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, InetAddress.getByAddress(new byte[]{(byte) 226,0,0,0}), PORT));
 	}
@@ -83,13 +83,13 @@ public class Networker implements Runnable {
 		byte sequencenr = (byte) ((new Random()).nextInt() >>> 24);
 		
 		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
-		byte[] chunk = new byte[maxChunkSize];
+		Byte[] chunk = new Byte[maxChunkSize];
 		
 		for (int i = 0; i < Math.ceil(data.length / maxChunkSize); i++){
 			if(data.length >= (i+1) * maxChunkSize){
 				System.arraycopy(data, i * maxChunkSize, chunk, 0, maxChunkSize);
 			} else {
-				chunk = new byte[data.length - i * maxChunkSize];
+				chunk = new Byte[data.length - i * maxChunkSize];
 				System.arraycopy(data, i * maxChunkSize, chunk, 0, data.length - i * maxChunkSize);
 			}
 			
