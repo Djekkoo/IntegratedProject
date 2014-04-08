@@ -1,4 +1,5 @@
 package application;
+import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
 
@@ -19,6 +20,12 @@ public class Client {
 	}
 	
 	//Communicatie functies:	
+
+	public void packetReceived(DataPacket packet) {
+
+		this.sendChat(new String(packet.getData()));
+		
+	}
 
 	public void sendChat(String text) {
 		//TODO: Fix de naam erbij
@@ -44,4 +51,5 @@ public class Client {
 		}
 		gui.updateUserlist(lijstje);
 	}
+	
 }

@@ -15,7 +15,6 @@ public class Communication {
 	Networker network;
 	RoutingInterface router;
 	NetworkMonitor monitor;
-	LinkedList<DataPacket> routerQueue = new LinkedList<DataPacket>();
 	
 	public Communication() {
 		
@@ -35,27 +34,28 @@ public class Communication {
 		     }
 		}).start();
 		
-		monitor = new NetworkMonitor(new Callback(network, "send"), new Callback(router, "networkError"));
-		
+		this.monitor = new NetworkMonitor(new Callback(network, "send"), new Callback(router, "networkError"));
+		this.monitor.run();
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
 		
 	}
 	
-	public void newPacket(DataPacket packter) {
+	public void newPacket(DataPacket packet) {
+		
+		if (packet.isRouting()) {
+			this.network.packetReceived(packet);
+		}
+		else if (packet.isKeepAlive()) {
+			this.monitor.messageReceived(packet);
+		}
+		else {
+			this.client.packetReceived(packet);
+		}
 		
 	}
 	
 	public void sendMessage(String message) {
-		
-	}
-	
-	public synchronized DataPacket routerPolling() {
-		
-		if (this.routerQueue.size() == 0)
-			return null;
-		
-		return this.routerQueue.removeFirst();
 		
 	}
 	
