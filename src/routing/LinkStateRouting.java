@@ -6,6 +6,7 @@ package routing;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import networking.DataPacket;
@@ -18,7 +19,7 @@ import monitoring.NetworkError;
  */
 public class LinkStateRouting implements RoutingInterface {
 	
-	TreeMap network = new TreeMap<Byte,ArrayList<Byte>>();
+	TreeMap nw = new TreeMap<Byte,ArrayList<Byte>>();
 	
 	public LinkStateRouting(Callback poll, Callback send) {
 		
@@ -59,4 +60,24 @@ public class LinkStateRouting implements RoutingInterface {
 		
 	}
 
+	private TreeMap<Byte,ArrayList<Byte>> parsePacket(byte[] p) {
+		int hosts = p[0];
+		return null;
+	}
+	
+	private Byte[] buildPacket() {
+		ArrayList<Byte> p = new ArrayList<Byte>();
+		p.add(Byte.valueOf((byte)(nw.size()&0xFF)));
+		for (Object obj : nw.entrySet()) {
+			Entry<Byte,ArrayList<Byte>> e = (Entry<Byte,ArrayList<Byte>>)obj;
+			Byte host = e.getKey();
+			ArrayList<Byte> neighbours = e.getValue();
+			p.add(host);
+			p.add(Byte.valueOf((byte)(neighbours.size()&0xFF)));
+			for(Byte b : neighbours) {
+				p.add(b);
+			}
+		}
+		return (Byte[])p.toArray();
+	}
 }
