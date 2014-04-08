@@ -25,7 +25,7 @@ public class Communication {
 			System.exit(0);
 		}
 		
-		router = new routing.LinkStateRouting(new Callback(this, "routerPolling"), new Callback(network, "send"));
+		router = new routing.LinkStateRouting(new Callback(network, "send"));
 		network.setRouter(new Callback(router, "getRoute"));
 		new Thread(new Runnable() {
 		     public void run()
