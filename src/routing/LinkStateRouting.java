@@ -33,6 +33,9 @@ public class LinkStateRouting implements RoutingInterface {
 		// Explore network and add neighbours.
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void packetReceived(DataPacket p) {
 		// TODO Handle packet receives
 	}
