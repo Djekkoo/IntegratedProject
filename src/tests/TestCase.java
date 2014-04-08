@@ -2,9 +2,9 @@ package tests;
 
 public abstract class TestCase {
 	
-	private String beschrijving;
-	private boolean isGeprint;
-	protected int fouten;
+	private String description;
+	private boolean isPrinted;
+	protected int errors;
 	
 	
 	abstract protected int runTest();
@@ -12,12 +12,12 @@ public abstract class TestCase {
 	
 	/**
      * Fixeert de beschrijving van de huidige testmethode.
-     * @param tekst de te printen beschrijving
+     * @param text de te printen beschrijving
      */
-	protected void beginTest(String tekst) {
-        beschrijving = tekst;
+	protected void startTest(String text) {
+        description = text;
         // de beschrijving is nog niet geprint
-        isGeprint = false;
+        isPrinted = false;
     }
 	
 	 /**
@@ -29,24 +29,20 @@ public abstract class TestCase {
      */
 	 protected void assertEquals(String tekst, Object verwacht, Object werkelijk) {
         boolean gelijk;
-        // test op gelijkheid van verwacht en werkelijk,
-        // rekening houdend met de waarde null
         if (verwacht == null) {
             gelijk = werkelijk == null;
         } else {
             gelijk = werkelijk != null && verwacht.equals(werkelijk);
         }
         if (! gelijk) {
-            // print eventueel de beschijving van de testmethode
-            if (! isGeprint) {
-                System.out.println("    Test: "+beschrijving);
-                // nu is de beschrijving geprint
-                isGeprint = true;
+            if (! isPrinted) {
+                System.out.println("    Test: "+description);
+                isPrinted = true;
             }
             System.out.println("        " + tekst);
-            System.out.println("            Verwacht:  " + verwacht);
-            System.out.println("            Werkelijk: " + werkelijk);
-            fouten++;
+            System.out.println("            Expected:  " + verwacht);
+            System.out.println("            Reality: " + werkelijk);
+            errors++;
         }
     }
 }

@@ -1,7 +1,6 @@
 package tests;
 
 import main.Callback;
-import main.Communication;
 import application.Client;
 import application.GUI;
 
@@ -24,11 +23,11 @@ public class GUITest extends TestCase {
         setUp();
         testChat();
         testUsers();
-        return fouten;
+        return errors;
     }
 
     protected void testChat() {
-        beginTest("Chat test");
+        startTest("Chat test");
         gui.updateChat("test");
         assertEquals("Aantal berichten", 2, gui.getChat().length);
         try { Thread.sleep(1000);} catch (InterruptedException e) {	}
@@ -39,7 +38,7 @@ public class GUITest extends TestCase {
     }
     
     protected void testUsers() {
-    	beginTest("User test");
+    	startTest("User test");
     	gui.updateUserlist(new String[]{"Joey","Neger"});
     	assertEquals("Players", " Joey Neger", gui.getUsers());
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
