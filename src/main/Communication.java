@@ -39,7 +39,7 @@ public class Communication {
 		}).start();
 		
 		this.monitor = new NetworkMonitor(new Callback(network, "send"), new Callback(router, "networkMessage"));
-		this.monitor.run();
+		this.monitor.start();
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
 		

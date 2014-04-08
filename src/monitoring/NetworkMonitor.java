@@ -51,8 +51,8 @@ public class NetworkMonitor extends Thread {
 			// broadcast
 			try {
 				//TODO: Change to broadcast
-				this.send.invoke();
 				time = System.currentTimeMillis();
+				this.send.invoke();
 			} catch (CallbackException e) {
 				System.out.println(e.getLocalizedMessage());
 			}
