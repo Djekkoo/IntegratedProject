@@ -80,7 +80,7 @@ public class Test {
 		System.out.println("--- Networker Tests ---");
 		
 		try {
-			byte[] data = new byte[8];
+			byte[] data = new byte[2048];
 			(new SecureRandom()).nextBytes(data);
 			
 			
@@ -89,7 +89,7 @@ public class Test {
 			Object networker = new Networker(new Callback(this, "getbyte"));
 			
 			Class[] args = new Class[2];
-			args[0] = byte.class;
+			args[0] = Byte.class;
 			args[1] = byte[].class;
 			
 			Method processData = networker.getClass().getDeclaredMethod("processData", args);

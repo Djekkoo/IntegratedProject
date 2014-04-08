@@ -10,29 +10,35 @@ import java.util.Random;
 
 import main.Callback;
 import main.CallbackException;
+import main.IntegrationProject;
 
 /** 
+ * This class when instantiated handles the SKCP layer.
+ * 
+ * It supports broadcasting, sending receiving, and chopping into smaller packets.
+ * 
  * @author      Sander Koning <s.koning@student.utwente.nl>
  * @version     0.1
  * @since       2014-04-07
  */
-public class Networker implements Runnable {
+public class Networker extends Thread {
 	public static final int PORT = 1337;
 	
 	DatagramSocket dSock;
-	byte self = 0;
 	
 	Callback routerGetRoute;
-	Callback routerPacketReceived;
+	Callback packetReceived;
 	
 	public Networker(Callback routerPacketReceived) throws SocketException{
 		dSock = new DatagramSocket(PORT);
-		self = dSock.getLocalAddress().getAddress()[3];
-		this.routerPacketReceived = routerPacketReceived;
+		IntegrationProject.DEVICE = dSock.getLocalAddress().getAddress()[3];
+		this.packetReceived = routerPacketReceived;
+		
+		this.start();
 	}
 	
 	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing, Boolean keepalive) throws IOException, DatagramDataSizeException{
-		DataPacket dp = new DataPacket(self, (byte) 0xFF, hops, (byte) 0x0F, data, ack, routing, keepalive);
+		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0xFF, hops, (byte) 0x0F, data, ack, routing, keepalive);
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, InetAddress.getByAddress(new byte[]{(byte) 226,0,0,0}), PORT));
 	}
 	
@@ -94,7 +100,8 @@ public class Networker implements Runnable {
 			}
 			
 			try {
-				dp = new DataPacket(self, destination, hops, sequencenr, chunk, false, false, false);
+				// TODO fix possible bug when sequencenr reaches max
+				dp = new DataPacket(IntegrationProject.DEVICE, destination, hops, (byte) (sequencenr + i), chunk, false, false, false);
 				result.add(dp);
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
@@ -116,25 +123,27 @@ public class Networker implements Runnable {
 		} 
 		return null;
 	}
+	
+	private void receive(DataPacket d){
+		if(d.getDestination() == IntegrationProject.DEVICE || d.getDestination() == (byte) 0x0F)
+			try {
+				packetReceived.invoke(d);
+			} catch (CallbackException e) {}
+	}
 
 	@Override
 	public void run() {
 		byte[] buffer = new byte[1024];
 		DatagramPacket dpack = new DatagramPacket(buffer, buffer.length);
-		DataPacket packet;
 		
 		while(true){
 			try {
 				dSock.receive(dpack);
-				packet = new DataPacket(dpack.getData());
-				if(packet.isRouting())
-					routerPacketReceived.invoke(packet);
+				receive(new DataPacket(dpack.getData()));
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (DatagramDataSizeException e) {
-				e.printStackTrace();
-			} catch (CallbackException e) {
 				e.printStackTrace();
 			}
 		}
