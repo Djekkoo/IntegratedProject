@@ -4,7 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 
 import networking.DataPacket;
 import networking.Networker;
-import monitoring.NetworkError;
+import monitoring.NetworkMessage;
 
 /**
  * @author      Joey Haas <j.haas@student.utwente.nl>
