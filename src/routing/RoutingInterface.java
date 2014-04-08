@@ -7,6 +7,8 @@ import networking.Networker;
 import monitoring.NetworkMessage;
 
 /**
+ * A basic interface for all routing.
+ * 
  * @author      Joey Haas <j.haas@student.utwente.nl>
  * @version     0.1
  * @since       2014-04-07

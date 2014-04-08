@@ -4,17 +4,16 @@
 package routing;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import networking.DataPacket;
 import main.Callback;
+import main.CallbackException;
 import monitoring.NetworkMessage;
 
 /**
@@ -30,19 +29,12 @@ public class LinkStateRouting implements RoutingInterface {
 	private TreeMap<Byte,TreeSet<Byte>> nw = new TreeMap<Byte,TreeSet<Byte>>();
 	private long lastReceivedPacket = 0;
 	private long lastSentPacket = 0;
+	private Callback send;
+	private byte DEVICE;
 	
 	public LinkStateRouting(Callback send) {
-		showNetwork();
-		Byte[] b = buildPacket();
-		nw.clear();
-		int j = 0;
-		byte[] pack = new byte[b.length];
-		for(Byte by: b){
-			pack[j++] = by.byteValue();
-		}
-		parsePacket(pack);
-		showNetwork();
-		System.out.println("Done.");
+		this.send = send;
+		this.DEVICE = main.IntegrationProject.DEVICE;
 	}
 	
 	/**
@@ -52,11 +44,12 @@ public class LinkStateRouting implements RoutingInterface {
 	public void initialize() {
 		// TODO Initialize 
 		// Explore network and add neighbours.
-	}
-
-	public static void main(String[] args) {
-		RoutingInterface r = new LinkStateRouting(null);
-		
+		try {
+			send.invoke(buildPacket());
+		} catch (CallbackException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
