@@ -4,6 +4,7 @@
 package routing;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,29 +18,30 @@ import main.Callback;
 import monitoring.NetworkMessage;
 
 /**
+ * Implements a Link-State routing protocol to explore the network,
+ * then uses pathfinding to find the shortest paths.
+ * 
  * @author      Joey Haas <j.haas@student.utwente.nl>
  * @version     0.1
  * @since       2014-04-07
  */
 public class LinkStateRouting implements RoutingInterface {
 	
-	private TreeMap nw = new TreeMap<Byte,Set<Byte>>();
-	private long lastPacket = 0;
+	private TreeMap<Byte,TreeSet<Byte>> nw = new TreeMap<Byte,TreeSet<Byte>>();
+	private long lastReceivedPacket = 0;
+	private long lastSentPacket = 0;
 	
 	public LinkStateRouting(Callback send) {
-		Set<Byte> s = new TreeSet<Byte>();
-		s.add(Byte.valueOf((byte)0x2));
-		s.add(Byte.valueOf((byte)0x4));
-		this.nw.put(Byte.valueOf((byte)0x4), s);
-		
+		showNetwork();
 		Byte[] b = buildPacket();
 		nw.clear();
-		
 		int j = 0;
 		byte[] pack = new byte[b.length];
-		for(Byte by: b)
-		    pack[j++] = by.byteValue();
+		for(Byte by: b){
+			pack[j++] = by.byteValue();
+		}
 		parsePacket(pack);
+		showNetwork();
 		System.out.println("Done.");
 	}
 	
@@ -62,6 +64,8 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	public void packetReceived(DataPacket p) {
 		// TODO Handle packet receives
+		boolean updated = parsePacket(p.getData());
+		
 	}
 	
 	/**
@@ -93,28 +97,32 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-08
 	 */
 	private boolean parsePacket(byte[] p) {
+		//Retrieve the timestamp from the packet
 		long timestamp = 0;
-		for(int i = 0; i < 8; i++) {
-			timestamp |= (p[i]<<48-(i*8));
-		}
-		
+	    ByteBuffer buffer = ByteBuffer.wrap(p,0,8);
+	    timestamp = buffer.getLong();
 		boolean updated = false;
-		if(timestamp > lastPacket) {
-			lastPacket = timestamp;
+		
+		//Is the packet newer than the last received packet?
+		if(timestamp > lastReceivedPacket) {
+			lastReceivedPacket = timestamp;
 			int numHosts = p[8];
 			int offset = 9;
 			for(int i = 0; i < numHosts; i++) {
-				int host = p[0+offset];
+				byte host = p[0+offset];
 				int numNeighbours = p[1+offset];
 				byte[] neighbours = new byte[numNeighbours];
 				System.arraycopy(p, 2+offset, neighbours, 0, numNeighbours);
 				offset += numNeighbours+2;
 				for(byte b : neighbours) {
+					//Do we have a host that we have no record of?
 					if(nw.containsKey(host)) {
-						((Set<Byte>)nw.get(host)).add(b);
+						((TreeSet<Byte>)nw.get(host)).add(b);
 					} else {
+						//I nominate the following two lines for
+						//	the "least readable code ever"-awards
 						nw.put(host, new TreeSet<Byte>());
-						((Set<Byte>)nw.get(host)).add(b);
+						((TreeSet<Byte>)nw.get(host)).add(b);
 						updated = true;
 					}
 				}
@@ -135,6 +143,7 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		// Add timestamp to the first 8 bits.
 		long timestamp = new Date().getTime();
+		lastSentPacket = timestamp;
 		byte[] timestampBytes = ByteBuffer.allocate(8).putLong(timestamp).array();
 		for(byte b : timestampBytes) {
 			p.add((Byte)b);
@@ -142,8 +151,7 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		// Add the host count.
 		p.add(Byte.valueOf((byte)(nw.size()&0xFF)));
-		for (Object obj : nw.entrySet()) {
-			Entry<Byte,TreeSet<Byte>> e = (Entry<Byte,TreeSet<Byte>>)obj;
+		for (Entry<Byte,TreeSet<Byte>> e : nw.entrySet()) {
 			Byte host = e.getKey();
 			TreeSet<Byte> neighbours = e.getValue();
 			p.add(host);
@@ -162,5 +170,14 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 		
 		return bytes;
+	}
+	
+	private void showNetwork() {
+		for(Entry<Byte,TreeSet<Byte>> e : nw.entrySet()) {
+			System.out.println(e.getKey() + " to: ");
+			for(Byte b : e.getValue()) {
+				System.out.println("\t" + b);
+			}
+		}
 	}
 }
