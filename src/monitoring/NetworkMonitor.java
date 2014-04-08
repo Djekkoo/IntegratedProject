@@ -32,12 +32,12 @@ public class NetworkMonitor extends Thread {
 		
 		while (true) {
 			
-			try {
-				//TODO: Change to broadcast
-				this.send.invoke();
-			} catch (CallbackException e) {
-				System.out.println(e.getLocalizedMessage());
-			}
+//			try {
+//				//TODO: Change to broadcast
+//				this.send.invoke();
+//			} catch (CallbackException e) {
+//				System.out.println(e.getLocalizedMessage());
+//			}
 			
 			try {
 				Thread.sleep(broadcastDelay);

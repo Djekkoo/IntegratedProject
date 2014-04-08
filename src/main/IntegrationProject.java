@@ -38,13 +38,19 @@ public class IntegrationProject {
 		        public void run() {
 		        	
 		        	System.out.println("Shutting down");
-		        	
-		        	try {
-						Runtime.getRuntime().exec("sudo route del -net "+BROADCAST+" dev "+WLAN);
-						System.out.println("Deleted route from routing table");
-					} catch (IOException e) {
-						System.out.println("Could not delete route: " + e.getLocalizedMessage());
-					}
+		        	boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+		        	if (isWindows) {
+			        	
+		        		
+		        	// linux
+		        	} else {
+		        		try {
+							Runtime.getRuntime().exec("sudo route del -net "+BROADCAST+" dev "+WLAN);
+							System.out.println("Deleted route from routing table");
+						} catch (IOException e) {
+							System.out.println("Could not delete route: " + e.getLocalizedMessage());
+						}
+		        	}
 		        }
 		    }
 		);

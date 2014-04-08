@@ -44,7 +44,7 @@ public class Communication {
 	public void newPacket(DataPacket packet) {
 		
 		if (packet.isRouting()) {
-			this.network.packetReceived(packet);
+			this.router.packetReceived(packet);
 		}
 		else if (packet.isKeepAlive()) {
 			this.monitor.messageReceived(packet);
