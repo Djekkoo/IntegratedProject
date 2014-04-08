@@ -6,8 +6,8 @@ import application.Client;
 
 public class IntegrationProject {
 
-	public static int DEVICE = 1;
-	public static int GROUP = 13;
+	public static byte DEVICE = 1;
+	public static byte GROUP = 13;
 	public static String WLAN = "Wlan1Groepje";
 	public static String BROADCAST = "266.0.0.0/8";
 	public Communication communication;
