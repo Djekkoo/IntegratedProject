@@ -1,11 +1,9 @@
 package networking;
-/**
- * 
- */
 
-/**
- * @author sander
- * 
+/** 
+ * @author      Sander Koning <s.koning@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
  */
 public class DatagramDataSizeException extends Exception {
 

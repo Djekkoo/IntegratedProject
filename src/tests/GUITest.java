@@ -6,7 +6,10 @@ import application.GUI;
 
 /** 
  * Testklasse-interface voor <code>application.GUI</code>.
- * @author FlorianF
+ *
+ * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
  */
 public class GUITest extends TestCase {
 	GUI gui;

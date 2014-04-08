@@ -1,5 +1,10 @@
 package networking;
 
+/** 
+ * @author      Sander Koning <s.koning@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
+ */
 public class DataPacket{
 	
 	public static final int HEADER_LENGTH = 4;
