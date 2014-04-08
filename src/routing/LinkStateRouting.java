@@ -40,21 +40,6 @@ public class LinkStateRouting implements RoutingInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public void initialize() {
-		// TODO Initialize 
-		// Explore network and add neighbours.
-		try {
-			send.invoke(buildPacket());
-		} catch (CallbackException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
 	public void packetReceived(DataPacket p) {
 		// TODO Handle packet receives
 		boolean updated = parsePacket(p.getData());
@@ -65,9 +50,15 @@ public class LinkStateRouting implements RoutingInterface {
 	 * {@inheritDoc}
 	 */
 	@Override
+	//SimpleEntry: NextHop, Distance
 	public SimpleEntry<Byte, Byte> getRoute(Byte destination)
 			throws RouteNotFoundException {
 		// TODO Respond whenever a route is requested.
+		// TODO Pathfinding
+		
+		if(!nw.containsKey(destination))
+			throw new RouteNotFoundException("Destination unknown.");
+		
 		return null;
 	}
 
@@ -77,9 +68,33 @@ public class LinkStateRouting implements RoutingInterface {
 	@Override
 	public void networkMessage(NetworkMessage type, Byte node) {
 		// TODO Handle messages
-		
+		try{
+			switch(type) {
+			case NEWKEEPALIVE:
+				nw.get(DEVICE).add(node);
+				send.invoke(node,buildPacket());
+				break;
+			case DROPPED:
+				nw.get(DEVICE).remove(node);
+				break;
+			case NOKEEPALIVE:
+				break;
+			default:
+				break;
+			}
+		} catch(CallbackException e) {
+			e.printStackTrace();
+		}
 	}
-
+	
+	private void sendToNeighbours(byte[] data) {
+		TreeSet<Byte> neighbours = nw.get(DEVICE);
+		Byte[] p = buildPacket();
+		for(Byte nb : neighbours) {
+			send.invoke(nb,toByteArray(p));
+		}
+	}
+	
 	/**
 	 * Builds the routing packet to be sent to the neighbours.
 	 * Done by serializing the network data and adding metadata;
@@ -99,25 +114,38 @@ public class LinkStateRouting implements RoutingInterface {
 		//Is the packet newer than the last received packet?
 		if(timestamp > lastReceivedPacket) {
 			lastReceivedPacket = timestamp;
+			//Get how many hosts there are in the data
 			int numHosts = p[8];
 			int offset = 9;
 			for(int i = 0; i < numHosts; i++) {
+				//Get the host of the entry
 				byte host = p[0+offset];
+				//Get how many neighbours are in the entry
 				int numNeighbours = p[1+offset];
 				byte[] neighbours = new byte[numNeighbours];
 				System.arraycopy(p, 2+offset, neighbours, 0, numNeighbours);
 				offset += numNeighbours+2;
-				for(byte b : neighbours) {
+				
+				TreeSet<Byte> oldNeighbours = new TreeSet<Byte>();
+				for(Object nb : nw.get(host).toArray()) {
+					oldNeighbours.add((Byte)nb);
+				}
+				
+				for(byte nb : neighbours) {
 					//Do we have a host that we have no record of?
 					if(nw.containsKey(host)) {
-						((TreeSet<Byte>)nw.get(host)).add(b);
+						nw.get(host).add(nb);
+						oldNeighbours.remove(nb);
 					} else {
-						//I nominate the following two lines for
-						//	the "least readable code ever"-awards
 						nw.put(host, new TreeSet<Byte>());
-						((TreeSet<Byte>)nw.get(host)).add(b);
+						nw.get(host).add(nb);
+						oldNeighbours.remove(nb);
 						updated = true;
 					}
+				}
+				for(Byte nb : oldNeighbours) {
+					nw.remove(nb);
+					updated = true;
 				}
 			}
 		}
@@ -154,15 +182,7 @@ public class LinkStateRouting implements RoutingInterface {
 			}
 		}
 		
-		//A really hacky way to cast byte[] into Byte[]
-		Byte[] bytes = new Byte[p.size()];
-		int i = 0;
-		for(Object obj : p.toArray()) {
-			Byte b = (Byte)obj;
-			bytes[i++] = b;
-		}
-		
-		return bytes;
+		return toByteObjectArray(p);
 	}
 	
 	private void showNetwork() {
@@ -172,5 +192,38 @@ public class LinkStateRouting implements RoutingInterface {
 				System.out.println("\t" + b);
 			}
 		}
+	}
+	
+	private Byte[] toByteObjectArray(Object[] bytes) {
+		//ArrayList<Byte> into Byte[]
+		Byte[] byteObjects = new Byte[bytes.length];
+		int i = 0;
+		for(Object b : bytes) {
+			Byte bObj = (Byte)b;
+			byteObjects[i++] = bObj;
+		}
+		return byteObjects;
+	}
+	
+	private Byte[] toByteObjectArray(byte[] bytes) {
+		//A really hacky way to cast byte[] to Byte[]
+		Byte[] byteObjects = new Byte[bytes.length];
+		int i = 0;
+		for(byte b : bytes) {
+			Byte bObj = (Byte)b;
+			byteObjects[i++] = bObj;
+		}
+		return byteObjects;
+	}
+	
+	private byte[] toByteArray(Byte[] byteObjects) {
+		//A really hacky way to cast Byte[] to byte[]
+		byte[] bytes = new byte[byteObjects.length];
+		int i = 0;
+		for(Byte bObj : byteObjects) {
+			Byte b = bObj.byteValue();
+			bytes[i++] = b;
+		}
+		return bytes;
 	}
 }

@@ -16,11 +16,6 @@ import monitoring.NetworkMessage;
 public interface RoutingInterface {
 	
 	/**
-	 * Sets the routing system up.
-	 */
-	public void initialize();
-	
-	/**
 	 * Called if a packet is received.
 	 * 
 	 * @param 	p The data packet that is received
