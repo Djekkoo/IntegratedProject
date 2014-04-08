@@ -47,14 +47,16 @@ public class Networker implements Runnable {
 		}
 		
 		if(data.length <= 1016){
-			DataPacket dp = new DataPacket(self, destination, hops, sequencenr, data, false, false, false);
 			try {
+				DataPacket dp = new DataPacket(self, destination, hops, sequencenr, data, false, false, false);
 				dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, getFullAddress(connection), PORT));
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (DatagramDataSizeException e) {
+				e.printStackTrace();
 			}
 		}else{
-			// chop into packets
+			// TODO chop into packets
 		}
 	}
 	
