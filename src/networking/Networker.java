@@ -10,6 +10,11 @@ import java.util.Random;
 import main.Callback;
 import main.CallbackException;
 
+/** 
+ * @author      Sander Koning <s.koning@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
+ */
 public class Networker implements Runnable {
 	public static final int PORT = 1337;
 	

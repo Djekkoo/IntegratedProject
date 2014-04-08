@@ -1,5 +1,10 @@
 package tests;
 
+/** 
+ * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
+ * @version     0.1
+ * @since       2014-04-07
+ */
 public abstract class TestCase {
 	
 	private String description;
