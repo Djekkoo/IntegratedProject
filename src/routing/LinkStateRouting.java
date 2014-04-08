@@ -88,10 +88,15 @@ public class LinkStateRouting implements RoutingInterface {
 	}
 	
 	private void sendToNeighbours(byte[] data) {
-		TreeSet<Byte> neighbours = nw.get(DEVICE);
-		Byte[] p = buildPacket();
-		for(Byte nb : neighbours) {
-			send.invoke(nb,toByteArray(p));
+		try {
+			TreeSet<Byte> neighbours = nw.get(DEVICE);
+			Byte[] p = buildPacket();
+			for(Byte nb : neighbours) {
+				send.invoke(nb,toByteArray(p));
+			}
+		} catch (CallbackException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -194,9 +199,9 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
-	private Byte[] toByteObjectArray(Object[] bytes) {
+	private Byte[] toByteObjectArray(ArrayList<Byte> bytes) {
 		//ArrayList<Byte> into Byte[]
-		Byte[] byteObjects = new Byte[bytes.length];
+		Byte[] byteObjects = new Byte[bytes.size()];
 		int i = 0;
 		for(Object b : bytes) {
 			Byte bObj = (Byte)b;
