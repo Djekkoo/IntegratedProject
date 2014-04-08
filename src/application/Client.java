@@ -22,7 +22,9 @@ public class Client {
 	//Communicatie functies:	
 
 	public void packetReceived(DataPacket packet) {
-
+		String data = packet.getData();
+		
+		
 		this.sendChat(new String(packet.getData()));
 		
 		
