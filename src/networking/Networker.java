@@ -31,7 +31,7 @@ public class Networker implements Runnable {
 	}
 	
 	public void broadcast(byte[] data){
-		
+		this.send((byte)0xFF,data);
 	}
 	
 	public void setRouter(Callback router){
