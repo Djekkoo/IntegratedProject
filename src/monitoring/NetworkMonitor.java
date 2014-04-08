@@ -21,7 +21,7 @@ import main.CallbackException;
  */
 public class NetworkMonitor extends Thread {
 	
-	private Callback send;
+	private Callback broadcast;
 	private Callback networkCommuncation;
 	
 	private static long broadcastDelay = 500;
@@ -32,8 +32,8 @@ public class NetworkMonitor extends Thread {
 	
 
 	
-	public NetworkMonitor(Callback send, Callback error){
-		this.send = send;
+	public NetworkMonitor(Callback broadcast, Callback error){
+		this.broadcast = broadcast;
 		this.networkCommuncation = error;
 	}
 	
@@ -50,9 +50,11 @@ public class NetworkMonitor extends Thread {
 			
 			// broadcast
 			try {
-				//TODO: Change to broadcast
+				
 				time = System.currentTimeMillis();
-				this.send.invoke();
+				// -> networking.Networker.broadcast();
+				this.broadcast.invoke(new byte[0], Byte.valueOf((byte) 0), Boolean.FALSE, Boolean.FALSE, Boolean.TRUE);
+				
 			} catch (CallbackException e) {
 				System.out.println(e.getLocalizedMessage());
 			}

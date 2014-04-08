@@ -31,14 +31,14 @@ public class Communication {
 		
 		router = new routing.LinkStateRouting(new Callback(network, "send"));
 		network.setRouter(new Callback(router, "getRoute"));
-		new Thread(new Runnable() {
-		     public void run()
-		     {
-		          router.initialize();
-		     }
-		}).start();
+//		new Thread(new Runnable() {
+//		     public void run()
+//		     {
+//		          router.initialize();
+//		     }
+//		}).start();
 		
-		this.monitor = new NetworkMonitor(new Callback(network, "send"), new Callback(router, "networkMessage"));
+		this.monitor = new NetworkMonitor(new Callback(network, "broadcast"), new Callback(router, "networkMessage"));
 		this.monitor.start();
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
@@ -56,10 +56,6 @@ public class Communication {
 		else {
 			this.client.packetReceived(packet);
 		}
-		
-	}
-	
-	public void sendMessage(String message) {
 		
 	}
 	

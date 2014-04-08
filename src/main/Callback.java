@@ -4,8 +4,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * Implements a Link-State routing protocol to explore the network,
- * then uses pathfinding to find the shortest paths.
+ * Provides a callback, a pointer to a method of a specific object. The callback can be invoked in any other method, 
+ * without them having a reference to the original object.
  * 
  * @author      Jacco Brandt <j.h.haas@student.utwente.nl>
  * @version     0.1
