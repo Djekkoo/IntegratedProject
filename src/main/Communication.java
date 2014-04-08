@@ -34,7 +34,7 @@ public class Communication {
 		     }
 		}).start();
 		
-		this.monitor = new NetworkMonitor(new Callback(network, "send"), new Callback(router, "networkError"));
+		this.monitor = new NetworkMonitor(new Callback(network, "send"), new Callback(router, "networkMessage"));
 		this.monitor.run();
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
