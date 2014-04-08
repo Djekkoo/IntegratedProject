@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -25,7 +24,7 @@ import monitoring.NetworkMessage;
 public class LinkStateRouting implements RoutingInterface {
 	
 	private TreeMap nw = new TreeMap<Byte,Set<Byte>>();
-	private int lastPacket = 0;
+	private long lastPacket = 0;
 	
 	public LinkStateRouting(Callback send) {
 		Set<Byte> s = new TreeSet<Byte>();
@@ -41,6 +40,7 @@ public class LinkStateRouting implements RoutingInterface {
 		for(Byte by: b)
 		    pack[j++] = by.byteValue();
 		parsePacket(pack);
+		System.out.println("Done.");
 	}
 	
 	/**
@@ -90,27 +90,34 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @param	p	The bytes of the packet to be parsed.
 	 * @return 	True if the new packet caused the network tree to update,
 	 * @return	False if no changes were made.
-	 * @since       2014-04-08
+	 * @since	2014-04-08
 	 */
 	private boolean parsePacket(byte[] p) {
 		long timestamp = 0;
 		for(int i = 0; i < 8; i++) {
 			timestamp |= (p[i]<<48-(i*8));
 		}
-		boolean updated = 0;
-		int numHosts = p[8];
-		int offset = 9;
-		for(int i = 0; i < numHosts; i++) {
-			int host = p[0+offset];
-			int numNeighbours = p[1+offset];
-			byte[] neighbours = new byte[numNeighbours];
-			System.arraycopy(p, 2+offset, neighbours, 0, numNeighbours);
-			offset += numNeighbours+2;
-			for(byte b : neighbours) {
-				((Set<Byte>)nw.get(host)).add(b);
-			}
-			if(nw.containsKey(host)) {
-				updated = true;
+		
+		boolean updated = false;
+		if(timestamp > lastPacket) {
+			lastPacket = timestamp;
+			int numHosts = p[8];
+			int offset = 9;
+			for(int i = 0; i < numHosts; i++) {
+				int host = p[0+offset];
+				int numNeighbours = p[1+offset];
+				byte[] neighbours = new byte[numNeighbours];
+				System.arraycopy(p, 2+offset, neighbours, 0, numNeighbours);
+				offset += numNeighbours+2;
+				for(byte b : neighbours) {
+					if(nw.containsKey(host)) {
+						((Set<Byte>)nw.get(host)).add(b);
+					} else {
+						nw.put(host, new TreeSet<Byte>());
+						((Set<Byte>)nw.get(host)).add(b);
+						updated = true;
+					}
+				}
 			}
 		}
 		return updated;
@@ -121,7 +128,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 * Done by serializing the network data and adding metadata;
 	 * 
 	 * @return 	The Byte array containing the serialized network data and metadata.
-	 * @since	2014-04-09
+	 * @since	2014-04-08
 	 */
 	private Byte[] buildPacket() {
 		ArrayList<Byte> p = new ArrayList<Byte>();
