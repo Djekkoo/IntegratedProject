@@ -2,6 +2,7 @@ package routing;
 
 import java.util.AbstractMap.SimpleEntry;
 
+import networking.DataPacket;
 import networking.Networker;
 import monitoring.NetworkError;
 
@@ -16,6 +17,13 @@ public interface RoutingInterface {
 	 * Sets the routing system up.
 	 */
 	public void initialize();
+	
+	/**
+	 * Called if a packet is received.
+	 * 
+	 * @param 	p The data packet that is received
+	 */
+	public void packetReceived(DataPacket p);
 	
 	/**
 	 * Gets the fastest route to a given destination.
