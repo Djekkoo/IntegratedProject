@@ -31,8 +31,9 @@ public class Networker implements Runnable {
 		this.routerPacketReceived = routerPacketReceived;
 	}
 	
-	public void broadcast(byte[] data) throws IOException{
-		dSock.send(new DatagramPacket(data, data.length, InetAddress.getByAddress(new byte[]{(byte) 226,0,0,0}), PORT));
+	public void broadcast(byte[] data, byte hops, boolean ack, boolean routing, boolean keepalive) throws IOException, DatagramDataSizeException{
+		DataPacket dp = new DataPacket(self, (byte) 0xFF, hops, (byte) 0x0F, data, ack, routing, keepalive);
+		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, InetAddress.getByAddress(new byte[]{(byte) 226,0,0,0}), PORT));
 	}
 	
 	public void setRouter(Callback router){
