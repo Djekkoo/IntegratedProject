@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import networking.DataPacket;
 import main.Callback;
@@ -25,6 +27,9 @@ public class NetworkMonitor extends Thread {
 	private static long broadcastDelay = 500;
 	private static long dumpDelay = 1500;
 	private Map<Byte, Long> activity = new HashMap<Byte, Long>();
+	
+	private Lock lock = new ReentrantLock();
+	
 
 	
 	public NetworkMonitor(Callback send, Callback error){
@@ -52,6 +57,8 @@ public class NetworkMonitor extends Thread {
 				System.out.println(e.getLocalizedMessage());
 			}
 			
+			this.lock.lock();
+			
 			// check for timeouts
 			keys = this.activity.keySet();
 			i    = keys.iterator();
@@ -69,6 +76,8 @@ public class NetworkMonitor extends Thread {
 				
 			}
 			
+			this.lock.unlock();
+			
 			// sleep
 			try {
 				
@@ -84,7 +93,9 @@ public class NetworkMonitor extends Thread {
 	
 	// Received a new notification, putting heads-up at the data
 	public void messageReceived(DataPacket p) {
+		
 		Byte source = p.getSource();
+		this.lock.lock();
 		
 		if (!this.activity.containsKey(source)) {
 			this.activity.put(source, System.currentTimeMillis());
@@ -97,6 +108,7 @@ public class NetworkMonitor extends Thread {
 		}
 		
 		this.activity.put(source, System.currentTimeMillis());
+		this.lock.unlock();
 		
 	}
 }
