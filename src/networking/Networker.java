@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
@@ -24,22 +25,29 @@ import main.IntegrationProject;
  * @version 0.1
  * @since 2014-04-07
  */
-public class Networker extends Thread {
-	public static final int PORT = 1337;
+public class Networker {
+	public static final int UNIPORT = 1337;
+	public static final int MULTIPORT = 7001;
 
 	DatagramSocket dSock;
+	MulticastSocket mSock;
 
 	Callback routerGetRoute;
 	Callback packetReceived;
 	
 	byte sequencenr = (byte) 0;
 
-	public Networker(Callback routerPacketReceived) throws SocketException {
-		dSock = new DatagramSocket(PORT);
+	public Networker(Callback routerPacketReceived) throws IOException {
+		dSock = new DatagramSocket(UNIPORT);
+		mSock = new MulticastSocket(MULTIPORT);
+		mSock.joinGroup(InetAddress.getByName("226.0.0.0"));
+		
 		IntegrationProject.DEVICE = dSock.getLocalAddress().getAddress()[3];
 		this.packetReceived = routerPacketReceived;
 
-		this.start();
+		(new UniMonitor(new Callback(this, "receive"), dSock)).start();
+		
+		(new MultiMonitor(new Callback(this, "receive"), mSock)).start();
 	}
 
 	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing,
@@ -50,13 +58,13 @@ public class Networker extends Thread {
 		
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				InetAddress.getByAddress(new byte[] { (byte) 226, 0, 0, 0 }),
-				PORT));
+				UNIPORT));
 	}
 	
 	public void broadcast(DataPacket dp) throws IOException{
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				InetAddress.getByAddress(new byte[] { (byte) 226, 0, 0, 0 }),
-				PORT));
+				UNIPORT));
 	}
 
 	public void setRouter(Callback router) {
@@ -79,7 +87,7 @@ public class Networker extends Thread {
 
 		for (DataPacket p : packets) {
 			dSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
-					getFullAddress(connection.getKey()), PORT));
+					getFullAddress(connection.getKey()), UNIPORT));
 		}
 	}
 	
@@ -96,7 +104,7 @@ public class Networker extends Thread {
 		}
 		
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
-				getFullAddress(connection.getKey()), PORT));
+				getFullAddress(connection.getKey()), UNIPORT));
 	}
 
 	private byte[] processPackets(LinkedList<DataPacket> packets) {
@@ -143,7 +151,6 @@ public class Networker extends Thread {
 
 			try {
 				// TODO fix possible bug when sequencenr reaches max
-				// TODO fix "more boolean" bug
 				dp = new DataPacket(IntegrationProject.DEVICE, destination,
 						hops, (byte) (sequencenr + i), chunk, false, false,
 						false, moar);
@@ -188,23 +195,6 @@ public class Networker extends Thread {
 			d.decreaseHops();
 			if(d.getHops() > 0){
 				send(d);
-			}
-		}
-	}
-
-	@Override
-	public void run() {
-		byte[] buffer = new byte[1024];
-		DatagramPacket dpack = new DatagramPacket(buffer, buffer.length);
-
-		while (true) {
-			try {
-				dSock.receive(dpack);
-				receive(new DataPacket(dpack.getData()));
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (DatagramDataSizeException e) {
-				e.printStackTrace();
 			}
 		}
 	}

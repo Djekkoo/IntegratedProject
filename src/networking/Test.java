@@ -1,5 +1,6 @@
 package networking;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.SocketException;
@@ -86,7 +87,13 @@ public class Test {
 			
 			LinkedList<DataPacket> packets = new LinkedList<DataPacket>();
 			
-			Object networker = new Networker(new Callback(this, "getbyte"));
+			Object networker = null;
+			try {
+				networker = new Networker(new Callback(this, "getbyte"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			Class[] args = new Class[2];
 			args[0] = Byte.class;
@@ -109,7 +116,7 @@ public class Test {
 				System.out.println("Packets generating/decoding failed");
 			
 			System.out.println("Was: " + stringFrombytes(result) + "\nS2B: " + stringFrombytes(data));
-		} catch (SocketException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
 		}
 
