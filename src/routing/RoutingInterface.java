@@ -3,7 +3,6 @@ package routing;
 import java.util.AbstractMap.SimpleEntry;
 
 import networking.DataPacket;
-import networking.Networker;
 import monitoring.NetworkMessage;
 
 /**
@@ -37,4 +36,11 @@ public interface RoutingInterface {
 	 * @param 	node The node that caused the error
 	 */
 	public void networkMessage(NetworkMessage type, Byte node);
+	
+	/**
+	 * Returns the longest route in the entire network.
+	 * 
+	 * @return 	The amount of hops the longest route takes.
+	 */
+	public Byte getLongestRoute();
 }

@@ -37,12 +37,17 @@ public class LinkStateRouting implements RoutingInterface {
 		this.DEVICE = main.IntegrationProject.DEVICE;
 	}
 	
+	//PUBLIC
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	public void packetReceived(DataPacket p) {
 		// TODO Handle packet receives
 		boolean updated = parsePacket(p.getData());
+		if(updated) {
+			sendToNeighbours(buildPacket());
+		}
 		
 	}
 	
@@ -55,11 +60,18 @@ public class LinkStateRouting implements RoutingInterface {
 			throws RouteNotFoundException {
 		// TODO Respond whenever a route is requested.
 		// TODO Pathfinding
-		
 		if(!nw.containsKey(destination))
 			throw new RouteNotFoundException("Destination unknown.");
+		else if(nw.get(destination).isEmpty())
+			throw new RouteNotFoundException("Destination unreachable; no route to host.");
 		
-		return null;
+		int[] dist = new int[nw.size()];
+		int[] prev = new int[nw.size()];
+		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
+			dist[neighbour.getKey()] = 999;
+		}
+		
+		return new SimpleEntry<Byte,Byte>((Byte)(byte)1,(Byte)(byte)1);
 	}
 
 	/**
@@ -87,12 +99,17 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
-	private void sendToNeighbours(byte[] data) {
+	public Byte getLongestRoute() {
+		return 0;
+	}
+	
+	// PRIVATE
+	
+	private void sendToNeighbours(Byte[] data) {
 		try {
 			TreeSet<Byte> neighbours = nw.get(DEVICE);
-			Byte[] p = buildPacket();
 			for(Byte nb : neighbours) {
-				send.invoke(nb,toByteArray(p));
+				send.invoke(nb,toByteArray(data));
 			}
 		} catch (CallbackException e) {
 			// TODO Auto-generated catch block
@@ -117,7 +134,7 @@ public class LinkStateRouting implements RoutingInterface {
 		boolean updated = false;
 		
 		//Is the packet newer than the last received packet?
-		if(timestamp > lastReceivedPacket) {
+		if(timestamp > lastReceivedPacket && timestamp > lastSentPacket) {
 			lastReceivedPacket = timestamp;
 			//Get how many hosts there are in the data
 			int numHosts = p[8];
