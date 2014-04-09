@@ -11,7 +11,7 @@ public class IntegrationProject {
 
 	public static byte DEVICE = 1;
 	public static byte GROUP = 14;
-	public static String WLAN = "Wlan1Groepje";
+	public static String WLAN = "Wlan1";
 	public static String BROADCAST = "266.0.0.0/8";
 	public Communication communication;
 
