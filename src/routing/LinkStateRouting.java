@@ -43,8 +43,6 @@ public class LinkStateRouting implements RoutingInterface {
 	private HashMap<Byte,Byte> nextHops = new HashMap<Byte,Byte>();
 	private HashMap<Byte,Byte> routeLens = new HashMap<Byte,Byte>();
 	
-	private DijkstraAlgorithm pathFinder;
-	
 	public LinkStateRouting(Callback send) {
 		this.send = send;
 		this.DEVICE = IntegrationProject.DEVICE;
