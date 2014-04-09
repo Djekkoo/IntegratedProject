@@ -29,6 +29,8 @@ public class Communication {
 		} catch (SocketException e) {
 			System.out.println("Something terrible happened, Sander screwed up his class: " + e.getMessage());
 			System.exit(0);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		
 		router = new routing.LinkStateRouting(new Callback(network, "send"));

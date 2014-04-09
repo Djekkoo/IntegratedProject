@@ -28,6 +28,8 @@ import main.IntegrationProject;
 public class Networker {
 	public static final int UNIPORT = 1337;
 	public static final int MULTIPORT = 7001;
+	
+	public static InetAddress multicastAddress;
 
 	DatagramSocket dSock;
 	MulticastSocket mSock;
@@ -38,9 +40,10 @@ public class Networker {
 	byte sequencenr = (byte) 0;
 
 	public Networker(Callback routerPacketReceived) throws IOException {
+		multicastAddress = InetAddress.getByName("226.0.0.0");
 		dSock = new DatagramSocket(UNIPORT);
 		mSock = new MulticastSocket(MULTIPORT);
-		mSock.joinGroup(InetAddress.getByName("226.0.0.0"));
+		mSock.joinGroup(multicastAddress);
 		
 		IntegrationProject.DEVICE = dSock.getLocalAddress().getAddress()[3];
 		this.packetReceived = routerPacketReceived;
@@ -56,15 +59,11 @@ public class Networker {
 		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0xFF,
 				hops, (byte) 0x0F, data, ack, routing, keepalive, false);
 		
-		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
-				InetAddress.getByAddress(new byte[] { (byte) 226, 0, 0, 0 }),
-				UNIPORT));
+		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, UNIPORT));
 	}
 	
 	public void broadcast(DataPacket dp) throws IOException{
-		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
-				InetAddress.getByAddress(new byte[] { (byte) 226, 0, 0, 0 }),
-				UNIPORT));
+		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, UNIPORT));
 	}
 
 	public void setRouter(Callback router) {
