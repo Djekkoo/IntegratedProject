@@ -131,8 +131,10 @@ public class Client {
 	
 	public void updateNetwork(Byte source, NetworkMessage type) {
 		if (type == NetworkMessage.DROPPED) {
+			System.out.println("Our friend "+table.get(source)+"("+source+") dropped it like it's hot.");
 			table.remove(source);
 		} else if (type == NetworkMessage.JOINED) {
+			System.out.println("Our friend "+table.get(source)+"("+source+") joined his sorry ass.");
 			try {
 				sendMsg.invoke("USER " + name,source);
 			} catch (CallbackException e) {
