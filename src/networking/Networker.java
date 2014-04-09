@@ -56,7 +56,7 @@ public class Networker {
 	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing,
 			Boolean keepalive) throws IOException, DatagramDataSizeException {
 		
-		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0xFF,
+		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
 				hops, (byte) 0x0F, data, ack, routing, keepalive, false);
 		
 		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, UNIPORT));
@@ -175,7 +175,7 @@ public class Networker {
 		return null;
 	}
 
-	private void receive(DataPacket d) throws IOException {
+	public void receive(DataPacket d) throws IOException {
 		if (d.getDestination() == IntegrationProject.DEVICE
 				|| d.getDestination() == (byte) 0x0F){
 			
