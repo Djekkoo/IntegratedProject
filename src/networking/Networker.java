@@ -30,6 +30,8 @@ public class Networker extends Thread {
 
 	Callback routerGetRoute;
 	Callback packetReceived;
+	
+	byte sequencenr = (byte) 0;
 
 	public Networker(Callback routerPacketReceived) throws SocketException {
 		dSock = new DatagramSocket(PORT);
@@ -41,8 +43,10 @@ public class Networker extends Thread {
 
 	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing,
 			Boolean keepalive) throws IOException, DatagramDataSizeException {
+		
 		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0xFF,
 				hops, (byte) 0x0F, data, ack, routing, keepalive);
+		
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				InetAddress.getByAddress(new byte[] { (byte) 226, 0, 0, 0 }),
 				PORT));
@@ -125,10 +129,10 @@ public class Networker extends Thread {
 
 	private InetAddress getFullAddress(Byte postfix) {
 
-		byte[] myAddress = dSock.getLocalAddress().getAddress();
-		myAddress[3] = postfix;
+		byte[] address = new byte[]{(byte) 192, (byte) 168, (byte) 5, postfix};
+		
 		try {
-			return InetAddress.getByAddress(myAddress);
+			return InetAddress.getByAddress(address);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
