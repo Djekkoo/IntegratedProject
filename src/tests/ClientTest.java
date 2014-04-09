@@ -56,7 +56,7 @@ public class ClientTest extends TestCase {
     	 byte[] b = data.getBytes();
          //byte[] b = data.getBytes(Charset.forName("UTF-8"));
          try {
-        	 packet = new DataPacket((byte) 0xf, (byte) 0xf, (byte) 0xf, (byte) 0xf, b, (Boolean) true, (Boolean) true, (Boolean) true);
+        	 packet = new DataPacket((byte) 0xf, (byte) 0xf, (byte) 0xf, (byte) 0xf, b, (Boolean) true, (Boolean) true, (Boolean) true, (Boolean) true);
 		} catch (DatagramDataSizeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
