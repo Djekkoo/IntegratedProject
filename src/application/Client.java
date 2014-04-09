@@ -29,6 +29,8 @@ public class Client {
 		//Start de GUI
 		this.name = "";
 		gui = new GUI(this);
+		//wait for initiation sequence
+		try {Thread.sleep(3000);} catch (Exception e) {	}
 		sendIdentity();
 	}
 	
