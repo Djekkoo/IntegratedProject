@@ -78,7 +78,7 @@ public class IntegrationProject {
 
 	}
 	
-	private InetAddress getIP() throws SocketException, UnknownHostException {
+	public static InetAddress getIP() throws SocketException, UnknownHostException {
 		Enumeration<NetworkInterface> ifs = NetworkInterface.getNetworkInterfaces();
 		NetworkInterface iface;
 		Enumeration<InetAddress> addresses;

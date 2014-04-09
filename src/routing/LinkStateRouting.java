@@ -3,14 +3,19 @@
  */
 package routing;
 
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import dijkstra.DijkstraAlgorithm;
+import dijkstra.model.*;
 import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
@@ -31,10 +36,16 @@ public class LinkStateRouting implements RoutingInterface {
 	private long lastSentPacket = 0;
 	private Callback send;
 	private byte DEVICE;
+	private Vertex[] vertexArray;
 	
 	public LinkStateRouting(Callback send) {
 		this.send = send;
-		this.DEVICE = main.IntegrationProject.DEVICE;
+		try {
+			this.DEVICE = main.IntegrationProject.getIP().getAddress()[3];
+		} catch (SocketException | UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	//PUBLIC
@@ -65,11 +76,11 @@ public class LinkStateRouting implements RoutingInterface {
 		else if(nw.get(destination).isEmpty())
 			throw new RouteNotFoundException("Destination unreachable; no route to host.");
 		
-		int[] dist = new int[nw.size()];
+		/*int[] dist = new int[nw.size()];
 		int[] prev = new int[nw.size()];
 		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
 			dist[neighbour.getKey()] = 999;
-		}
+		}*/
 		
 		return new SimpleEntry<Byte,Byte>((Byte)(byte)1,(Byte)(byte)1);
 	}
@@ -104,6 +115,28 @@ public class LinkStateRouting implements RoutingInterface {
 	}
 	
 	// PRIVATE
+	
+	private void calculatePaths() {
+		List<Vertex> vertices = new ArrayList<Vertex>();
+		List<Edge> edges = new ArrayList<Edge>();
+		
+		Vertex[] vertexArray = new Vertex[nw.size()];
+		
+		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
+			String id = neighbour.getKey().toString();
+			Vertex v = new Vertex(id,id);
+			vertices.add(v);
+			vertexArray[neighbour.getKey()] = v;
+		}
+		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
+			for(Byte b : neighbour.getValue()) {
+				String name = b.toString() + neighbour.getKey().toString();
+				edges.add(new Edge(name,vertexArray[neighbour.getKey()],vertexArray[b],1));
+			}
+		}
+		Graph network = new Graph(vertices, edges);
+		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(network);
+	}
 	
 	private void sendToNeighbours(Byte[] data) {
 		try {
