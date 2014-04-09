@@ -49,74 +49,9 @@ public class LinkStateRouting implements RoutingInterface {
 		this.send = send;
 		this.DEVICE = IntegrationProject.DEVICE;
 		
-		TreeSet<Byte> t = new TreeSet<Byte>();
-		t.add((byte)2);
-		t.add((byte)3);
-		nw.put((byte)1,t);
-		
-		t = new TreeSet<Byte>();
-		t.add((byte)1);
-		t.add((byte)3);
-		nw.put((byte)2,t);
-		
-		t = new TreeSet<Byte>();
-		t.add((byte)1);
-		t.add((byte)2);
-		t.add((byte)4);
-		nw.put((byte)3,t);
-		
-		t = new TreeSet<Byte>();
-		t.add((byte)3);
-		t.add((byte)5);
-		nw.put((byte)4,t);
-		
-		t = new TreeSet<Byte>();
-		t.add((byte)4);
-		nw.put((byte)5,t);
-		
-		LinkedList<Vertex> path = findPath((byte)1,(byte)5);
-		for(Vertex v : path) {
-			System.out.print(v.getId() + " -> ");
-		}
-		System.out.println("Done!");
-		
-		nw.get((byte)3).remove((byte)1);
-		nw.get((byte)1).remove((byte)3);
-		nw.get((byte)3).remove((byte)4);
-		nw.get((byte)4).remove((byte)3);
-		
-		path = findPath((byte)1,(byte)5);
-		if(path == null) {
-			System.out.println("1 -> NO ROUTE FOUND");
-		} else {
-			for(Vertex v : path) {
-				System.out.print(v.getId() + " -> ");
-			}
-			System.out.println("Done!");
-		}
-		
-		nw.get((byte)1).add((byte)6);
-		nw.get((byte)5).add((byte)6);
-		
-		t = new TreeSet<Byte>();
-		t.add((byte)1);
-		t.add((byte)5);
-		nw.put((byte)6,t);
-		
-		path = findPath((byte)1,(byte)5);
-		for(Vertex v : path) {
-			System.out.print(v.getId() + " -> ");
-		}
-		System.out.println("Done!");
+		nw.put(DEVICE, new TreeSet<Byte>());
 		
 		update();
-		try {
-			System.out.println(this.getRoute((byte)5).getKey() + " " + this.getRoute((byte)5).getValue());
-			System.out.println(this.getLongestRoute()+ "");
-		} catch (RouteNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
 	}
 	
@@ -231,6 +166,16 @@ public class LinkStateRouting implements RoutingInterface {
 			}
 		}
 		return paths;
+	}
+	
+	public void addPath(Byte A, Byte B) {
+		nw.get((byte)A).add((byte)B);
+		nw.get((byte)B).add((byte)A);
+	}
+	
+	public void removePath(Byte A, Byte B) {
+		nw.get((byte)A).remove((byte)B);
+		nw.get((byte)B).remove((byte)A);
 	}
 	
 	private void update() {
