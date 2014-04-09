@@ -40,12 +40,11 @@ public class Networker {
 	byte sequencenr = (byte) 0;
 
 	public Networker(Callback routerPacketReceived) throws IOException {
-		multicastAddress = InetAddress.getByName("226.0.0.0");
+		multicastAddress = InetAddress.getByName(IntegrationProject.BROADCAST);
 		dSock = new DatagramSocket(UNIPORT);
 		mSock = new MulticastSocket(MULTIPORT);
 		mSock.joinGroup(multicastAddress);
 		
-		IntegrationProject.DEVICE = dSock.getLocalAddress().getAddress()[3];
 		this.packetReceived = routerPacketReceived;
 
 		(new UniMonitor(new Callback(this, "receive"), dSock)).start();
@@ -55,15 +54,15 @@ public class Networker {
 
 	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing,
 			Boolean keepalive) throws IOException, DatagramDataSizeException {
-		
+		System.out.println(IntegrationProject.DEVICE + " boom!");
 		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
 				hops, (byte) 0x0F, data, ack, routing, keepalive, false);
 		
-		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, UNIPORT));
+		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, MULTIPORT));
 	}
 	
 	public void broadcast(DataPacket dp) throws IOException{
-		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, UNIPORT));
+		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, MULTIPORT));
 	}
 
 	public void setRouter(Callback router) {
