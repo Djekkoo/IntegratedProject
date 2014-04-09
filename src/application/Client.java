@@ -15,15 +15,25 @@ import main.CallbackException;
 public class Client {
 	private Callback sendMsg;
 	private GUI gui;
+	private String name;
 	
 	public Client(Callback sendMsg) {
 		this.sendMsg = sendMsg;
 		//Start de GUI
+		this.name = "";
 		gui = new GUI(this);
 	}
 	
 	public GUI getGUI() {
 		return gui;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	//Communicatie functies:	
@@ -63,9 +73,10 @@ public class Client {
 
 	public void sendChat(String text) {
 		//TODO: Stuur naar andere peers
-		gui.updateChat(text);
+		String chat = getName() + ": " + text;
+		gui.updateChat(chat);
 		try {
-			sendMsg.invoke(text);
+			sendMsg.invoke(chat);
 		} catch (CallbackException e) {
 			System.out.println(e.getMessage());
 		}

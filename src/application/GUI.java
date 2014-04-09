@@ -13,20 +13,20 @@ import java.awt.event.KeyEvent;
 public class GUI extends javax.swing.JFrame {
 	private static final long serialVersionUID = 1L;
 	private Client client;
-	private String name;
 	
 	/**
 	 * Creates new form GUI
 	 */
 	public GUI(Client client) {
 		this.client = client;
-		name = "";
+		String name = "";
 		while (name.equals("")) {
 			name = JOptionPane.showInputDialog("Hoe wil je heten?","0779 Cappuchino");
 			if (name == null) {
 				System.exit(0);
 			}
 		}
+		client.setName(name);
 		this.setVisible(true);
 		initComponents();
 	}
@@ -70,7 +70,7 @@ public class GUI extends javax.swing.JFrame {
 
 		userList.setFont(standardFont); // NOI18N
 		userList.setModel(new javax.swing.AbstractListModel() {
-			String[] strings = { name };
+			String[] strings = { client.getName() };
 
 			public int getSize() {
 				return strings.length;
