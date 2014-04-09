@@ -129,7 +129,15 @@ public class Client {
 	}
 	
 	public void updateNetwork(Byte source, NetworkMessage type) {
-		
+		if (type == NetworkMessage.DROPPED) {
+			table.remove(source);
+		} else if (type == NetworkMessage.JOINED) {
+			try {
+				sendMsg.invoke("USER " + name,source);
+			} catch (CallbackException e) {
+				System.out.println(e.getMessage());
+			}
+		}
 	}
 	
 }
