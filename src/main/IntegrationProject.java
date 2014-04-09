@@ -31,6 +31,13 @@ public class IntegrationProject {
 			
 			// linux
 		} else {
+			try {
+				DEVICE = getIP().getAddress()[3];
+				System.out.println(DEVICE + " ");
+			} catch (SocketException | UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			/*
 			Runtime.getRuntime().exec(
 					"gksudo ./adhoc_linux.sh " + WLAN + " " + GROUP + " "
@@ -78,7 +85,7 @@ public class IntegrationProject {
 
 	}
 	
-	public static InetAddress getIP() throws SocketException, UnknownHostException {
+	private static InetAddress getIP() throws SocketException, UnknownHostException {
 		Enumeration<NetworkInterface> ifs = NetworkInterface.getNetworkInterfaces();
 		NetworkInterface iface;
 		Enumeration<InetAddress> addresses;

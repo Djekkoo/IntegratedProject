@@ -3,8 +3,6 @@
  */
 package routing;
 
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -19,6 +17,7 @@ import dijkstra.model.*;
 import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
+import main.IntegrationProject;
 import monitoring.NetworkMessage;
 
 /**
@@ -40,12 +39,8 @@ public class LinkStateRouting implements RoutingInterface {
 	
 	public LinkStateRouting(Callback send) {
 		this.send = send;
-		try {
-			this.DEVICE = main.IntegrationProject.getIP().getAddress()[3];
-		} catch (SocketException | UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.DEVICE = IntegrationProject.DEVICE;
+		System.out.println(this.DEVICE + "");
 	}
 	
 	//PUBLIC
@@ -84,7 +79,7 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		return new SimpleEntry<Byte,Byte>((Byte)(byte)1,(Byte)(byte)1);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -239,6 +234,12 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		return toByteObjectArray(p);
 	}
+	
+	/**
+	 * Prints the nodes and prints what nodes they are connected to.
+	 * 
+	 * @since	2014-04-08
+	 */
 	
 	private void showNetwork() {
 		for(Entry<Byte,TreeSet<Byte>> e : nw.entrySet()) {
