@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -35,12 +37,91 @@ public class LinkStateRouting implements RoutingInterface {
 	private long lastSentPacket = 0;
 	private Callback send;
 	private byte DEVICE;
+	
 	private Vertex[] vertexArray;
+	
+	private HashMap<Byte,Byte> nextHops = new HashMap<Byte,Byte>();
+	private HashMap<Byte,Byte> routeLens = new HashMap<Byte,Byte>();
+	
+	private DijkstraAlgorithm pathFinder;
 	
 	public LinkStateRouting(Callback send) {
 		this.send = send;
 		this.DEVICE = IntegrationProject.DEVICE;
-		System.out.println(this.DEVICE + "");
+		
+		TreeSet<Byte> t = new TreeSet<Byte>();
+		t.add((byte)2);
+		t.add((byte)3);
+		nw.put((byte)1,t);
+		
+		t = new TreeSet<Byte>();
+		t.add((byte)1);
+		t.add((byte)3);
+		nw.put((byte)2,t);
+		
+		t = new TreeSet<Byte>();
+		t.add((byte)1);
+		t.add((byte)2);
+		t.add((byte)4);
+		nw.put((byte)3,t);
+		
+		t = new TreeSet<Byte>();
+		t.add((byte)3);
+		t.add((byte)5);
+		nw.put((byte)4,t);
+		
+		t = new TreeSet<Byte>();
+		t.add((byte)4);
+		nw.put((byte)5,t);
+		
+		LinkedList<Vertex> path = findPath((byte)1,(byte)5);
+		for(Vertex v : path) {
+			System.out.print(v.getId() + " -> ");
+		}
+		System.out.println("Done!");
+		
+		nw.get((byte)3).remove((byte)1);
+		nw.get((byte)1).remove((byte)3);
+		nw.get((byte)3).remove((byte)4);
+		nw.get((byte)4).remove((byte)3);
+		
+		path = findPath((byte)1,(byte)5);
+		if(path == null) {
+			System.out.println("1 -> NO ROUTE FOUND");
+		} else {
+			for(Vertex v : path) {
+				System.out.print(v.getId() + " -> ");
+			}
+			System.out.println("Done!");
+		}
+		
+		nw.get((byte)1).add((byte)6);
+		nw.get((byte)5).add((byte)6);
+		
+		t = new TreeSet<Byte>();
+		t.add((byte)1);
+		t.add((byte)5);
+		nw.put((byte)6,t);
+		
+		path = findPath((byte)1,(byte)5);
+		for(Vertex v : path) {
+			System.out.print(v.getId() + " -> ");
+		}
+		System.out.println("Done!");
+		
+		update();
+		try {
+			System.out.println(this.getRoute((byte)5).getKey() + " " + this.getRoute((byte)5).getValue());
+			System.out.println(this.getLongestRoute()+ "");
+		} catch (RouteNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void main(String[] args) {
+		RoutingInterface r = new LinkStateRouting(null);
 	}
 	
 	//PUBLIC
@@ -65,37 +146,40 @@ public class LinkStateRouting implements RoutingInterface {
 	public SimpleEntry<Byte, Byte> getRoute(Byte destination)
 			throws RouteNotFoundException {
 		// TODO Respond whenever a route is requested.
-		// TODO Pathfinding
 		if(!nw.containsKey(destination))
 			throw new RouteNotFoundException("Destination unknown.");
-		else if(nw.get(destination).isEmpty())
+		else if(nw.get(destination).isEmpty() || nw.get(DEVICE).isEmpty())
 			throw new RouteNotFoundException("Destination unreachable; no route to host.");
 		
-		/*int[] dist = new int[nw.size()];
-		int[] prev = new int[nw.size()];
-		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
-			dist[neighbour.getKey()] = 999;
-		}*/
+		Byte nextHop = nextHops.get(destination);
+		Byte routeLen = routeLens.get(destination);
+		if(nextHop == -1 || routeLen == -1) {
+			update();
+			throw new RouteNotFoundException("Destination unreachable; no route to host.");
+		}
 		
-		return new SimpleEntry<Byte,Byte>((Byte)(byte)1,(Byte)(byte)1);
+		return new SimpleEntry<Byte,Byte>(nextHop,routeLen);
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void networkMessage(NetworkMessage type, Byte node) {
+	public void networkMessage(Byte node, NetworkMessage type) {
 		// TODO Handle messages
 		try{
 			switch(type) {
 			case NEWKEEPALIVE:
 				nw.get(DEVICE).add(node);
 				send.invoke(node,buildPacket());
+				update();
 				break;
 			case DROPPED:
 				nw.get(DEVICE).remove(node);
+				update();
 				break;
 			case NOKEEPALIVE:
+				update();
 				break;
 			default:
 				break;
@@ -105,17 +189,72 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
+	public Boolean isReachable(Byte node) {
+		return (findPath(DEVICE,node) == null);
+	}
+	
 	public Byte getLongestRoute() {
-		return 0;
+		Byte max = 0;
+		for(Entry<Byte,Byte> e : routeLens.entrySet()) {
+			Byte nextHop = e.getValue();
+			if(nextHop > max) {
+				max = nextHop;
+			}
+		}
+		return max;
 	}
 	
 	// PRIVATE
 	
-	private void calculatePaths() {
+	private LinkedList<Vertex> findPath(Byte src, Byte dst) {
+		DijkstraAlgorithm pf;
+		LinkedList<Vertex> path;
+		pf = getPathFinder();
+		
+		if(vertexArray[src] != null && vertexArray[dst] != null) {
+			pf.execute(vertexArray[src]);
+			path = pf.getPath(vertexArray[dst]);
+			return path;
+		}
+		return null;
+	}
+	
+	private HashMap<Byte,LinkedList<Vertex>> findAllPaths() {
+		DijkstraAlgorithm pf;
+		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
+		pf = getPathFinder();
+		pf.execute(vertexArray[DEVICE]);
+		for(Vertex v : vertexArray) {
+			if(v != null) {
+				Byte vID = Byte.parseByte(v.getId());
+				paths.put(vID,pf.getPath(v));
+			}
+		}
+		return paths;
+	}
+	
+	private void update() {
+		HashMap<Byte,LinkedList<Vertex>> paths = findAllPaths();
+		nextHops.clear();
+		routeLens.clear();
+		for(Entry<Byte,LinkedList<Vertex>> path : paths.entrySet()) {
+			Byte id = path.getKey();
+			if(path.getValue() != null) {
+				Byte nextHop = Byte.parseByte(path.getValue().get(1).getId());
+				nextHops.put(id,nextHop);
+				routeLens.put(id,(byte)(path.getValue().size()-2));
+			} else {
+				nextHops.put(id,(byte)(-1));
+				routeLens.put(id,(byte)(-1));
+			}
+		}
+	}
+	
+	private DijkstraAlgorithm getPathFinder() {
 		List<Vertex> vertices = new ArrayList<Vertex>();
 		List<Edge> edges = new ArrayList<Edge>();
 		
-		Vertex[] vertexArray = new Vertex[nw.size()];
+		this.vertexArray = new Vertex[16];
 		
 		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
 			String id = neighbour.getKey().toString();
@@ -131,6 +270,7 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 		Graph network = new Graph(vertices, edges);
 		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(network);
+		return dijkstra;
 	}
 	
 	private void sendToNeighbours(Byte[] data) {

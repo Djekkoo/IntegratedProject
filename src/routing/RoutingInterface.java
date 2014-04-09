@@ -35,7 +35,16 @@ public interface RoutingInterface {
 	 * @param 	type Network Error type
 	 * @param 	node The node that caused the error
 	 */
-	public void networkMessage(NetworkMessage type, Byte node);
+	public void networkMessage(Byte node, NetworkMessage type);
+	
+	/**
+	 * Checks whether a node is still reachable.
+	 * 
+	 * @param	node The node to check the connection to
+	 * @return 	True if the node still has a route.
+	 * @return	False if the node has no known route.
+	 */
+	public Boolean isReachable(Byte node);
 	
 	/**
 	 * Returns the longest route in the entire network.
