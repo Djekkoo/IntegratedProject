@@ -1,11 +1,13 @@
 package main;
 
+import java.io.IOException;
 import java.net.SocketException;
 
 import application.Client;
 import routing.RoutingInterface;
 import monitoring.NetworkMonitor;
 import networking.DataPacket;
+import networking.DatagramDataSizeException;
 import networking.Networker;
 
 /** 
@@ -58,6 +60,17 @@ public class Communication {
 		else {
 			this.client.packetReceived(packet);
 		}
+		
+	}
+	
+	public void sendMessage(String message, Byte destination) throws IOException, DatagramDataSizeException {
+		
+		if (destination.equals(0x0F)) {
+			this.network.broadcast(message.getBytes(), this.router.getLongestRoute(), Boolean.FALSE, Boolean.FALSE, Boolean.TRUE);
+			return;
+		}
+		
+		this.network.send(destination, message.getBytes());
 		
 	}
 	
