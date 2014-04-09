@@ -40,10 +40,10 @@ public class Communication {
 //		     }
 //		}).start();
 		
-		this.monitor = new NetworkMonitor(new Callback(network, "broadcast"), new Callback(router, "networkMessage"));
-		this.monitor.start();
-		
 		this.client = new Client(new Callback(this, "sendMessage"));
+		
+		this.monitor = new NetworkMonitor(new Callback(network, "broadcast"), new Callback(router, "networkMessage"), new Callback(this.client, "updateNetwork"));
+		this.monitor.start();
 		
 	}
 	

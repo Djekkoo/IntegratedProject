@@ -23,6 +23,7 @@ public class NetworkMonitor extends Thread {
 	
 	private Callback broadcast;
 	private Callback networkCommuncation;
+	private Callback client;
 	
 	private static long broadcastDelay = 500;
 	private static long dumpDelay = 1500;
@@ -32,9 +33,10 @@ public class NetworkMonitor extends Thread {
 	
 
 	
-	public NetworkMonitor(Callback broadcast, Callback error){
+	public NetworkMonitor(Callback broadcast, Callback error, Callback client){
 		this.broadcast = broadcast;
 		this.networkCommuncation = error;
+		this.client = client;
 	}
 	
 	public void run() {
@@ -72,6 +74,7 @@ public class NetworkMonitor extends Thread {
 				if (this.activity.get(key) <= threshold) {
 					this.activity.remove(key);
 					try {
+						this.client.invoke(key, NetworkMessage.NOKEEPALIVE);
 						this.networkCommuncation.invoke(key, NetworkMessage.NOKEEPALIVE);
 					} catch (CallbackException e) { }
 				}
@@ -102,6 +105,7 @@ public class NetworkMonitor extends Thread {
 		if (!this.activity.containsKey(source)) {
 			this.activity.put(source, System.currentTimeMillis());
 			try {
+				this.client.invoke(source, NetworkMessage.NEWKEEPALIVE);
 				this.networkCommuncation.invoke(source, NetworkMessage.NEWKEEPALIVE);
 			} catch (CallbackException e) {
 				System.out.println(e.getLocalizedMessage());
