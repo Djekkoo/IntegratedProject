@@ -64,7 +64,7 @@ public class Communication {
 	
 	public void sendMessage(String message, Byte destination) throws IOException, DatagramDataSizeException {
 		
-		if (destination.equals(0x0F)) {
+		if (destination.equals(Byte.valueOf((byte) 0x0F))) {
 			this.network.broadcast(message.getBytes(), this.router.getLongestRoute(), Boolean.FALSE, Boolean.FALSE, Boolean.TRUE);
 			return;
 		}
