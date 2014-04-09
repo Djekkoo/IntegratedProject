@@ -6,5 +6,5 @@ package monitoring;
  * @since       2014-04-07
  */
 public enum NetworkMessage {
-	NOKEEPALIVE, NEWKEEPALIVE, DROPPED;
+	NOKEEPALIVE, NEWKEEPALIVE, DROPPED, JOINED;
 }

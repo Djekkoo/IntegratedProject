@@ -19,7 +19,8 @@ public class IntegrationProject {
 	public static byte GROUP = 14;
 	public static String WLAN = "wlan0";
 	public static String BROADCAST = "226.0.0.0/8";
-	public Communication communication;
+	
+	private static Communication Communication;
 
 	public static void main(String args[]) throws IOException {
 		// startup AD-HOC network
@@ -38,17 +39,6 @@ public class IntegrationProject {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			/*
-			Runtime.getRuntime().exec(
-					"gksudo ./adhoc_linux.sh " + WLAN + " " + GROUP + " "
-							+ DEVICE);
-			
-			System.out.println("set up Ad-hoc connection");
-			
-			Runtime.getRuntime().exec("gksudo route add -net "+BROADCAST+" dev "+WLAN);
-			
-			System.out.println("Added route to routing table");
-			*/
 		}
 		
 		// register shutdown
@@ -57,19 +47,8 @@ public class IntegrationProject {
 		        public void run() {
 		        	
 		        	System.out.println("Shutting down");
-		        	boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-		        	if (isWindows) {
-			        	
-		        		
-		        	// linux
-		        	} else {
-		        		/*try {
-							Runtime.getRuntime().exec("sudo route del -net "+BROADCAST+" dev "+WLAN);
-							System.out.println("Deleted route from routing table");
-						} catch (IOException e) {
-							System.out.println("Could not delete route: " + e.getLocalizedMessage());
-						}*/
-		        	}
+		        	IntegrationProject.Communication.shutDown();
+		        	
 		        }
 		    }
 		);
@@ -81,7 +60,7 @@ public class IntegrationProject {
 
 	public IntegrationProject() {
 		
-		new Communication();
+		IntegrationProject.Communication = new Communication();
 
 	}
 	

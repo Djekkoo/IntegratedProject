@@ -42,7 +42,7 @@ public class Communication {
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
 		
-		this.monitor = new NetworkMonitor(new Callback(network, "broadcast"), new Callback(router, "networkMessage"), new Callback(this.client, "updateNetwork"));
+		this.monitor = new NetworkMonitor(this.router, new Callback(network, "broadcast"), new Callback(this.client, "updateNetwork"));
 		this.monitor.start();
 		
 	}
@@ -50,12 +50,11 @@ public class Communication {
 	public void newPacket(DataPacket packet) {
 		
 		System.out.println(packet.getSource() + "-" + new String(packet.getData()));
-		
-		if (packet.isRouting()) {
-			this.router.packetReceived(packet);
-		}
-		else if (packet.isKeepAlive()) {
+		if (packet.isKeepAlive()) {
 			this.monitor.messageReceived(packet);
+		}
+		else if (packet.isRouting()) {
+			this.router.packetReceived(packet);
 		}
 		else {
 			this.client.packetReceived(packet);
@@ -71,6 +70,14 @@ public class Communication {
 		}
 		
 		this.network.send(destination, message.getBytes());
+		
+	}
+
+	public void shutDown() {
+		
+		try {
+			this.network.broadcast(new byte[0], this.router.getLongestRoute(), Boolean.FALSE, Boolean.TRUE, Boolean.TRUE);
+		} catch(Exception e) {}
 		
 	}
 	

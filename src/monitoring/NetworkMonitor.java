@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import routing.RoutingInterface;
 import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
@@ -22,7 +23,6 @@ import main.CallbackException;
 public class NetworkMonitor extends Thread {
 	
 	private Callback broadcast;
-	private Callback networkCommuncation;
 	private Callback client;
 	
 	private static long broadcastDelay = 500;
@@ -30,12 +30,13 @@ public class NetworkMonitor extends Thread {
 	private Map<Byte, Long> activity = new HashMap<Byte, Long>();
 	
 	private Lock lock = new ReentrantLock();
+	private RoutingInterface router;
 	
 
 	
-	public NetworkMonitor(Callback broadcast, Callback error, Callback client){
+	public NetworkMonitor(RoutingInterface router, Callback broadcast, Callback client){
+		this.router = router;
 		this.broadcast = broadcast;
-		this.networkCommuncation = error;
 		this.client = client;
 	}
 	
@@ -75,7 +76,7 @@ public class NetworkMonitor extends Thread {
 					this.activity.remove(key);
 					try {
 						this.client.invoke(key, NetworkMessage.NOKEEPALIVE);
-						this.networkCommuncation.invoke(key, NetworkMessage.NOKEEPALIVE);
+						this.router.networkMessage(NetworkMessage.NOKEEPALIVE, key);
 					} catch (CallbackException e) { }
 				}
 				
@@ -99,14 +100,37 @@ public class NetworkMonitor extends Thread {
 	// Received a new notification, putting heads-up at the data
 	public void messageReceived(DataPacket p) {
 		
+		if (!p.isKeepAlive()) {
+			System.out.println("Error, packet delivered at network monitor is NOT a keep-alive packet!");
+			return;
+		}
+		
 		Byte source = p.getSource();
 		this.lock.lock();
 		
+		// shutdown?
+		if (p.isRouting()) {
+			if (this.activity.containsKey(source)) {
+				this.activity.remove(source);
+				try {
+					this.router.networkMessage(NetworkMessage.DROPPED, source);
+					if (this.router.isReachable(source).equals(Boolean.FALSE))
+						this.client.invoke(source, NetworkMessage.DROPPED);
+				}
+				catch (CallbackException e) {
+					System.out.println(e.getLocalizedMessage());
+				}
+			}
+			
+			return;
+		}
+		
+		// alive
 		if (!this.activity.containsKey(source)) {
 			this.activity.put(source, System.currentTimeMillis());
 			try {
-				this.client.invoke(source, NetworkMessage.NEWKEEPALIVE);
-				this.networkCommuncation.invoke(source, NetworkMessage.NEWKEEPALIVE);
+				this.client.invoke(source, NetworkMessage.JOINED);
+				this.router.networkMessage(NetworkMessage.NEWKEEPALIVE, source);
 			} catch (CallbackException e) {
 				System.out.println(e.getLocalizedMessage());
 			}
