@@ -115,6 +115,7 @@ public class Client {
 		} catch (CallbackException e) {
 			System.out.println(e.getMessage());
 		}
+		updateUsers();
 	}
 
 	public void updateUsers() {

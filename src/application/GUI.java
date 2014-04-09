@@ -74,7 +74,7 @@ public class GUI extends javax.swing.JFrame {
 
 		userList.setFont(standardFont); // NOI18N
 		userList.setModel(new javax.swing.AbstractListModel() {
-			String[] strings = { client.getName() };
+			String[] strings = { "" }; //voorheen client.getName()
 
 			public int getSize() {
 				return strings.length;
