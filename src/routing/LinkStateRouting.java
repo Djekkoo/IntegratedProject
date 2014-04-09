@@ -55,10 +55,6 @@ public class LinkStateRouting implements RoutingInterface {
 		
 	}
 	
-	public static void main(String[] args) {
-		RoutingInterface r = new LinkStateRouting(null);
-	}
-	
 	//PUBLIC
 	
 	/**
