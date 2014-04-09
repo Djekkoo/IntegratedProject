@@ -76,7 +76,7 @@ public class NetworkMonitor extends Thread {
 					this.activity.remove(key);
 					try {
 						this.client.invoke(key, NetworkMessage.NOKEEPALIVE);
-						this.router.networkMessage(NetworkMessage.NOKEEPALIVE, key);
+						this.router.networkMessage(key, NetworkMessage.NOKEEPALIVE);
 					} catch (CallbackException e) { }
 				}
 				
@@ -87,7 +87,7 @@ public class NetworkMonitor extends Thread {
 			// sleep
 			try {
 				
-				sleep = System.currentTimeMillis() - (time+broadcastDelay);
+				sleep = System.currentTimeMillis() - time + broadcastDelay;
 				if (sleep > 50)
 					Thread.sleep(sleep);
 				
@@ -113,7 +113,7 @@ public class NetworkMonitor extends Thread {
 			if (this.activity.containsKey(source)) {
 				this.activity.remove(source);
 				try {
-					this.router.networkMessage(NetworkMessage.DROPPED, source);
+					this.router.networkMessage(source, NetworkMessage.DROPPED);
 					if (this.router.isReachable(source).equals(Boolean.FALSE))
 						this.client.invoke(source, NetworkMessage.DROPPED);
 				}
@@ -130,7 +130,7 @@ public class NetworkMonitor extends Thread {
 			this.activity.put(source, System.currentTimeMillis());
 			try {
 				this.client.invoke(source, NetworkMessage.JOINED);
-				this.router.networkMessage(NetworkMessage.NEWKEEPALIVE, source);
+				this.router.networkMessage(source, NetworkMessage.NEWKEEPALIVE);
 			} catch (CallbackException e) {
 				System.out.println(e.getLocalizedMessage());
 			}
