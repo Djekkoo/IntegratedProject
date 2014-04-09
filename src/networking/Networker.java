@@ -43,6 +43,7 @@ public class Networker {
 		multicastAddress = InetAddress.getByName(IntegrationProject.BROADCAST);
 		dSock = new DatagramSocket(UNIPORT);
 		mSock = new MulticastSocket(MULTIPORT);
+		mSock.setLoopbackMode(true);
 		mSock.joinGroup(multicastAddress);
 		
 		this.packetReceived = routerPacketReceived;
