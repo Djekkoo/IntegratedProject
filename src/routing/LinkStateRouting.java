@@ -96,26 +96,22 @@ public class LinkStateRouting implements RoutingInterface {
 	@Override
 	public void networkMessage(Byte node, NetworkMessage type) {
 		// TODO Handle messages
-		try{
-			switch(type) {
-			case NEWKEEPALIVE:
-				System.out.println("New user!");
-				nw.get(DEVICE).add(node);
-				send(node,buildPacket());
-				update();
-				break;
-			case DROPPED:
-				nw.get(DEVICE).remove(node);
-				update();
-				break;
-			case NOKEEPALIVE:
-				update();
-				break;
-			default:
-				break;
-			}
-		} catch(CallbackException e) {
-			e.printStackTrace();
+		switch(type) {
+		case NEWKEEPALIVE:
+			System.out.println("New user!");
+			nw.get(DEVICE).add(node);
+			send(node,buildPacket());
+			update();
+			break;
+		case DROPPED:
+			nw.get(DEVICE).remove(node);
+			update();
+			break;
+		case NOKEEPALIVE:
+			update();
+			break;
+		default:
+			break;
 		}
 	}
 	
@@ -214,14 +210,9 @@ public class LinkStateRouting implements RoutingInterface {
 	}
 	
 	private void sendToNeighbours(Byte[] data) {
-		try {
-			TreeSet<Byte> neighbours = nw.get(DEVICE);
-			for(Byte nb : neighbours) {
-				send(nb,toByteArray(data));
-			}
-		} catch (CallbackException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		TreeSet<Byte> neighbours = nw.get(DEVICE);
+		for(Byte nb : neighbours) {
+			send(nb,data);
 		}
 	}
 	
@@ -317,7 +308,7 @@ public class LinkStateRouting implements RoutingInterface {
 	
 	private void send(Byte node, Byte[] data) {
 		try {
-			send(toByteArray(data));
+			send.invoke(node, toByteArray(data));
 		} catch (CallbackException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
