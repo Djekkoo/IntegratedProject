@@ -105,6 +105,7 @@ public class LinkStateRouting implements RoutingInterface {
 		try{
 			switch(type) {
 			case NEWKEEPALIVE:
+				System.out.println("New user!");
 				nw.get(DEVICE).add(node);
 				send.invoke(node,buildPacket());
 				update();
