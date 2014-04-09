@@ -101,7 +101,7 @@ public class LinkStateRouting implements RoutingInterface {
 			case NEWKEEPALIVE:
 				System.out.println("New user!");
 				nw.get(DEVICE).add(node);
-				send.invoke(node,buildPacket());
+				send(node,buildPacket());
 				update();
 				break;
 			case DROPPED:
@@ -217,7 +217,7 @@ public class LinkStateRouting implements RoutingInterface {
 		try {
 			TreeSet<Byte> neighbours = nw.get(DEVICE);
 			for(Byte nb : neighbours) {
-				send.invoke(nb,toByteArray(data));
+				send(nb,toByteArray(data));
 			}
 		} catch (CallbackException e) {
 			// TODO Auto-generated catch block
@@ -313,6 +313,15 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 		
 		return toByteObjectArray(p);
+	}
+	
+	private void send(Byte node, Byte[] data) {
+		try {
+			send(toByteArray(data));
+		} catch (CallbackException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
