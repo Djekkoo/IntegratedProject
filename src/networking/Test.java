@@ -24,7 +24,7 @@ public class Test {
 		
 		DataPacket dp = null;
 		try {
-			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true);
+			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true, true);
 		} catch (DatagramDataSizeException e1) {
 			e1.printStackTrace();
 		}

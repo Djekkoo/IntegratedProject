@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import main.Callback;
@@ -45,8 +46,14 @@ public class Networker extends Thread {
 			Boolean keepalive) throws IOException, DatagramDataSizeException {
 		
 		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0xFF,
-				hops, (byte) 0x0F, data, ack, routing, keepalive);
+				hops, (byte) 0x0F, data, ack, routing, keepalive, false);
 		
+		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
+				InetAddress.getByAddress(new byte[] { (byte) 226, 0, 0, 0 }),
+				PORT));
+	}
+	
+	public void broadcast(DataPacket dp) throws IOException{
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				InetAddress.getByAddress(new byte[] { (byte) 226, 0, 0, 0 }),
 				PORT));
@@ -59,18 +66,37 @@ public class Networker extends Thread {
 	public void send(Byte destination, byte[] data) throws IOException {
 		LinkedList<DataPacket> packets = processData(destination, data);
 
-		byte connection = 0;
+		Entry<Byte, Byte> connection = null;
 
 		try {
-			connection = (byte) routerGetRoute.invoke(new Byte(destination));
+			Object temp = routerGetRoute.invoke(new Byte(destination));
+			if(temp instanceof Entry)
+				connection = (Entry<Byte, Byte>) temp;
 		} catch (CallbackException e1) {
-			e1.printStackTrace();
+			System.out.println("Error finding route. Possibly no route to that host.");
+			return; // Route not found
 		}
 
 		for (DataPacket p : packets) {
 			dSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
-					getFullAddress(connection), PORT));
+					getFullAddress(connection.getKey()), PORT));
 		}
+	}
+	
+	public void send(DataPacket dp) throws IOException{
+		Entry<Byte, Byte> connection = null;
+
+		try {
+			Object temp = routerGetRoute.invoke(dp.getDestination());
+			if(temp instanceof Entry)
+				connection = (Entry<Byte, Byte>) temp;
+		} catch (CallbackException e1) {
+			System.out.println("Error finding route. Possibly no route to that host.");
+			return; // Route not found
+		}
+		
+		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
+				getFullAddress(connection.getKey()), PORT));
 	}
 
 	private byte[] processPackets(LinkedList<DataPacket> packets) {
@@ -99,14 +125,17 @@ public class Networker extends Thread {
 
 		byte hops = 0x0F;
 		byte sequencenr = (byte) ((new Random()).nextInt() >>> 24);
+		boolean moar = false;
 
 		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
 		byte[] chunk = new byte[maxChunkSize];
 
 		for (int i = 0; i <= Math.ceil(data.length / maxChunkSize); i++) {
 			if (data.length >= (i + 1) * maxChunkSize) {
+				moar = true;
 				System.arraycopy(data, i * maxChunkSize, chunk, 0, maxChunkSize);
 			} else {
+				moar = false;
 				chunk = new byte[data.length - i * maxChunkSize];
 				System.arraycopy(data, i * maxChunkSize, chunk, 0, data.length
 						- i * maxChunkSize);
@@ -114,9 +143,10 @@ public class Networker extends Thread {
 
 			try {
 				// TODO fix possible bug when sequencenr reaches max
+				// TODO fix "more boolean" bug
 				dp = new DataPacket(IntegrationProject.DEVICE, destination,
 						hops, (byte) (sequencenr + i), chunk, false, false,
-						false);
+						false, moar);
 				result.add(dp);
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
@@ -139,12 +169,25 @@ public class Networker extends Thread {
 		return null;
 	}
 
-	private void receive(DataPacket d) {
+	private void receive(DataPacket d) throws IOException {
 		if (d.getDestination() == IntegrationProject.DEVICE
 				|| d.getDestination() == (byte) 0x0F){
+			
+			System.out.println("Received packet for me");
+			
 			try {
 				packetReceived.invoke(d);
 			} catch (CallbackException e) {
+			}
+			
+			if(d.getDestination() == (byte) 0x0F && d.getHops() > 0){
+				d.decreaseHops();
+				broadcast(d);
+			}
+		} else {
+			d.decreaseHops();
+			if(d.getHops() > 0){
+				send(d);
 			}
 		}
 	}

@@ -19,6 +19,7 @@ public class DataPacket{
 	private static final byte ACK = (byte) 0x10;
 	private static final byte ROUTING = (byte) 0x20;
 	private static final byte KEEP_ALIVE = (byte) 0x40;
+	private static final byte MOAR = (byte) 0x80;
 	
 	private byte[] packet = new byte[0];
 	
@@ -30,7 +31,7 @@ public class DataPacket{
 		packet = raw;
 	}
 
-	public DataPacket(byte source, byte destination, byte hops, byte sequencenr, byte[] data, Boolean ack, Boolean routing, Boolean keepalive) throws DatagramDataSizeException{
+	public DataPacket(byte source, byte destination, byte hops, byte sequencenr, byte[] data, Boolean ack, Boolean routing, Boolean keepalive, Boolean more) throws DatagramDataSizeException{
 
 		if(data.length > (1024 - HEADER_LENGTH)) throw new DatagramDataSizeException(data.length + HEADER_LENGTH);
 		
@@ -48,6 +49,7 @@ public class DataPacket{
 		if(ack) 		packet[2] = (byte) (packet[2] | ACK);
 		if(routing) 	packet[2] = (byte) (packet[2] | ROUTING);
 		if(keepalive) 	packet[2] = (byte) (packet[2] | KEEP_ALIVE);
+		if(more) 		packet[2] = (byte) (packet[2] | MOAR);
 		
 		packet[3] = sequencenr;
 		
@@ -106,5 +108,9 @@ public class DataPacket{
 	
 	public boolean isKeepAlive(){
 		return ((packet[2] & KEEP_ALIVE) == KEEP_ALIVE);
+	}
+	
+	public boolean hasMore(){
+		return ((packet[2] & MOAR) == MOAR);
 	}
 }
