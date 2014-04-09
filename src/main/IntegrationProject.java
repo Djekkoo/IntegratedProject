@@ -28,12 +28,12 @@ public class IntegrationProject {
 		} else {
 			
 			Runtime.getRuntime().exec(
-					"sudo ./adhoc_linux.sh " + WLAN + " " + GROUP + " "
+					"gksudo ./adhoc_linux.sh " + WLAN + " " + GROUP + " "
 							+ DEVICE);
 			
 			System.out.println("set up Ad-hoc connection");
 			
-			Runtime.getRuntime().exec("sudo route add -net "+BROADCAST+" dev "+WLAN);
+			Runtime.getRuntime().exec("gksudo route add -net "+BROADCAST+" dev "+WLAN);
 			System.out.println("Added route to routing table");
 			
 		}
@@ -51,7 +51,7 @@ public class IntegrationProject {
 		        	// linux
 		        	} else {
 		        		try {
-							Runtime.getRuntime().exec("sudo route del -net "+BROADCAST+" dev "+WLAN);
+							Runtime.getRuntime().exec("gksudo route del -net "+BROADCAST+" dev "+WLAN);
 							System.out.println("Deleted route from routing table");
 						} catch (IOException e) {
 							System.out.println("Could not delete route: " + e.getLocalizedMessage());
