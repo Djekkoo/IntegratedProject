@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
+import main.IntegrationProject;
 import monitoring.NetworkMessage;
 
 //The door between GUI and Communication classes <3
@@ -28,6 +29,7 @@ public class Client {
 		//Start de GUI
 		this.name = "";
 		gui = new GUI(this);
+		sendIdentity();
 	}
 	
 	public GUI getGUI() {
@@ -103,6 +105,15 @@ public class Client {
 			} catch (CallbackException e) {
 				System.out.println(e.getMessage());
 			}
+		}
+	}
+	
+	public void sendIdentity() {
+		table.put(name,IntegrationProject.DEVICE);
+		try {
+			sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));
+		} catch (CallbackException e) {
+			System.out.println(e.getMessage());
 		}
 	}
 
