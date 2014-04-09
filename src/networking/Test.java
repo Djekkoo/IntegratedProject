@@ -109,17 +109,7 @@ public class Test {
 				System.out.println("Packets generating/decoding failed");
 			
 			System.out.println("Was: " + stringFrombytes(result) + "\nS2B: " + stringFrombytes(data));
-		} catch (SocketException e) {
-			e.printStackTrace();
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
+		} catch (SocketException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
 		}
 
