@@ -47,6 +47,8 @@ public class Communication {
 	
 	public void newPacket(DataPacket packet) {
 		
+		System.out.println(packet.getSource() + "-" + new String(packet.getData()));
+		
 		if (packet.isRouting()) {
 			this.router.packetReceived(packet);
 		}

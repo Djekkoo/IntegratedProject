@@ -20,7 +20,10 @@ public class IntegrationProject {
 		// startup AD-HOC network
 		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
 		if (isWindows) {
-
+			
+			System.out.println("Please boot this application on Linux");
+			System.exit(0);
+			
 			// linux
 		} else {
 			
