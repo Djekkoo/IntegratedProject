@@ -1,5 +1,9 @@
 package application;
 import javax.swing.ImageIcon;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.ListModel;
 
@@ -80,6 +84,23 @@ public class GUI extends javax.swing.JFrame {
 				return strings[i];
 			}
 		});
+		
+		MouseListener mouseListener = new MouseAdapter() {
+		      public void mouseClicked(MouseEvent mouseEvent) {
+		        JList theList = (JList) mouseEvent.getSource();
+		        if (mouseEvent.getClickCount() == 2) {
+		          int index = theList.locationToIndex(mouseEvent.getPoint());
+		          if (index >= 0) {
+		            Object o = theList.getModel().getElementAt(index);
+		            inputText.setText("!pvt "+o.toString()+" ");
+		            inputText.requestFocusInWindow();
+		          }
+		        }
+		      }
+		    };
+		userList.addMouseListener(mouseListener);
+
+		
 		userScrollpane.setViewportView(userList);
 
 		javax.swing.GroupLayout UserPanelLayout = new javax.swing.GroupLayout(

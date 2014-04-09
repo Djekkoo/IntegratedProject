@@ -1,5 +1,7 @@
 package tests;
 
+import networking.DataPacket;
+import networking.DatagramDataSizeException;
 import main.Callback;
 import application.Client;
 
@@ -25,27 +27,40 @@ public class ClientTest extends TestCase {
         setUp();
         testChat();
         testUsers();
-        client.getGUI().dispose();
+        //client.getGUI().dispose(); //TODO Terugzetten
         return errors;
     }
 
     protected void testChat() {
         startTest("Chat test");
-        client.receiveChat("test");
+        client.packetReceived(parseDatapacket("CHAT Joey: fuk joe"));
         assertEquals("Aantal berichten", 2, client.getGUI().getChat().length);
         try { Thread.sleep(1000);} catch (InterruptedException e) {	}
-        client.receiveChat("hoi Jacco");
+        client.packetReceived(parseDatapacket("CHAT Jacco da man: fuk joe"));
         try { Thread.sleep(1000);} catch (InterruptedException e) {	}
-        client.receiveChat("allemaal gechat");
+        client.packetReceived(parseDatapacket("CHAT Niggah: wat een gechat hier"));
         assertEquals("Aantal berichten", 4, client.getGUI().getChat().length);
     }
     
     protected void testUsers() {
     	startTest("User test");
-    	client.updateUsers("Joey;Neger");
+    	client.packetReceived(parseDatapacket("USER Joey"));
     	assertEquals("Players", " Joey Neger", client.getGUI().getUsers());
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
-    	client.updateUsers("Joey;Neger;Jan Boerman;Zoe Haas;Koekoekjongen");
-    	assertEquals("Players", " Joey Neger Jan Boerman Zoe Haas Koekoekjongen", client.getGUI().getUsers());
+    	client.packetReceived(parseDatapacket("USER FLo"));
+    	assertEquals("Players", " FLo Joey", client.getGUI().getUsers());
+    }
+    
+    protected DataPacket parseDatapacket(String data) {
+    	DataPacket packet = null;
+    	 byte[] b = data.getBytes();
+         //byte[] b = data.getBytes(Charset.forName("UTF-8"));
+         try {
+        	 packet = new DataPacket((byte) 0xf, (byte) 0xf, (byte) 0xf, (byte) 0xf, b, (Boolean) true, (Boolean) true, (Boolean) true);
+		} catch (DatagramDataSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return packet;
     }
 }
