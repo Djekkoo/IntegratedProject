@@ -54,7 +54,7 @@ public class Networker {
 
 	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing,
 			Boolean keepalive) throws IOException, DatagramDataSizeException {
-		System.out.println(IntegrationProject.DEVICE + " boom!");
+
 		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
 				hops, (byte) 0x0F, data, ack, routing, keepalive, false);
 		
@@ -185,7 +185,7 @@ public class Networker {
 			} catch (CallbackException e) {
 			}
 			
-			if(d.getDestination() == (byte) 0x0F && d.getHops() > 0){
+			if(d.getDestination() == (byte) 0x0F && d.getHops() > 0 && d.getDestination() != IntegrationProject.DEVICE){
 				d.decreaseHops();
 				broadcast(d);
 			}

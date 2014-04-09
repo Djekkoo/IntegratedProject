@@ -32,6 +32,9 @@ public class MultiMonitor extends Thread {
 				e.printStackTrace();
 			} catch (CallbackException e) {
 				e.printStackTrace();
+			} finally {
+				buffer = new byte[1024];
+				dpack = new DatagramPacket(buffer, buffer.length);
 			}
 		}
 	}
