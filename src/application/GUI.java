@@ -1,11 +1,14 @@
 package application;
 import javax.swing.ImageIcon;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.ListModel;
+import javax.swing.text.DefaultCaret;
 
 import java.awt.event.KeyEvent;
 
@@ -121,7 +124,8 @@ public class GUI extends javax.swing.JFrame {
 		chatTextPane
 				.setText("                                                               Chat Venster");
 		chatScrollpane.setViewportView(chatTextPane);
-
+		DefaultCaret caret = (DefaultCaret)chatTextPane.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		javax.swing.GroupLayout ChatPanelLayout = new javax.swing.GroupLayout(
 				ChatPanel);
 		ChatPanel.setLayout(ChatPanelLayout);
