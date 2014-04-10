@@ -24,6 +24,7 @@ public class Sequencer extends Thread{
 	private HashMap<Byte, HashMap<Byte, DataPacket>> packets = new HashMap<Byte, HashMap<Byte, DataPacket>>();
 	private HashMap<Byte, Byte> ACK = new HashMap<Byte, Byte>();
 	private HashMap<Byte, Byte> RET = new HashMap<Byte, Byte>();
+	private HashMap<Byte, Byte> ACKReceived = new HashMap<Byte, Byte>();
 	
 	private static long checkTimeout = 1000;
 	
@@ -54,9 +55,15 @@ public class Sequencer extends Thread{
 			
 			this.lock.lock();
 			
-			iter = this.ACK.keySet().iterator(); 
+			iter = this.oneToOne.keySet().iterator(); 
 			while(iter.hasNext()) {
 				rStack = iter.next();
+				// broadcast
+				if (rStack == (byte) 0xF0) {
+					
+				} else {
+					this.ACKReceived.get(rStack);
+				}
 				
 			}
 			
@@ -79,7 +86,7 @@ public class Sequencer extends Thread{
 	public Byte getTo(Byte node){
 		SimpleEntry<Byte, Byte> e = (SimpleEntry<Byte, Byte>) oneToOne.get(node);
 		byte b = e.getKey();
-		e = new SimpleEntry<Byte, Byte>((byte) (b + 1), e.getValue());
+		e = new SimpleEntry<Byte, Byte>(this.nextSEQ(b), e.getValue());
 		oneToOne.put(node, e);
 		return b;
 	}
@@ -97,7 +104,8 @@ public class Sequencer extends Thread{
 		this.lock.lock();
 		
 		HashMap<Byte, DataPacket> packets = new HashMap<Byte, DataPacket>();
-		packets.putAll(this.packets.get(rStack));
+		if (this.packets.get(rStack) != null)
+			packets.putAll(this.packets.get(rStack));
 		
 		
 		byte bRet = this.RET.get(rStack);
@@ -167,6 +175,14 @@ public class Sequencer extends Thread{
 		ackStack |= packet.getSource();
 		
 		this.lock.lock();
+		
+		// ACK?
+		if (packet.isAck()) {
+			
+			this.ACKReceived.put(ackStack, packet.getSequenceNumber());
+			return null;
+			
+		} 
 		
 		if (!this.packets.containsKey(ackStack)) {
 			this.packets.put(ackStack, new HashMap<Byte, DataPacket>());
