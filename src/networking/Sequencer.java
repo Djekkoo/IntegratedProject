@@ -124,8 +124,19 @@ public class Sequencer {
 			this.ACK.put(ackStack, (byte) 0);
 			this.RET.put(ackStack, (byte) 0);
 		}
-		HashMap<Byte, DataPacket> packets = this.packets.get(ackStack);
-		packets.put(packet.getSequenceNumber(), packet);
+		
+		if ((this.ACK.get(ackStack) < packet.getSequenceNumber() && packet.getSequenceNumber() - this.ACK.get(ackStack) >= 128)
+		 ||(this.ACK.get(ackStack) > packet.getSequenceNumber() && (256-this.ACK.get(ackStack) + packet.getSequenceNumber() - 1) > 128)
+			) {
+			
+			System.out.println("Packet dropped, queue too long");
+			
+		} else {
+			
+			HashMap<Byte, DataPacket> packets = this.packets.get(ackStack);
+			packets.put(packet.getSequenceNumber(), packet);
+		
+		}
 		
 		// get last ACK
 		byte lAck = this.ACK.get(ackStack);
@@ -133,8 +144,8 @@ public class Sequencer {
 			lAck = this.nextSEQ(lAck);
 		}
 		
-		lAck = this.prevSEQ(lAck);
-		
+		lAck = this.prevSEQ(lAck);		
+			
 		this.ACK.put(ackStack, lAck);
 		return lAck;
 		
