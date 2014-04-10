@@ -5,6 +5,7 @@ package networking;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
@@ -52,7 +53,58 @@ public class Sequencer {
 		}
 		rStack |= source;
 		
+		HashMap<Byte, DataPacket> packets = new HashMap<Byte, DataPacket>();
+		packets.putAll(this.packets.get(rStack));
 		
+		
+		byte bRet = this.RET.get(rStack);
+		byte temp = 0x00;
+		LinkedList<DataPacket> tList = new LinkedList<DataPacket>();
+		
+		while(packets.containsKey(bRet)) {
+			
+			if (!packets.get(bRet).hasMore()) {
+				
+				// End of multi-packet data
+				if (temp != (byte) 0x00) {
+					temp = 0x00;
+					
+					Iterator<DataPacket> i = tList.iterator();
+					while(i.hasNext()) {
+						DataPacket dp = i.next();
+						res.add(dp);
+						this.packets.get(rStack).remove(dp.getSequenceNumber());
+					}
+					
+					tList = new LinkedList<DataPacket>();
+					bRet = this.nextSEQ(bRet);
+					
+					continue;
+				}
+				
+				// single packet data
+				res.add(packets.get(bRet));
+				this.packets.get(rStack).remove(bRet);
+				
+			// multi-packet data
+			} else {
+				
+				if (temp == (byte) 0x00)
+					temp = bRet;
+				
+				tList.add(packets.get(bRet));
+				
+			}
+			
+			bRet = this.nextSEQ(bRet);
+			
+		}
+
+		if (temp != (byte) 0x00) {
+			bRet = temp;
+		}
+		
+		this.RET.put(rStack, this.prevSEQ(bRet));
 		return res;
 		
 		
@@ -73,21 +125,36 @@ public class Sequencer {
 			this.RET.put(ackStack, (byte) 0);
 		}
 		HashMap<Byte, DataPacket> packets = this.packets.get(ackStack);
-		
-		if (!packets.containsKey(packet.getSequenceNumber())) {
-			packets.put(packet.getSequenceNumber(), packet);
-		}
+		packets.put(packet.getSequenceNumber(), packet);
 		
 		// get last ACK
 		byte lAck = this.ACK.get(ackStack);
 		while(packets.containsKey(lAck)) {
-			lAck++;
+			lAck = this.nextSEQ(lAck);
 		}
 		
-		lAck--;
+		lAck = this.prevSEQ(lAck);
 		
 		this.ACK.put(ackStack, lAck);
-		return lAck;		
+		return lAck;
+		
+	}
+
+	private byte nextSEQ(byte seq) {
+		
+		if (seq == (byte)0xFF)
+			return (byte) 0x01;
+		
+		return (byte) (seq+1);
+		
+	}
+
+	private byte prevSEQ(byte seq) {
+		
+		if (seq == (byte)0x01)
+			return (byte) 0xFF;
+		
+		return (byte) (seq-1);
 		
 	}
 	
