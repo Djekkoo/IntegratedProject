@@ -65,7 +65,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private HashMap<Byte,Byte> routeLengths = new HashMap<Byte,Byte>();
 	/**
-	 * 
+	 * Tells the class if auto updating is enabled.
 	 */
 	private boolean autoUpdate=true;
 	
@@ -80,9 +80,9 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
-	public LinkStateRouting(Callback send, boolean autoUpdate) {
+	public LinkStateRouting(Callback send, boolean autoUpdate, byte ID) {
 		this.sendMethod = send;
-		this.deviceID = IntegrationProject.DEVICE;
+		this.deviceID = ID;
 		this.autoUpdate = autoUpdate;
 		
 		networkTreeMap.put(deviceID, new TreeSet<Byte>());
