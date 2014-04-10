@@ -11,6 +11,19 @@ package networking;
  */
 
 public class BigPacket extends DataPacket {
+	
+	/**
+	 * 
+	 * @param source The source
+	 * @param destination The destination
+	 * @param hops Number of hops
+	 * @param sequencenr Sequencenumber to identify packets 
+	 * @param data Array of bytes with raw data
+	 * @param ack The packet is an ack
+	 * @param routing The packet is meant for routing
+	 * @param keepalive The packet is a keep alive signal
+	 * @param more Should be set if the packet with sequencenumber + 1 is part of this packet
+	 */
 
 	public BigPacket(byte source, byte destination, byte hops, byte sequencenr,
 			byte[] data, Boolean ack, Boolean routing, Boolean keepalive,

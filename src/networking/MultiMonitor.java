@@ -17,6 +17,15 @@ import java.net.MulticastSocket;
 import main.Callback;
 import main.CallbackException;
 
+/**
+ * MultiMonitor is a thread that monitors a MulticastSocket for data received.
+ * It invokes a callback with a DataPacket as parameter.
+ * 
+ * @author Sander Koning <s.koning@student.utwente.nl>
+ * @version 0.1
+ * @since 2014-04-07
+ */
+
 public class MultiMonitor extends Thread {
 
 	MulticastSocket mSock = null;
