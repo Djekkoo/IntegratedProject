@@ -25,8 +25,10 @@ public class Client {
 	private String name;
 	private Map<Byte,String> table;
 	private RoutingInterface router;
+	private boolean hardcoremode;
 	
 	public Client(Callback sendMsg, RoutingInterface router) {
+		hardcoremode = false;
 		this.sendMsg = sendMsg;
 		this.router = router;
 		table = new HashMap<Byte,String>();
@@ -118,11 +120,19 @@ public class Client {
 				for (Entry<Byte, String> entry : table.entrySet()) {
 					gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
 				}
+			case "/hardcore":
+				if (hardcoremode) {
+					hardcoremode = false;
+				} else {
+					hardcoremode = true;
+				}
 			}
 			} else {
 			//BROADCAST
 			String chat = getName() + ": " + text;
 			gui.updateChat(chat);
+			
+			//TODO Unicast toevoegen
 			try {
 				sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
 			} catch (CallbackException e) {
@@ -131,13 +141,10 @@ public class Client {
 		}
 	}
 	
+	//Always to everyone (BROADCAST)
 	public void sendIdentity() {
 		table.put(IntegrationProject.DEVICE,name);
-		try {
-			sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));
-		} catch (CallbackException e) {
-			System.out.println(e.getMessage());
-		}
+		try {	sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));} catch (CallbackException e) { System.out.println(e.getMessage());}
 		updateUsers();
 	}
 
@@ -158,10 +165,14 @@ public class Client {
 			updateUsers();
 		} else if (type == NetworkMessage.JOINED) {
 			System.out.println("Someone from source "+source+" joined.");
-			try {
-				sendMsg.invoke("USER " + name,source);
-			} catch (CallbackException e) {
-				System.out.println(e.getMessage());
+			if (hardcoremode) {
+				try {
+					sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));
+				} catch (CallbackException e) {				}
+			} else {
+				try {
+					sendMsg.invoke("USER " + name,source);
+				} catch (CallbackException e) {				}
 			}
 		}
 	}
