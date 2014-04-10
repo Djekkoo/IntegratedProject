@@ -7,6 +7,15 @@ import java.net.DatagramSocket;
 import main.Callback;
 import main.CallbackException;
 
+/**
+ * UniMonitor is a thread that monitors a DatagramSocket for data received.
+ * It invokes a callback with a DataPacket as parameter.
+ * 
+ * @author Sander Koning <s.koning@student.utwente.nl>
+ * @version 0.1
+ * @since 2014-04-07
+ */
+
 public class UniMonitor extends Thread {
 
 	DatagramSocket dSock = null;
