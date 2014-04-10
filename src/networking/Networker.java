@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+import java.util.Random;
 
 import main.Callback;
 import main.CallbackException;
@@ -202,6 +203,10 @@ public class Networker {
 				broadcast(d);
 			}
 		} else if (d.getDestination() == IntegrationProject.DEVICE) { // Meant for me
+			if(d.getSequenceNumber() == 0 && !d.isAck() && !d.isKeepAlive() && !d.isRouting() && !d.hasMore()){
+				sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
+				return; // Job done, no bubbling up
+			}
 			try {
 				Entry<Byte, Byte> connection = null;
 
@@ -255,8 +260,38 @@ public class Networker {
 		}
 	}
 	
+	/**
+	 * Should be called when a new node is discovered. It sends 
+	 * 
+	 * @param destination
+	 */
+	@SuppressWarnings("unchecked")
 	public void handshake(Byte destination){
-		// TODO handshaken
+		byte sequence = (byte) (new Random()).nextInt();
+		while(sequence == 0) sequence = (byte) (new Random()).nextInt();
+		
+		sequencer.setSequenceTo(destination, sequence);
+
+		Entry<Byte, Byte> connection = null;
+		try {
+			Object temp = routerGetRoute.invoke(new Byte(destination));
+			if (temp instanceof Entry)
+				connection = (Entry<Byte, Byte>) temp;
+		} catch (CallbackException e1) {
+			System.out
+					.println("Error finding route. Possibly no route to that host.");
+			return;
+		}
+		
+		DataPacket dp;
+		try {
+			dp = new DataPacket(IntegrationProject.DEVICE, destination, connection.getValue(), (byte) 0x0, new byte[]{sequence}, false, false, false, false);
+			send(dp); // We cannot assume
+			send(dp); // the first packet
+			send(dp); // actually arrives
+		} catch (IOException | BigPacketSentException | DatagramDataSizeException e) {
+			// e.printStackTrace();
+		}
 	}
 
 	/**
