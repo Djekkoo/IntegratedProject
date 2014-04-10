@@ -42,6 +42,20 @@ public class Sequencer extends Thread{
 		this.start();
 		
 	}
+
+	public boolean isAccessible(Byte source) {
+		if (this.oneToOne.containsKey(source) == false)
+			return false;
+		
+		if (this.oneToOne.get(source).getValue() == (byte)0)
+			return false;
+					
+		if (this.oneToOne.get(source).getKey() == (byte) 0)
+			return false;
+		
+		return true;
+		
+	}
 	
 	public void setSequenceFrom(Byte source, Byte sequence) {
 		this.packets.put(source, new HashMap<Byte, DataPacket>());
@@ -84,7 +98,7 @@ public class Sequencer extends Thread{
 				
 				if (resend == false && (byte) tAck != (byte) this.oneToOne.get(rStack).getKey()) {
 					try {
-						this.retransmit.invoke(Byte.valueOf(rStack), Byte.valueOf(this.nextSEQ(temp)), Boolean.FALSE);
+						this.retransmit.invoke(Byte.valueOf(rStack), Byte.valueOf(this.nextSEQ(temp)));
 					} catch (CallbackException e) {
 						System.out.println("Error retransmitting!!");
 						e.printStackTrace();

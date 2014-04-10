@@ -40,6 +40,7 @@ public class NetworkMonitor extends Thread {
 		this.client = client;
 	}
 	
+	
 	public void run() {
 		
 		Long time = System.currentTimeMillis();
@@ -129,8 +130,11 @@ public class NetworkMonitor extends Thread {
 		if (!this.activity.containsKey(source)) {
 			this.activity.put(source, System.currentTimeMillis());
 			try {
-				this.client.invoke(source, NetworkMessage.JOINED);
+				
+				if (this.router.isReachable(source).equals(Boolean.FALSE))
+					this.client.invoke(source, NetworkMessage.JOINED);
 				this.router.networkMessage(source, NetworkMessage.NEWKEEPALIVE);
+				
 			} catch (CallbackException e) {
 				System.out.println(e.getLocalizedMessage());
 			}
