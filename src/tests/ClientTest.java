@@ -28,7 +28,8 @@ public class ClientTest extends TestCase {
         setUp();
         //testChat();
         //testUsers();
-        testEvents();
+        //testEvents();
+        pvtChat();
         //client.getGUI().dispose(); //TODO Terugzetten
         return errors;
     }
@@ -84,7 +85,8 @@ public class ClientTest extends TestCase {
     	try { Thread.sleep(3000);} catch (InterruptedException e) {	} //de 3 sec delay
     	client.packetReceived(parseDatapacket("USER Sander",(byte) 0x0D));
     	try { Thread.sleep(2000);} catch (InterruptedException e) {	} 
-    	client.packetReceived(parseDatapacket("CHAT Sander: I LIEK TO SUK DIK",(byte) 0x0D));
+    	client.sendChat("CHAT Sander:!pvt Someone I LIEK TO SUK DIK");
+    	client.sendChat("CHAT Sander:!pvt Flo I LIEK TO SUK DIK");
     	try { Thread.sleep(5000);} catch (InterruptedException e) {	}
     	client.updateNetwork((Byte) Byte.valueOf((byte) 0x0D),NetworkMessage.DROPPED);
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}

@@ -102,10 +102,10 @@ public class Client {
 			//DIRECT SEND
 			Byte dest = 0x00;
 			for (Entry<Byte, String> entry : table.entrySet()) {
-				if (entry.getValue().equals(text.split(" ")[1])) {
+				//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+				if (entry.getValue().contains(text.split(" ")[1])) {
 					dest = entry.getKey();
 				}
-			    //tell("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 			}
 			String chat = getName() + "(pvt): " + text;
 			gui.updateChat(chat);
