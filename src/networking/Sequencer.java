@@ -8,14 +8,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.ReentrantLock;
 
+import main.Callback;
 import main.IntegrationProject;
 
 /**
- * @author sander
+ * @author Jacco
  *
  */
-public class Sequencer {
+public class Sequencer extends Thread{
 	private HashMap<Byte, Byte> broadcasts; 			// <node, sequencenr>
 	private HashMap<Byte, Entry<Byte, Byte>> oneToOne; 	// <node, <sequencenr to, sequencenr from>>
 	
@@ -23,12 +25,51 @@ public class Sequencer {
 	private HashMap<Byte, Byte> ACK = new HashMap<Byte, Byte>();
 	private HashMap<Byte, Byte> RET = new HashMap<Byte, Byte>();
 	
-	public Sequencer(){
-		broadcasts = new HashMap<Byte, Byte>();
-		broadcasts.put(IntegrationProject.DEVICE, (byte) 0);
+	private static long checkTimeout = 1000;
+	
+	// lock
+	ReentrantLock lock = new ReentrantLock();
+	
+	private Callback retransmit;
+	
+	public Sequencer(Callback retransmit){
+		this.retransmit = retransmit;
+		this.broadcasts = new HashMap<Byte, Byte>();
+		this.broadcasts.put(IntegrationProject.DEVICE, (byte) 0);
 		
-		oneToOne = new HashMap<Byte, Entry<Byte, Byte>>();
-		oneToOne.put((byte) 0x0F, new SimpleEntry<Byte, Byte>((byte) 0, (byte) 0));
+		this.oneToOne = new HashMap<Byte, Entry<Byte, Byte>>();
+		this.oneToOne.put((byte) 0x0F, new SimpleEntry<Byte, Byte>((byte) 0, (byte) 0));
+		
+		this.start();
+		
+	}
+	
+	// check for ACK's waiting too long
+	public void run() {
+		
+		Iterator<Byte> iter;
+		byte rStack;
+		
+		while (true) {
+			
+			this.lock.lock();
+			
+			iter = this.ACK.keySet().iterator(); 
+			while(iter.hasNext()) {
+				rStack = iter.next();
+				
+			}
+			
+			
+			this.lock.unlock();
+			try {
+				Thread.sleep(checkTimeout);
+			} catch (InterruptedException e) {}
+			
+			
+			
+		}
+		
 	}
 	
 	public Byte getBroadcast(){
@@ -52,6 +93,8 @@ public class Sequencer {
 			rStack |= 0xF0;
 		}
 		rStack |= source;
+		
+		this.lock.lock();
 		
 		HashMap<Byte, DataPacket> packets = new HashMap<Byte, DataPacket>();
 		packets.putAll(this.packets.get(rStack));
@@ -105,6 +148,9 @@ public class Sequencer {
 		}
 		
 		this.RET.put(rStack, this.prevSEQ(bRet));
+		
+		this.lock.unlock();
+		
 		return res;
 		
 		
@@ -119,14 +165,17 @@ public class Sequencer {
 		}
 		
 		ackStack |= packet.getSource();
+		
+		this.lock.lock();
+		
 		if (!this.packets.containsKey(ackStack)) {
 			this.packets.put(ackStack, new HashMap<Byte, DataPacket>());
 			this.ACK.put(ackStack, (byte) 0);
 			this.RET.put(ackStack, (byte) 0);
 		}
 		
-		if ((this.ACK.get(ackStack) < packet.getSequenceNumber() && packet.getSequenceNumber() - this.ACK.get(ackStack) >= 128)
-		 ||(this.ACK.get(ackStack) > packet.getSequenceNumber() && (256-this.ACK.get(ackStack) + packet.getSequenceNumber() - 1) > 128)
+		if ((this.ACK.get(ackStack) < packet.getSequenceNumber() && packet.getSequenceNumber() - this.ACK.get(ackStack) >= 127)
+		 ||(this.ACK.get(ackStack) > packet.getSequenceNumber() && (256-this.ACK.get(ackStack) + packet.getSequenceNumber() - 1) >= 127)
 			) {
 			
 			System.out.println("Packet dropped, queue too long");
@@ -144,9 +193,11 @@ public class Sequencer {
 			lAck = this.nextSEQ(lAck);
 		}
 		
-		lAck = this.prevSEQ(lAck);		
-			
+		lAck = this.prevSEQ(lAck);
 		this.ACK.put(ackStack, lAck);
+		
+		this.lock.unlock();
+		
 		return lAck;
 		
 	}
