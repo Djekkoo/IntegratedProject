@@ -35,23 +35,23 @@ public class LinkStateRouting implements RoutingInterface {
 	/**
 	 * A map of sets of neighbours paired to the network IDs
 	 */
-	private TreeMap<Byte,TreeSet<Byte>> nw = new TreeMap<Byte,TreeSet<Byte>>();
+	private TreeMap<Byte,TreeSet<Byte>> networkTreeMap = new TreeMap<Byte,TreeSet<Byte>>();
 	/**
 	 * The timestamp of the last received packet
 	 */
-	private long lastReceivedPacket = 0;
+	private long lastReceivedPacketTimestamp = 0;
 	/**
 	 * The timestamp of the last sent packet
 	 */
-	private long lastSentPacket = 0;
+	private long lastSentPacketTimestamp = 0;
 	/**
 	 * A callback, invoking this will run networking.Networker.send()
 	 */
-	private Callback send;
+	private Callback sendMethod;
 	/**
 	 * The device ID ie., the last byte of the IP on wlan0
 	 */
-	private byte DEVICE;
+	private byte deviceID;
 	/**
 	 * Contains all the nodes as Vertex objects.
 	 */
@@ -63,13 +63,13 @@ public class LinkStateRouting implements RoutingInterface {
 	/**
 	 * A cache of the route lengths, from this device to another.
 	 */
-	private HashMap<Byte,Byte> routeLens = new HashMap<Byte,Byte>();
+	private HashMap<Byte,Byte> routeLengths = new HashMap<Byte,Byte>();
 	
 	public LinkStateRouting(Callback send) {
-		this.send = send;
-		this.DEVICE = IntegrationProject.DEVICE;
+		this.sendMethod = send;
+		this.deviceID = IntegrationProject.DEVICE;
 		
-		nw.put(DEVICE, new TreeSet<Byte>());
+		networkTreeMap.put(deviceID, new TreeSet<Byte>());
 		
 		update();
 		
@@ -97,13 +97,13 @@ public class LinkStateRouting implements RoutingInterface {
 	public SimpleEntry<Byte, Byte> getRoute(Byte destination)
 			throws RouteNotFoundException {
 		// TODO Respond whenever a route is requested.
-		if(!nw.containsKey(destination))
+		if(!networkTreeMap.containsKey(destination))
 			throw new RouteNotFoundException("Destination unknown.");
-		else if(nw.get(destination).isEmpty() || nw.get(DEVICE).isEmpty())
+		else if(networkTreeMap.get(destination).isEmpty() || networkTreeMap.get(deviceID).isEmpty())
 			throw new RouteNotFoundException("Destination unreachable; no route to host.");
 		
 		Byte nextHop = nextHops.get(destination);
-		Byte routeLen = routeLens.get(destination);
+		Byte routeLen = routeLengths.get(destination);
 		if(nextHop == -1 || routeLen == -1) {
 			update();
 			throw new RouteNotFoundException("Destination unreachable; no route to host.");
@@ -121,12 +121,12 @@ public class LinkStateRouting implements RoutingInterface {
 		switch(type) {
 		case NEWKEEPALIVE:
 			System.out.println("New user!");
-			nw.get(DEVICE).add(node);
+			networkTreeMap.get(deviceID).add(node);
 			send(node,buildPacket());
 			update();
 			break;
 		case DROPPED:
-			nw.get(DEVICE).remove(node);
+			networkTreeMap.get(deviceID).remove(node);
 			update();
 			break;
 		case NOKEEPALIVE:
@@ -141,7 +141,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 * {@inheritDoc}
 	 */
 	public Boolean isReachable(Byte node) {
-		return (findPath(DEVICE,node) == null);
+		return (findPath(deviceID,node) == null);
 	}
 	
 	/**
@@ -149,7 +149,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	public Byte getLongestRoute() {
 		Byte max = 0;
-		for(Entry<Byte,Byte> e : routeLens.entrySet()) {
+		for(Entry<Byte,Byte> e : routeLengths.entrySet()) {
 			Byte nextHop = e.getValue();
 			if(nextHop > max) {
 				max = nextHop;
@@ -191,7 +191,7 @@ public class LinkStateRouting implements RoutingInterface {
 		DijkstraAlgorithm pf;
 		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
 		pf = getPathFinder();
-		pf.execute(vertexArray[DEVICE]);
+		pf.execute(vertexArray[deviceID]);
 		for(Vertex v : vertexArray) {
 			if(v != null) {
 				Byte vID = Byte.parseByte(v.getId());
@@ -209,8 +209,8 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	public void addPath(Byte A, Byte B) {
-		nw.get((byte)A).add((byte)B);
-		nw.get((byte)B).add((byte)A);
+		networkTreeMap.get((byte)A).add((byte)B);
+		networkTreeMap.get((byte)B).add((byte)A);
 	}
 	
 	/**
@@ -221,8 +221,8 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	public void removePath(Byte A, Byte B) {
-		nw.get((byte)A).remove((byte)B);
-		nw.get((byte)B).remove((byte)A);
+		networkTreeMap.get((byte)A).remove((byte)B);
+		networkTreeMap.get((byte)B).remove((byte)A);
 	}
 	
 	/**
@@ -233,16 +233,16 @@ public class LinkStateRouting implements RoutingInterface {
 	private void update() {
 		HashMap<Byte,LinkedList<Vertex>> paths = findAllPaths();
 		nextHops.clear();
-		routeLens.clear();
+		routeLengths.clear();
 		for(Entry<Byte,LinkedList<Vertex>> path : paths.entrySet()) {
 			Byte id = path.getKey();
 			if(path.getValue() != null) {
 				Byte nextHop = Byte.parseByte(path.getValue().get(1).getId());
 				nextHops.put(id,nextHop);
-				routeLens.put(id,(byte)(path.getValue().size()-2));
+				routeLengths.put(id,(byte)(path.getValue().size()-2));
 			} else {
 				nextHops.put(id,(byte)(-1));
-				routeLens.put(id,(byte)(-1));
+				routeLengths.put(id,(byte)(-1));
 			}
 		}
 	}
@@ -260,13 +260,13 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		this.vertexArray = new Vertex[16];
 		
-		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
+		for(Entry<Byte,TreeSet<Byte>> neighbour : networkTreeMap.entrySet()) {
 			String id = neighbour.getKey().toString();
 			Vertex v = new Vertex(id,id);
 			vertices.add(v);
 			vertexArray[neighbour.getKey()] = v;
 		}
-		for(Entry<Byte,TreeSet<Byte>> neighbour : nw.entrySet()) {
+		for(Entry<Byte,TreeSet<Byte>> neighbour : networkTreeMap.entrySet()) {
 			for(Byte b : neighbour.getValue()) {
 				String name = b.toString() + neighbour.getKey().toString();
 				edges.add(new Edge(name,vertexArray[neighbour.getKey()],vertexArray[b],1));
@@ -284,7 +284,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	private void sendToNeighbours(Byte[] data) {
-		TreeSet<Byte> neighbours = nw.get(DEVICE);
+		TreeSet<Byte> neighbours = networkTreeMap.get(deviceID);
 		for(Byte nb : neighbours) {
 			send(nb,data);
 		}
@@ -307,8 +307,8 @@ public class LinkStateRouting implements RoutingInterface {
 		boolean updated = false;
 		
 		//Is the packet newer than the last received packet?
-		if(timestamp > lastReceivedPacket && timestamp > lastSentPacket) {
-			lastReceivedPacket = timestamp;
+		if(timestamp > lastReceivedPacketTimestamp && timestamp > lastSentPacketTimestamp) {
+			lastReceivedPacketTimestamp = timestamp;
 			//Get how many hosts there are in the data
 			int numHosts = p[8];
 			int offset = 9;
@@ -322,24 +322,24 @@ public class LinkStateRouting implements RoutingInterface {
 				offset += numNeighbours+2;
 				
 				TreeSet<Byte> oldNeighbours = new TreeSet<Byte>();
-				for(Object nb : nw.get(host).toArray()) {
+				for(Object nb : networkTreeMap.get(host).toArray()) {
 					oldNeighbours.add((Byte)nb);
 				}
 				
 				for(byte nb : neighbours) {
 					//Do we have a host that we have no record of?
-					if(nw.containsKey(host)) {
-						nw.get(host).add(nb);
+					if(networkTreeMap.containsKey(host)) {
+						networkTreeMap.get(host).add(nb);
 						oldNeighbours.remove(nb);
 					} else {
-						nw.put(host, new TreeSet<Byte>());
-						nw.get(host).add(nb);
+						networkTreeMap.put(host, new TreeSet<Byte>());
+						networkTreeMap.get(host).add(nb);
 						oldNeighbours.remove(nb);
 						updated = true;
 					}
 				}
 				for(Byte nb : oldNeighbours) {
-					nw.remove(nb);
+					networkTreeMap.remove(nb);
 					updated = true;
 				}
 			}
@@ -359,15 +359,15 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		// Add timestamp to the first 8 bits.
 		long timestamp = new Date().getTime();
-		lastSentPacket = timestamp;
+		lastSentPacketTimestamp = timestamp;
 		byte[] timestampBytes = ByteBuffer.allocate(8).putLong(timestamp).array();
 		for(byte b : timestampBytes) {
 			p.add((Byte)b);
 		}
 		
 		// Add the host count.
-		p.add(Byte.valueOf((byte)(nw.size()&0xFF)));
-		for (Entry<Byte,TreeSet<Byte>> e : nw.entrySet()) {
+		p.add(Byte.valueOf((byte)(networkTreeMap.size()&0xFF)));
+		for (Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
 			Byte host = e.getKey();
 			TreeSet<Byte> neighbours = e.getValue();
 			p.add(host);
@@ -389,7 +389,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private void send(Byte node, Byte[] data) {
 		try {
-			send.invoke(node, toByteArray(data));
+			sendMethod.invoke(node, toByteArray(data));
 		} catch (CallbackException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -402,7 +402,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-08
 	 */
 	private void showNetwork() {
-		for(Entry<Byte,TreeSet<Byte>> e : nw.entrySet()) {
+		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
 			System.out.println(e.getKey() + " to: ");
 			for(Byte b : e.getValue()) {
 				System.out.println("\t" + b);
