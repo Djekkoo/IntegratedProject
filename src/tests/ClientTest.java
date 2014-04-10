@@ -60,20 +60,22 @@ public class ClientTest extends TestCase {
     	try { Thread.sleep(3000);} catch (InterruptedException e) {	} //de 3 sec delay
     	client.packetReceived(parseDatapacket("USER Jacco",(byte) 0x0E));
     	try { Thread.sleep(2000);} catch (InterruptedException e) {	} 
-    	client.packetReceived(parseDatapacket("CHAT Jacco: Yoooow, groetjes Jacco",(byte) 0x0E));
+    	client.packetReceived(parseDatapacket("CHAT Jacco: got sum XTC up my arse today.",(byte) 0x0E));
     	
     	client.updateNetwork((Byte) Byte.valueOf((byte) 0x0D),NetworkMessage.JOINED);
     	try { Thread.sleep(3000);} catch (InterruptedException e) {	} //de 3 sec delay
     	client.packetReceived(parseDatapacket("USER Sander",(byte) 0x0D));
     	try { Thread.sleep(2000);} catch (InterruptedException e) {	} 
-    	client.packetReceived(parseDatapacket("CHAT Sander: I LIEK TO SUK DIK",(byte) 0x0D));
+    	client.packetReceived(parseDatapacket("CHAT Sander: I LIKE TO SUK DIK",(byte) 0x0D));
     	try { Thread.sleep(5000);} catch (InterruptedException e) {	}
     	client.updateNetwork((Byte) Byte.valueOf((byte) 0x0D),NetworkMessage.DROPPED);
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
     	
+    	client.packetReceived(parseDatapacket("CHAT Jacco: got to get sum moar druks.",(byte) 0x0E));
     	try { Thread.sleep(2000);} catch (InterruptedException e) {	}
     	client.updateNetwork((Byte) Byte.valueOf((byte) 0x0E),NetworkMessage.DROPPED);
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
+    	client.tell("Test completed, fuck, you!");
     }
     
     protected void pvtChat() {

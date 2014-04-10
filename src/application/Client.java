@@ -1,8 +1,15 @@
 package application;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javazoom.jl.decoder.JavaLayerException;
+
+import com.gtranslate.Audio;
+import com.gtranslate.Language;
 
 import networking.DataPacket;
 import main.Callback;
@@ -40,6 +47,7 @@ public class Client {
 	
 	public void setName(String name) {
 		this.name = name;
+		tell("Welcome "+name+"... Please, .. fuck, ... me.");
 	}
 	
 	public String getName() {
@@ -58,7 +66,7 @@ public class Client {
 		try {
 			data = new String(packet.getData(), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			System.out.println(e.getMessage());
+			tell(e.getMessage());
 		}
 		
 		if (!data.equals("") && data.split(" ").length > 1) {
@@ -70,19 +78,20 @@ public class Client {
 					msg = msg + " " + splitdata[i];
 				}
 				gui.updateChat(msg);
+				tell(msg);
 				break;
 			case "USER":
 				String usermsg = "";
 				for(int i = 1; i < splitdata.length; i++) {
 					usermsg = usermsg + splitdata[i];
 				}
-				//System.out.println(usermsg +"  en src  "+ packet.getSource());
+				//tell(usermsg +"  en src  "+ packet.getSource());
 				table.put(packet.getSource(),usermsg);
-				System.out.println(table.get(packet.getSource()) + " detected");
+				tell("Some bitch.. ass... nigger.. "+usermsg+"... joined.");
 				updateUsers();
 				break;
 			default:
-				System.out.println("The received command does not exist.");
+				tell("The received command does not exist.");
 				break;
 			}
 		}
@@ -96,14 +105,14 @@ public class Client {
 				if (entry.getValue().equals(text.split(" ")[1])) {
 					dest = entry.getKey();
 				}
-			    //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+			    //tell("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 			}
 			String chat = getName() + "(pvt): " + text;
 			gui.updateChat(chat);
 			try {
 				sendMsg.invoke("CHAT " + chat,dest);
 			} catch (CallbackException e) {
-				System.out.println(e.getMessage());
+				tell(e.getMessage());
 			}
 		} else {
 			//BROADCAST
@@ -112,7 +121,7 @@ public class Client {
 			try {
 				sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
 			} catch (CallbackException e) {
-				System.out.println(e.getMessage());
+				tell(e.getMessage());
 			}
 		}
 	}
@@ -122,7 +131,7 @@ public class Client {
 		try {
 			sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));
 		} catch (CallbackException e) {
-			System.out.println(e.getMessage());
+			tell(e.getMessage());
 		}
 		updateUsers();
 	}
@@ -133,14 +142,14 @@ public class Client {
 		for (Entry<Byte, String> entry : table.entrySet()) {
 			lijstje[count] = entry.getValue();
 			count++;
-		    //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+		    //tell("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 		}
 		gui.updateUserlist(lijstje);
 	}
 	
 	public void updateNetwork(Byte source, NetworkMessage type) {
 		if (type == NetworkMessage.DROPPED) {
-			System.out.println("Our friend "+table.get(source)+"("+source+") dropped it like it's hot.");
+			tell("Our friend "+table.get(source)+" dropped it like it's hot.");
 			table.remove(source);
 			updateUsers();
 		} else if (type == NetworkMessage.JOINED) {
@@ -148,8 +157,27 @@ public class Client {
 			try {
 				sendMsg.invoke("USER " + name,source);
 			} catch (CallbackException e) {
-				System.out.println(e.getMessage());
+				tell(e.getMessage());
 			}
+		}
+	}
+	
+	public void tell(String msg) {
+		String text = msg.replace(":", " says, ..");
+        
+		Audio audio = Audio.getInstance();
+		InputStream sound;
+		try {
+			sound = audio.getAudio(text, Language.ENGLISH);
+			try {
+				audio.play(sound);
+			} catch (JavaLayerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
