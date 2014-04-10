@@ -195,7 +195,7 @@ public class Networker {
 	@SuppressWarnings("unchecked")
 	public void receive(DataPacket d) throws IOException {
 		if (d.getDestination() == (byte) 0x0F) {
-			if (d.getSequenceNumber() == 0) { // Reserved for packets that don't use sequencenumbers
+			if (d.getSequenceNumber() == (byte) 0) { // Reserved for packets that don't use sequencenumbers
 				try {
 					packetReceived.invoke(d);
 				} catch (CallbackException e) {

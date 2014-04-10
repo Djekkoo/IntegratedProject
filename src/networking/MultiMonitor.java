@@ -44,8 +44,7 @@ public class MultiMonitor extends Thread {
 		while (true) {
 			try {
 				mSock.receive(dpack);
-				if(!(dpack.getSocketAddress().equals(mSock.getInetAddress())))
-					received.invoke(new DataPacket(dpack.getData()));
+				received.invoke(new DataPacket(dpack.getData()));
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (DatagramDataSizeException e) {
