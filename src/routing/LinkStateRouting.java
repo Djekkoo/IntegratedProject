@@ -230,7 +230,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 * 
 	 * @since	2014-04-09
 	 */
-	private void update() {
+	public void update() {
 		HashMap<Byte,LinkedList<Vertex>> paths = findAllPaths();
 		nextHops.clear();
 		routeLengths.clear();
@@ -389,7 +389,9 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private void send(Byte node, Byte[] data) {
 		try {
-			sendMethod.invoke(node, toByteArray(data));
+			if(sendMethod != null) {
+				sendMethod.invoke(node, toByteArray(data));
+			}
 		} catch (CallbackException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
