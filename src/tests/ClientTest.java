@@ -1,5 +1,6 @@
 package tests;
 
+import routing.LinkStateRouting;
 import networking.DataPacket;
 import networking.DatagramDataSizeException;
 import main.Callback;
@@ -17,7 +18,7 @@ public class ClientTest extends TestCase {
 	Client client;
 	
     protected void setUp() {
-    	client = new Client(new Callback(this,"empty"));
+    	client = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty")));
     }
     
     public void empty(String text,Byte ding) {

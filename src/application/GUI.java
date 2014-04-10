@@ -95,7 +95,7 @@ public class GUI extends javax.swing.JFrame {
 		          int index = theList.locationToIndex(mouseEvent.getPoint());
 		          if (index >= 0) {
 		            Object o = theList.getModel().getElementAt(index);
-		            inputText.setText("!pvt "+o.toString()+" ");
+		            inputText.setText("/pvt "+o.toString()+" ");
 		            inputText.requestFocusInWindow();
 		          }
 		        }

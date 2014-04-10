@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import routing.LinkStateRouting;
+import routing.RoutingInterface;
 import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
@@ -22,9 +24,11 @@ public class Client {
 	private GUI gui;
 	private String name;
 	private Map<Byte,String> table;
+	private RoutingInterface router;
 	
-	public Client(Callback sendMsg) {
+	public Client(Callback sendMsg, RoutingInterface router) {
 		this.sendMsg = sendMsg;
+		this.router = router;
 		table = new HashMap<Byte,String>();
 		//Start de GUI
 		this.name = "";
@@ -88,23 +92,34 @@ public class Client {
 	}
 
 	public void sendChat(String text) {
-		if (text.split(" ")[0].equals("!pvt")) {
-			//DIRECT SEND
-			Byte dest = 0x00;
-			for (Entry<Byte, String> entry : table.entrySet()) {
-				//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-				if (entry.getValue().contains(text.split(" ")[1])) {
-					dest = entry.getKey();
+		if (text.split(" ")[0].contains("/")) {
+			switch (text.split(" ")[0]) {
+			case "/pvt":
+				//DIRECT SEND
+				Byte dest = 0x00;
+				for (Entry<Byte, String> entry : table.entrySet()) {
+					//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+					if (entry.getValue().contains(text.split(" ")[1])) {
+						dest = entry.getKey();
+					}
+				}
+				String chat = getName() + "(pvt): " + text;
+				gui.updateChat(chat);
+				try {
+					sendMsg.invoke("CHAT " + chat,dest);
+				} catch (CallbackException e) {
+					System.out.println(e.getMessage());
+				}
+			case "/shownetwork":
+				gui.updateChat("Showing network in the console");
+				((LinkStateRouting) router).showNetwork();
+			case "/users":
+				gui.updateChat("Showing the user table in Client:");
+				for (Entry<Byte, String> entry : table.entrySet()) {
+					gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
 				}
 			}
-			String chat = getName() + "(pvt): " + text;
-			gui.updateChat(chat);
-			try {
-				sendMsg.invoke("CHAT " + chat,dest);
-			} catch (CallbackException e) {
-				System.out.println(e.getMessage());
-			}
-		} else {
+			} else {
 			//BROADCAST
 			String chat = getName() + ": " + text;
 			gui.updateChat(chat);

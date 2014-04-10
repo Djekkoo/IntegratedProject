@@ -1,5 +1,6 @@
 package tests;
 
+import routing.LinkStateRouting;
 import main.Callback;
 import application.Client;
 import application.GUI;
@@ -15,9 +16,8 @@ public class GUITest extends TestCase {
 	GUI gui;
 	
     protected void setUp() {
-        gui = new Client(new Callback(this,"empty")).getGUI();
+        gui = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty"))).getGUI();
     }
-    
     public void empty(String text,Byte ding) {
     	System.out.println(text);
     }
