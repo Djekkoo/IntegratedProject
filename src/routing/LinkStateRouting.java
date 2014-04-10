@@ -129,8 +129,6 @@ public class LinkStateRouting implements RoutingInterface {
 			lock.unlock();
 			throw new RouteNotFoundException("Destination unreachable; no route to host.");
 		}
-		update();
-		showNetwork();
 		
 		Byte nextHop = nextHops.get(destination);
 		Byte routeLen = routeLengths.get(destination);

@@ -116,10 +116,17 @@ public class Sequencer extends Thread{
 	}
 	
 	public Byte getTo(Byte node){
+		lock.lock();
+		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getValue() == (byte)0 || this.oneToOne.get(node).getKey() == (byte) 0) {
+			System.out.println("Dropped packet, ACK's are not registered");
+			lock.unlock();
+			return null;
+		}
 		SimpleEntry<Byte, Byte> e = (SimpleEntry<Byte, Byte>) oneToOne.get(node);
 		byte b = e.getKey();
 		e = new SimpleEntry<Byte, Byte>(this.nextSEQ(b), e.getValue());
 		oneToOne.put(node, e);
+		lock.unlock();
 		return b;
 	}
 	
