@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.locks.ReentrantLock;
 
 import main.Callback;
+import main.CallbackException;
 import main.IntegrationProject;
 
 /**
@@ -18,7 +19,6 @@ import main.IntegrationProject;
  *
  */
 public class Sequencer extends Thread{
-	private HashMap<Byte, Byte> broadcasts; 			// <node, sequencenr>
 	private HashMap<Byte, Entry<Byte, Byte>> oneToOne; 	// <node, <sequencenr to, sequencenr from>>
 	
 	private HashMap<Byte, HashMap<Byte, DataPacket>> packets = new HashMap<Byte, HashMap<Byte, DataPacket>>();
@@ -27,6 +27,7 @@ public class Sequencer extends Thread{
 	private HashMap<Byte, Byte> ACKReceived = new HashMap<Byte, Byte>();
 	
 	private static long checkTimeout = 1000;
+	private static int  retransmitThreshold = 2;
 	
 	// lock
 	ReentrantLock lock = new ReentrantLock();
@@ -35,21 +36,32 @@ public class Sequencer extends Thread{
 	
 	public Sequencer(Callback retransmit){
 		this.retransmit = retransmit;
-		this.broadcasts = new HashMap<Byte, Byte>();
-		this.broadcasts.put(IntegrationProject.DEVICE, (byte) 0);
 		
 		this.oneToOne = new HashMap<Byte, Entry<Byte, Byte>>();
-		this.oneToOne.put((byte) 0x0F, new SimpleEntry<Byte, Byte>((byte) 0, (byte) 0));
 		
 		this.start();
 		
+	}
+	
+	public void setSequenceFrom(Byte source, Byte sequence) {
+		this.packets.put(source, new HashMap<Byte, DataPacket>());
+		this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(this.oneToOne.get(source).getKey(), sequence));
+		this.ACK.put(source, sequence);
+		this.RET.put(source, sequence);
+	}
+	
+	public void setSequenceTo(Byte source, Byte sequence) {
+		this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, this.oneToOne.get(source).getValue()));
+		this.ACKReceived.put(source, sequence);
 	}
 	
 	// check for ACK's waiting too long
 	public void run() {
 		
 		Iterator<Byte> iter;
+		Byte tAck;
 		byte rStack;
+		boolean resend = false;
 		
 		while (true) {
 			
@@ -58,29 +70,36 @@ public class Sequencer extends Thread{
 			iter = this.oneToOne.keySet().iterator(); 
 			while(iter.hasNext()) {
 				rStack = iter.next();
-				// broadcast
-				if (rStack == (byte) 0xF0) {
-					rStack |= 0xF0;
-				} else {
-					this.ACKReceived.get(rStack);
+				resend = true;
+				tAck = this.ACKReceived.get(rStack);
+				byte temp = tAck;
+				
+				for (int i = 0; i < retransmitThreshold; i++) {
+					if ((byte) tAck == (byte)this.oneToOne.get(rStack).getKey()) {
+						resend = true;
+						break;
+					}
+					tAck = this.nextSEQ(tAck);
+				}
+				
+				if (resend == false && (byte) tAck != (byte) this.oneToOne.get(rStack).getKey()) {
+					try {
+						this.retransmit.invoke(Byte.valueOf(rStack), Byte.valueOf(this.nextSEQ(temp)), Boolean.FALSE);
+					} catch (CallbackException e) {
+						System.out.println("Error retransmitting!!");
+						e.printStackTrace();
+					}
 				}
 				
 			}
-			
 			
 			this.lock.unlock();
 			try {
 				Thread.sleep(checkTimeout);
 			} catch (InterruptedException e) {}
 			
-			
-			
 		}
 		
-	}
-	
-	public Byte getBroadcast(){
-		return getTo((byte) 0x0F);
 	}
 	
 	public Byte getTo(Byte node){
@@ -93,13 +112,8 @@ public class Sequencer extends Thread{
 	
 	public LinkedList<DataPacket> getPackets(Byte source, Boolean broadcast) {
 		
-		byte rStack = 0x00;
+		byte rStack = source;
 		LinkedList<DataPacket> res = new LinkedList<DataPacket>();
-		
-		if (broadcast.equals(Boolean.TRUE)){
-			rStack |= 0xF0;
-		}
-		rStack |= source;
 		
 		this.lock.lock();
 		
@@ -176,10 +190,19 @@ public class Sequencer extends Thread{
 		
 		this.lock.lock();
 		
+		//
+		if (this.oneToOne.containsKey(ackStack) == false || this.oneToOne.get(ackStack).getValue() == (byte)0 || this.oneToOne.get(ackStack).getKey() == (byte) 0) {
+			
+			System.out.println("Dropped packet, ACK's are not registered");
+			this.lock.unlock();
+			return null;
+		}
+		
 		// ACK?
 		if (packet.isAck()) {
 			
 			this.ACKReceived.put(ackStack, packet.getSequenceNumber());
+			this.lock.unlock();
 			return null;
 			
 		} 
