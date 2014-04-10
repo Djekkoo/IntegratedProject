@@ -1,6 +1,7 @@
 package main;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
@@ -19,14 +20,34 @@ public class FileTransferHandler {
 	/**
 	 * The file to do read/write operations on.
 	 */
-	private RandomAccessFile f;
+	private RandomAccessFile currentFile;
+	/**
+	 * The filename of the current file.
+	 */
+	private String currentFilename;
 	
 	public FileTransferHandler() throws FileNotFoundException {
-		f = new RandomAccessFile("/dev/null", "rw");
+		currentFile = new RandomAccessFile("/dev/null", "rw");
+		currentFilename = "null";
 	}
 	
 	public FileTransferHandler(String filename, String mode) throws FileNotFoundException {
-		f = new RandomAccessFile(filename, mode);
+		currentFile = new RandomAccessFile(filename, mode);
+		String[] splitFilename = filename.split("/");
+		currentFilename = splitFilename[splitFilename.length-1];
+	}
+	
+	public static void main(String[] args) {
+		FileTransferHandler fthr;
+		try {
+			fthr = new FileTransferHandler("/home/joeyjo0/test","r");
+			FileTransferHandler fthw = new FileTransferHandler("/home/joeyjo0/test3","rw");
+			fthw.writeFile(fthw.parsePacket(fthr.getPacket()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	/**
@@ -37,17 +58,33 @@ public class FileTransferHandler {
 	public byte[] getPacket() {
 		try {
 			MessageDigest md5 = MessageDigest.getInstance("MD5");
-            long longLength = f.length();
+            long longLength = currentFile.length();
             int dataLength = (int) longLength;
             if (dataLength != longLength)
                 throw new IOException("File size >= 2 GB");
             byte[] data = new byte[dataLength];
-            f.readFully(data);
+            currentFile.readFully(data);
             
+            byte[] preamble = "FILE ".getBytes();
             byte[] checksum = md5.digest(data);
-            byte[] packet = new byte[checksum.length + dataLength];
-            System.arraycopy(checksum, 0, packet, 0, 16);
-            System.arraycopy(data, 0, packet, 16, data.length);
+            
+            byte[] filename = currentFilename.getBytes();
+            if(filename.length > 255) {
+            	throw new IOException("File name >= 256 Bytes");
+            }
+            byte filenameLength = (byte)(filename.length&0xFF);
+            
+            byte[] packet = new byte[checksum.length + dataLength + filenameLength + 1 + 5];
+            int offset = 0;
+            System.arraycopy(preamble, 0, packet, 0, 5);
+            offset += 5;
+            System.arraycopy(checksum, 0, packet, 5, 16);
+            offset += 16;
+            System.arraycopy(new byte[]{filenameLength}, 0, packet, 16+5, 1);
+            offset += 1;
+            System.arraycopy(filename, 0, packet, 16+5+1, filenameLength);
+            offset += filenameLength;
+            System.arraycopy(data, 0, packet, 16+5+1+filenameLength, data.length);
             
             return packet;
 		} catch (NoSuchAlgorithmException | IOException e) {
@@ -66,16 +103,35 @@ public class FileTransferHandler {
 	public byte[] parsePacket(byte[] packet) throws IOException {
 		try {
 			MessageDigest md5 = MessageDigest.getInstance("MD5");
-			
-            
+			byte[] preamble = new byte[5]; //Always "DATA "
             byte[] checksum = new byte[16];
-            byte[] data = new byte[packet.length-16];
-			
-			System.arraycopy(packet, 0, checksum, 0, 16);
-            System.arraycopy(packet, 16, data, 0, data.length);
             
+            byte filenameLength = packet[5+16];
+            byte[] filename = new byte[filenameLength];
+            byte[] data = new byte[packet.length-(16+5+1+filenameLength)];
+            
+            int offset = 0;
+            System.arraycopy(packet, 0, preamble, 0, 5);
+            offset += 5;
+			System.arraycopy(packet, 5, checksum, 0, 16);
+			offset += 16 + 1; //Because of the filenameLength byte.
+			System.arraycopy(packet, 16+5+1, filename, 0, filenameLength);
+			offset += filenameLength;
+            System.arraycopy(packet, 16+5+1+filenameLength, data, 0, data.length);
+            
+            System.out.println("\'" + new String(filename) + "\' file size: " + data.length);
+            
+            byte[] preambleCompare = "FILE ".getBytes();
+            boolean preambleMatch = true;
+            for(int i = 0; i < 5; i++) {
+            	if(preamble[i] != preambleCompare[i]) {
+            		preambleMatch = false;
+            	}
+            }
+            if(!preambleMatch) {
+            	throw new IOException("Incorrect preamble, should be \"FILE \".");
+            }
             byte[] checksumCompare = md5.digest(data);
-            
             boolean checksumMatch = true;
             for(int i = 0; i < 16; i++) {
             	if(checksum[i] != checksumCompare[i]) {
@@ -83,7 +139,7 @@ public class FileTransferHandler {
             	}
             }
             if(!checksumMatch) {
-            	throw new IOException("Checksum error");
+            	throw new IOException("Checksum error; checksum incorrect.");
             }
             return data;
 		} catch (NoSuchAlgorithmException e) {
@@ -99,7 +155,8 @@ public class FileTransferHandler {
 	 * @throws 	IOException
 	 */
 	public void writeFile(byte[] data) throws IOException {
-		f.write(data);
+		currentFile.setLength(0);
+		currentFile.write(data);
 	}
 	
 	/**
@@ -111,8 +168,8 @@ public class FileTransferHandler {
 	 */
 	public void setFile(String filename, String mode) {
 		try {
-			f.close();
-			f = new RandomAccessFile(filename, mode);	
+			currentFile.close();
+			currentFile = new RandomAccessFile(filename, mode);	
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
