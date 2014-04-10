@@ -16,12 +16,16 @@ public class DataPacket{
 	
 	public static final int HEADER_LENGTH = 4;
 	
-	private static final byte ACK = (byte) 0x10;
-	private static final byte ROUTING = (byte) 0x20;
-	private static final byte KEEP_ALIVE = (byte) 0x40;
-	private static final byte MOAR = (byte) 0x80;
+	protected static final byte ACK = (byte) 0x10;
+	protected static final byte ROUTING = (byte) 0x20;
+	protected static final byte KEEP_ALIVE = (byte) 0x40;
+	protected static final byte MOAR = (byte) 0x80;
 	
-	private byte[] packet = new byte[0];
+	protected byte[] packet = new byte[0];
+	
+	protected DataPacket(){
+		// Can now be extended by BigPacket
+	}
 	
 	public DataPacket(byte[] raw) throws DatagramDataSizeException{
 		if (raw.length < HEADER_LENGTH) throw new DatagramDataSizeException(raw.length);

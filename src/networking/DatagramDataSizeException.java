@@ -8,6 +8,7 @@ package networking;
  * @version     0.1
  * @since       2014-04-07
  */
+
 public class DatagramDataSizeException extends Exception {
 
 	/**

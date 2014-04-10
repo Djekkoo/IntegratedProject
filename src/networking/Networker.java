@@ -28,7 +28,7 @@ public class Networker {
 	public static final int MULTIPORT = 7001;
 
 	public static InetAddress multicastAddress;
-	
+
 	Sequencer sequencer;
 
 	DatagramSocket dSock;
@@ -59,14 +59,17 @@ public class Networker {
 		DataPacket dp;
 
 		if (nonSequence) {
-			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F, (byte) 0x0,
-					(byte) 0x0, data, false, routing, keepalive, false);
-			
-			if(hops != 0)
-				System.out.println("WARNING: nonsequence broadcast can only have 0 hops");
+			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
+					(byte) 0x0, (byte) 0x0, data, false, routing, keepalive,
+					false);
+
+			if (hops != 0)
+				System.out
+						.println("WARNING: nonsequence broadcast can only have 0 hops");
 		} else {
 			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F, hops,
-					sequencer.getBroadcast(), data, false, routing, keepalive, false);
+					sequencer.getBroadcast(), data, false, routing, keepalive,
+					false);
 		}
 
 		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
@@ -105,24 +108,29 @@ public class Networker {
 		}
 	}
 
-	public void send(DataPacket dp) throws IOException {
-		Entry<Byte, Byte> connection = null;
+	public void send(DataPacket dp) throws IOException, BigPacketSentException {
+		if (dp instanceof BigPacket)
+			throw new BigPacketSentException();
 
+		Entry<Byte, Byte> connection;
 		try {
 			Object temp = routerGetRoute.invoke(dp.getDestination());
 			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
-		} catch (CallbackException e1) {
+			else
+				throw new NullPointerException();
+		} catch (NullPointerException | CallbackException e1) {
 			System.out
 					.println("Error finding route. Possibly no route to that host.");
-			return; // Route not found
+			return;
 		}
 
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				getFullAddress(connection.getKey()), UNIPORT));
 	}
 
-	private byte[] processPackets(LinkedList<DataPacket> packets) {
+	private BigPacket processPackets(LinkedList<DataPacket> packets) {
+		DataPacket first = packets.peek();
 
 		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
 		int length = (packets.size() - 1) * maxChunkSize
@@ -138,7 +146,9 @@ public class Networker {
 			i++;
 		}
 
-		return result;
+		return new BigPacket(first.getSource(), first.getDestination(),
+				first.getHops(), first.getSequenceNumber(), result,
+				first.isAck(), first.isRouting(), first.isKeepAlive(), false);
 	}
 
 	private LinkedList<DataPacket> processData(Byte destination, Byte hops,
@@ -165,8 +175,8 @@ public class Networker {
 
 			try {
 				dp = new DataPacket(IntegrationProject.DEVICE, destination,
-						hops, sequencer.getTo(destination), chunk, false, false, false,
-						moar);
+						hops, sequencer.getTo(destination), chunk, false,
+						false, false, moar);
 				result.add(dp);
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
@@ -189,28 +199,82 @@ public class Networker {
 		return null;
 	}
 
+	private byte offer(DataPacket d) throws CallbackException{
+		byte ack = sequencer.put(d);
+
+		LinkedList<DataPacket> readyPackets = sequencer.getPackets(
+				d.getSource(), false);
+		LinkedList<DataPacket> buffer = new LinkedList<DataPacket>();
+
+		while (!readyPackets.isEmpty()) {
+			if (!readyPackets.peek().hasMore()) {
+				packetReceived.invoke(readyPackets.poll());
+			} else {
+				while (!readyPackets.isEmpty()
+						&& readyPackets.peek().hasMore()) {
+					buffer.add(readyPackets.poll());
+				}
+				buffer.add(readyPackets.poll());
+
+				packetReceived.invoke(processPackets(buffer));
+			}
+		}
+		
+		return ack;
+	}
+	
+	@SuppressWarnings("unchecked")
 	public void receive(DataPacket d) throws IOException {
-		// TODO Put packets together if necessary
-		if (d.getDestination() == IntegrationProject.DEVICE
-				|| d.getDestination() == (byte) 0x0F) {
-
-			System.out.println("Received packet for me");
-
-			try {
-				packetReceived.invoke(d);
-			} catch (CallbackException e) {
+		if (d.getDestination() == (byte) 0x0F) {
+			if (d.getSequenceNumber() == 0) { // Reserved for packets that don't use sequencenumbers
+				try {
+					packetReceived.invoke(d);
+				} catch (CallbackException e) {
+				}
+			} else {
+				try {
+					byte ack = offer(d);
+				} catch (CallbackException e) {
+				}
 			}
 
-			if (d.getDestination() == (byte) 0x0F && d.getHops() > 0
-					&& d.getDestination() != IntegrationProject.DEVICE) {
+			if (d.getHops() > 0) {
 				d.decreaseHops();
 				broadcast(d);
+			}
+		} else if (d.getDestination() == IntegrationProject.DEVICE) {
+			try {
+				Entry<Byte, Byte> connection = null;
+
+				Object temp = routerGetRoute.invoke(new Byte(d.getSource()));
+				if (temp instanceof Entry)
+					connection = (Entry<Byte, Byte>) temp;
+				else
+					throw new NullPointerException();
+
+				byte ack = offer(d);
+
+				send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
+						connection.getValue(), ack, new byte[0], true, false,
+						false, false));
+
+			} catch (NullPointerException | CallbackException e1) {
+				System.out
+						.println("Error finding route for an ack! Possibly no route to that host. Which is strange, because somehow it did arrive.");
+			} catch (BigPacketSentException | DatagramDataSizeException e) {
+				// Can't really happen, but oh well...
+				e.printStackTrace();
 			}
 		} else {
 			d.decreaseHops();
 			if (d.getHops() > 0) {
-				send(d);
+				try {
+					send(d);
+				} catch (BigPacketSentException e) {
+					e.printStackTrace();
+				}
 			}
 		}
+
 	}
 }
