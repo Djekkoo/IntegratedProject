@@ -164,21 +164,22 @@ public class Client {
 	
 	public void tell(String msg) {
 		String text = msg.replace(":", " says, ..");
-        
-		Audio audio = Audio.getInstance();
-		InputStream sound;
-		try {
-			sound = audio.getAudio(text, Language.ENGLISH);
+		System.out.println(text);
+		if (1+1==3) {
+			Audio audio = Audio.getInstance();
+			InputStream sound;
 			try {
-				audio.play(sound);
-			} catch (JavaLayerException e) {
+				sound = audio.getAudio(text, Language.ENGLISH);
+				try {
+					audio.play(sound);
+				} catch (JavaLayerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}	
+			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}	
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			}
 		}
 	}
-	
 }
