@@ -31,9 +31,9 @@ public class Callback {
 			Method method = this.o.getClass().getMethod(this.method, classes);
 			return method.invoke(this.o, parameters);
 		} catch (InvocationTargetException e) {
-			throw new CallbackException(e.getTargetException().getClass(), e.getTargetException().toString());
+			throw new CallbackException(e.getTargetException().getClass(), e.getTargetException().toString(), e);
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
-			throw new CallbackException(e.getClass(), e.toString());
+			throw new CallbackException(e.getClass(), e.toString(), e);
 		}
 		
 	}
