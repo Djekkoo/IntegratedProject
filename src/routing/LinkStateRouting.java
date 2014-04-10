@@ -1,6 +1,3 @@
-/**
- * 
- */
 package routing;
 
 import java.nio.ByteBuffer;
@@ -50,6 +47,10 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private Callback sendMethod;
 	/**
+	 * A callback, invoking this will run main.Communication.updateNetwork()
+	 */
+	private Callback updateMethod;
+	/**
 	 * The device ID ie., the last byte of the IP on wlan0
 	 */
 	private byte deviceID;
@@ -74,11 +75,11 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private ReentrantLock lock = new ReentrantLock();
 	
-	
 	//PUBLIC
 	
-	public LinkStateRouting(Callback send) {
+	public LinkStateRouting(Callback send, Callback newUser) {
 		this.sendMethod = send;
+		this.updateMethod = newUser;
 		this.deviceID = IntegrationProject.DEVICE;
 		
 		networkTreeMap.put(deviceID, new TreeSet<Byte>());
@@ -88,8 +89,9 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
-	public LinkStateRouting(Callback send, boolean autoUpdate) {
+	public LinkStateRouting(Callback send, Callback newUser, boolean autoUpdate) {
 		this.sendMethod = send;
+		this.updateMethod = newUser;
 		this.deviceID = IntegrationProject.DEVICE;
 		this.autoUpdate = autoUpdate;
 		
@@ -108,6 +110,7 @@ public class LinkStateRouting implements RoutingInterface {
 		boolean updated = parsePacket(p.getData());
 		if(updated) {
 			sendToNeighbours(buildPacket());
+			update();
 		}
 	}
 	
@@ -381,40 +384,45 @@ public class LinkStateRouting implements RoutingInterface {
 			int numHosts = p[8];
 			int offset = 9;
 			for(int i = 0; i < numHosts; i++) {
-				//Get the host of the entry
-				byte host = p[0+offset];
-				//Get how many neighbours are in the entry
-				int numNeighbours = p[1+offset];
-				byte[] neighbours = new byte[numNeighbours];
-				System.arraycopy(p, 2+offset, neighbours, 0, numNeighbours);
-				offset += numNeighbours+2;
-				
-				TreeSet<Byte> oldNeighbours = new TreeSet<Byte>();
-				for(Object nb : networkTreeMap.get(host).toArray()) {
-					oldNeighbours.add((Byte)nb);
-				}
-				
-				for(byte nb : neighbours) {
-					//Do we have a host that we have no record of?
-					if(networkTreeMap.containsKey(host)) {
-						if(networkTreeMap.get(host).contains(nb)) {
-							//Do nothing
+				try {
+					//Get the host of the entry
+					byte host = p[0+offset];
+					//Get how many neighbours are in the entry
+					int numNeighbours = p[1+offset];
+					byte[] neighbours = new byte[numNeighbours];
+					System.arraycopy(p, 2+offset, neighbours, 0, numNeighbours);
+					offset += numNeighbours+2;
+					
+					TreeSet<Byte> oldNeighbours = new TreeSet<Byte>();
+					for(Object nb : networkTreeMap.get(host).toArray()) {
+						oldNeighbours.add((Byte)nb);
+					}
+					
+					for(byte nb : neighbours) {
+						//Do we have a host that we have no record of?
+						if(networkTreeMap.containsKey(host)) {
+							if(networkTreeMap.get(host).contains(nb)) {
+								//Do nothing
+							} else {
+								this.addPath(host, nb);
+								updated = true;
+							}
+							oldNeighbours.remove(nb);
 						} else {
+							this.addNode(host);
 							this.addPath(host, nb);
+							sendMethod.invoke(host,NetworkMessage.JOINED);
+							oldNeighbours.remove(nb);
 							updated = true;
 						}
-						oldNeighbours.remove(nb);
-					} else {
-						networkTreeMap.put(host, new TreeSet<Byte>());
-						this.addNode(host);
-						this.addPath(host, nb);
-						oldNeighbours.remove(nb);
+					}
+					for(Byte nb : oldNeighbours) {
+						this.removeNode(nb);
+						sendMethod.invoke(nb,NetworkMessage.DROPPED);
 						updated = true;
 					}
-				}
-				for(Byte nb : oldNeighbours) {
-					this.removeNode(nb);
-					updated = true;
+				} catch(CallbackException e) {
+					e.getException().printStackTrace();
 				}
 			}
 		}
@@ -468,7 +476,7 @@ public class LinkStateRouting implements RoutingInterface {
 			}
 		} catch (CallbackException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.getException().printStackTrace();
 		}
 	}
 	
