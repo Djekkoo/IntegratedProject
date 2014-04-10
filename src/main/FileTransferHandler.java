@@ -77,13 +77,13 @@ public class FileTransferHandler {
             int offset = 0;
             System.arraycopy(preamble, 0, packet, 0, 5);
             offset += 5;
-            System.arraycopy(checksum, 0, packet, 5, 16);
+            System.arraycopy(checksum, 0, packet, offset, 16);
             offset += 16;
-            System.arraycopy(new byte[]{filenameLength}, 0, packet, 16+5, 1);
+            System.arraycopy(new byte[]{filenameLength}, 0, packet, offset, 1);
             offset += 1;
-            System.arraycopy(filename, 0, packet, 16+5+1, filenameLength);
+            System.arraycopy(filename, 0, packet, offset, filenameLength);
             offset += filenameLength;
-            System.arraycopy(data, 0, packet, 16+5+1+filenameLength, data.length);
+            System.arraycopy(data, 0, packet, offset, data.length);
             
             return packet;
 		} catch (NoSuchAlgorithmException | IOException e) {
@@ -112,11 +112,11 @@ public class FileTransferHandler {
             int offset = 0;
             System.arraycopy(packet, 0, preamble, 0, 5);
             offset += 5;
-			System.arraycopy(packet, 5, checksum, 0, 16);
+			System.arraycopy(packet, offset, checksum, 0, 16);
 			offset += 16 + 1; //Because of the filenameLength byte.
-			System.arraycopy(packet, 16+5+1, filename, 0, filenameLength);
+			System.arraycopy(packet, offset, filename, 0, filenameLength);
 			offset += filenameLength;
-            System.arraycopy(packet, 16+5+1+filenameLength, data, 0, data.length);
+            System.arraycopy(packet, offset, data, 0, data.length);
             
             System.out.println("\'" + new String(filename) + "\' file size: " + data.length);
             
