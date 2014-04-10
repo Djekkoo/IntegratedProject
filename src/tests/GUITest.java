@@ -18,7 +18,7 @@ public class GUITest extends TestCase {
         gui = new Client(new Callback(this,"empty")).getGUI();
     }
     
-    public void empty(String text) {
+    public void empty(String text,Byte ding) {
     	System.out.println(text);
     }
 
@@ -34,9 +34,9 @@ public class GUITest extends TestCase {
         startTest("Chat test");
         gui.updateChat("test");
         assertEquals("Aantal berichten", 2, gui.getChat().length);
-        try { Thread.sleep(100);} catch (InterruptedException e) {	}
+        try { Thread.sleep(1000);} catch (InterruptedException e) {	}
         gui.updateChat("hoi Jacco");
-        try { Thread.sleep(100);} catch (InterruptedException e) {	}
+        try { Thread.sleep(1000);} catch (InterruptedException e) {	}
         gui.updateChat("allemaal gechat");
         assertEquals("Aantal berichten", 4, gui.getChat().length);
     }
@@ -45,7 +45,7 @@ public class GUITest extends TestCase {
     	startTest("User test");
     	gui.updateUserlist(new String[]{"Joey","Neger"});
     	assertEquals("Players", " Joey Neger", gui.getUsers());
-    	try { Thread.sleep(100);} catch (InterruptedException e) {	}
+    	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
     	gui.updateUserlist(new String[]{"Joey","Neger","Jan Boerman","Zoe Haas","Koekoekjongen"});
     	assertEquals("Players", " Joey Neger Jan Boerman Zoe Haas Koekoekjongen", gui.getUsers());
     }

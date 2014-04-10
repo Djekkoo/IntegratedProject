@@ -21,11 +21,11 @@ public class Client {
 	private Callback sendMsg;
 	private GUI gui;
 	private String name;
-	private Map<String,Byte> table;
+	private Map<Byte,String> table;
 	
 	public Client(Callback sendMsg) {
 		this.sendMsg = sendMsg;
-		table = new HashMap<String,Byte>();
+		table = new HashMap<Byte,String>();
 		//Start de GUI
 		this.name = "";
 		gui = new GUI(this);
@@ -76,7 +76,9 @@ public class Client {
 				for(int i = 1; i < splitdata.length; i++) {
 					usermsg = usermsg + splitdata[i];
 				}
-				table.put(usermsg,packet.getSource());
+				//System.out.println(usermsg +"  en src  "+ packet.getSource());
+				table.put(packet.getSource(),usermsg);
+				System.out.println(table.get(packet.getSource()) + " detected");
 				updateUsers();
 				break;
 			default:
@@ -89,8 +91,13 @@ public class Client {
 	public void sendChat(String text) {
 		if (text.split(" ")[0].equals("!pvt")) {
 			//DIRECT SEND
-			Byte dest = table.get(text.split(" ")[1]);
-			
+			Byte dest = 0x00;
+			for (Entry<Byte, String> entry : table.entrySet()) {
+				if (entry.getValue().equals(text.split(" ")[1])) {
+					dest = entry.getKey();
+				}
+			    //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+			}
 			String chat = getName() + "(pvt): " + text;
 			gui.updateChat(chat);
 			try {
@@ -111,7 +118,7 @@ public class Client {
 	}
 	
 	public void sendIdentity() {
-		table.put(name,IntegrationProject.DEVICE);
+		table.put(IntegrationProject.DEVICE,name);
 		try {
 			sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));
 		} catch (CallbackException e) {
@@ -123,8 +130,8 @@ public class Client {
 	public void updateUsers() {
 		String[] lijstje = new String[table.size()];
 		int count = 0;
-		for (Entry<String, Byte> entry : table.entrySet()) {
-			lijstje[count] = entry.getKey();
+		for (Entry<Byte, String> entry : table.entrySet()) {
+			lijstje[count] = entry.getValue();
 			count++;
 		    //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 		}
@@ -135,8 +142,9 @@ public class Client {
 		if (type == NetworkMessage.DROPPED) {
 			System.out.println("Our friend "+table.get(source)+"("+source+") dropped it like it's hot.");
 			table.remove(source);
+			updateUsers();
 		} else if (type == NetworkMessage.JOINED) {
-			System.out.println("Our friend "+table.get(source)+"("+source+") joined his sorry ass.");
+			System.out.println("Someone from source "+source+" joined his sorry ass.");
 			try {
 				sendMsg.invoke("USER " + name,source);
 			} catch (CallbackException e) {

@@ -11,7 +11,7 @@ public class Tester {
     public static void main(String[] args) {
         System.out.println("Log of " + Tester.class + 
                            ", " + new java.util.Date());
-		run(new GUITest());	
+		//run(new GUITest());	
 		run(new ClientTest());	
 		System.out.println("Total errors: " + errors);
     }
