@@ -1,15 +1,8 @@
 package application;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javazoom.jl.decoder.JavaLayerException;
-
-import com.gtranslate.Audio;
-import com.gtranslate.Language;
 
 import networking.DataPacket;
 import main.Callback;
@@ -47,7 +40,6 @@ public class Client {
 	
 	public void setName(String name) {
 		this.name = name;
-		//tell("Welcome "+name+"... Please, .. fuck, ... me.");
 	}
 	
 	public String getName() {
@@ -78,7 +70,6 @@ public class Client {
 					msg = msg + " " + splitdata[i];
 				}
 				gui.updateChat(msg);
-				//tell(msg);
 				break;
 			case "USER":
 				String usermsg = "";
@@ -87,7 +78,6 @@ public class Client {
 				}
 				table.put(packet.getSource(),usermsg);
 				System.out.println(usermsg + " detected.");
-				//tell("Some bitch.. ass... nigger.. "+usermsg+"... joined.");
 				updateUsers();
 				break;
 			default:
@@ -142,7 +132,6 @@ public class Client {
 		for (Entry<Byte, String> entry : table.entrySet()) {
 			lijstje[count] = entry.getValue();
 			count++;
-		    //tell("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 		}
 		gui.updateUserlist(lijstje);
 	}
@@ -158,27 +147,6 @@ public class Client {
 				sendMsg.invoke("USER " + name,source);
 			} catch (CallbackException e) {
 				System.out.println(e.getMessage());
-			}
-		}
-	}
-	
-	public void tell(String msg) {
-		String text = msg.replace(":", " says, ..");
-		System.out.println(text);
-		if (1+1==3) {
-			Audio audio = Audio.getInstance();
-			InputStream sound;
-			try {
-				sound = audio.getAudio(text, Language.ENGLISH);
-				try {
-					audio.play(sound);
-				} catch (JavaLayerException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}	
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
 	}

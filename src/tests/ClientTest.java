@@ -76,7 +76,6 @@ public class ClientTest extends TestCase {
     	try { Thread.sleep(2000);} catch (InterruptedException e) {	}
     	client.updateNetwork((Byte) Byte.valueOf((byte) 0x0E),NetworkMessage.DROPPED);
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
-    	client.tell("Test completed, fuck, you!");
     }
     
     protected void pvtChat() {
