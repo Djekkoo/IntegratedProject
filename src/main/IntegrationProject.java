@@ -15,6 +15,8 @@ import java.util.Enumeration;
  */
 public class IntegrationProject {
 
+	private static final byte MAXNODES = 16;
+	
 	public static byte DEVICE = 1;
 	public static byte GROUP = 14;
 	public static String WLAN = "wlan0";
@@ -33,7 +35,7 @@ public class IntegrationProject {
 			// linux
 		} else {
 			try {
-				DEVICE = getIP().getAddress()[3];
+				DEVICE = getIP("wlan0").getAddress()[3];
 				System.out.println(DEVICE + " ");
 			} catch (SocketException | UnknownHostException e) {
 				// TODO Auto-generated catch block
@@ -41,21 +43,25 @@ public class IntegrationProject {
 			}
 		}
 		
-		// register shutdown
-		Runtime.getRuntime().addShutdownHook(
-		    new Thread() {
-		        public void run() {
-		        	
-		        	System.out.println("Shutting down");
-		        	IntegrationProject.Communication.shutDown();
-		        	
-		        }
-		    }
-		);
-		
-		// Start project
-		new IntegrationProject();
-
+		if(DEVICE < MAXNODES && DEVICE > 0)
+		{
+			// register shutdown
+			Runtime.getRuntime().addShutdownHook(
+			    new Thread() {
+			        public void run() {
+			        	
+			        	System.out.println("Shutting down");
+			        	IntegrationProject.Communication.shutDown();
+			        	
+			        }
+			    }
+			);
+			
+			// Start project
+			new IntegrationProject();
+		} else {
+			System.err.println("It appears you are not in the Ad-hoc network. Shutting down.");
+		}
 	}
 
 	public IntegrationProject() {
@@ -64,14 +70,22 @@ public class IntegrationProject {
 
 	}
 	
-	private static InetAddress getIP() throws SocketException, UnknownHostException {
+	/**
+	 * Gives the IP currently in use on an interface.
+	 * 
+	 * @param	ifacename The short name of the interface to request the IP of.
+	 * @return	The IP currently in use on the interface.
+	 * @throws 	SocketException
+	 * @throws 	UnknownHostException
+	 */
+	private static InetAddress getIP(String ifacename) throws SocketException, UnknownHostException {
 		Enumeration<NetworkInterface> ifs = NetworkInterface.getNetworkInterfaces();
 		NetworkInterface iface;
 		Enumeration<InetAddress> addresses;
 		InetAddress ip;
 		while(ifs.hasMoreElements() && (iface = ifs.nextElement()) != null)
 		{
-			if(iface.getDisplayName().equals("wlan0")) {
+			if(iface.getDisplayName().equals(ifacename)) {
 				addresses = iface.getInetAddresses();
 				
 				while(addresses.hasMoreElements() && (ip = addresses.nextElement()) != null) {
