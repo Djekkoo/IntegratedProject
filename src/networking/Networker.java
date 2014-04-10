@@ -73,37 +73,17 @@ public class Networker {
 	 * @param routing Is used by routing protocol
 	 * @param keepalive Is used as a keep alive signal
 	 * @throws IOException When the socket can be reached
+	 * @throws DatagramDataSizeException 
 	 */
 	public void broadcast(byte[] data, Byte hops, Boolean nonSequence,
-			Boolean routing, Boolean keepalive) throws IOException{
-
-		if (nonSequence) {
-			try {
-				DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
-						(byte) 0x0, (byte) 0x0, data, false, routing, keepalive,
-						false);
-				mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
-						multicastAddress, MULTIPORT));
-			} catch (DatagramDataSizeException e) {
-				e.printStackTrace();
-			}
-
-			if (hops != 0)
-				System.out
-						.println("WARNING: nonsequence broadcast can only have 0 hops");
-		} else {
-			
-			LinkedList<DataPacket> packets = processData((byte) 0x0F,
-					hops, data, false, routing, keepalive);
-
-			for (DataPacket p : packets) {
-				broadcasts.put(p.getSequenceNumber(), p);
-				
-				mSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
-						multicastAddress, MULTIPORT));
-			}
-			
-		}
+			Boolean routing, Boolean keepalive) throws IOException, DatagramDataSizeException{
+		
+		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
+				(byte) 0x0, (byte) 0x0, data, false, routing, keepalive,
+				false);
+		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
+				multicastAddress, MULTIPORT));
+		
 	}
 	
 	/**
@@ -114,8 +94,10 @@ public class Networker {
 	 */
 
 	public void broadcast(DataPacket dp) throws IOException {
+		
 		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				multicastAddress, MULTIPORT));
+		
 	}
 
 	/**
@@ -124,7 +106,9 @@ public class Networker {
 	 * @param router Callback to the function of Routing
 	 */
 	public void setRouter(Callback router) {
+		
 		this.routerGetRoute = router;
+		
 	}
 
 	/**
@@ -156,6 +140,7 @@ public class Networker {
 			dSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
 					getFullAddress(connection.getKey()), UNIPORT));
 		}
+		
 	}
 
 	/**
@@ -166,6 +151,7 @@ public class Networker {
 	 */
 	@SuppressWarnings("unchecked")
 	public void send(DataPacket dp) throws IOException, BigPacketSentException {
+		
 		if (dp instanceof BigPacket)
 			throw new BigPacketSentException();
 
@@ -184,6 +170,7 @@ public class Networker {
 
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				getFullAddress(connection.getKey()), UNIPORT));
+		
 	}
 	/**
 	 * When one of the monitors receives a DataPacket it should pass it on to here
@@ -194,24 +181,17 @@ public class Networker {
 	
 	@SuppressWarnings("unchecked")
 	public void receive(DataPacket d) throws IOException {
-		if (d.getDestination() == (byte) 0x0F) {
-			if (d.getSequenceNumber() == (byte) 0) { // Reserved for packets that don't use sequencenumbers
-				try {
-					packetReceived.invoke(d);
-				} catch (CallbackException e) {
-				}
-			} else {
-				try {
-					offer(d);
-				} catch (CallbackException e) {
-				}
+		if (d.getDestination() == (byte) 0x0F) {// Multicast
+			try {
+				packetReceived.invoke(d);
+			} catch (CallbackException e) {
 			}
 
 			if (d.getHops() > 0) {
 				d.decreaseHops();
 				broadcast(d);
 			}
-		} else if (d.getDestination() == IntegrationProject.DEVICE) {
+		} else if (d.getDestination() == IntegrationProject.DEVICE) { // Meant for me
 			try {
 				Entry<Byte, Byte> connection = null;
 
@@ -234,12 +214,13 @@ public class Networker {
 				// Can't really happen, but oh well...
 				e.printStackTrace();
 			}
-		} else {
+		} else { // Must pass it on
 			d.decreaseHops();
 			if (d.getHops() > 0) {
 				try {
 					send(d);
 				} catch (BigPacketSentException e) {
+					// Can't really happen, but oh well...
 					e.printStackTrace();
 				}
 			}
@@ -343,12 +324,15 @@ public class Networker {
 	}
 
 	private byte offer(DataPacket d) throws CallbackException{
+		System.out.println("Offering");
 		byte ack = sequencer.put(d);
 
+		System.out.println("Getting packets");
 		LinkedList<DataPacket> readyPackets = sequencer.getPackets(
 				d.getSource(), false);
 		LinkedList<DataPacket> buffer = new LinkedList<DataPacket>();
 
+		System.out.println("Looping packets");
 		while (!readyPackets.isEmpty()) {
 			if (!readyPackets.peek().hasMore()) {
 				packetReceived.invoke(readyPackets.poll());
