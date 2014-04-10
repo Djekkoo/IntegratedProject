@@ -1,6 +1,9 @@
 package networking;
 
 /** 
+ * DatagramDataSizeException is thrown when a DataPacket is instantiated 
+ * with a byte array exceeding the maximum size.
+ * 
  * @author      Sander Koning <s.koning@student.utwente.nl>
  * @version     0.1
  * @since       2014-04-07

@@ -1,6 +1,16 @@
 package networking;
 
 import java.io.IOException;
+
+/**
+ * MultiMonitor is a thread that monitors a MulticastSocket for data received.
+ * It invokes a callback with a DataPacket as parameter.
+ * 
+ * @author Sander Koning <s.koning@student.utwente.nl>
+ * @version 0.1
+ * @since 2014-04-09
+ */
+
 import java.net.DatagramPacket;
 import java.net.MulticastSocket;
 

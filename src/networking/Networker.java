@@ -6,7 +6,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
@@ -60,8 +59,11 @@ public class Networker {
 		DataPacket dp;
 
 		if (nonSequence) {
-			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F, hops,
+			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F, (byte) 0x0,
 					(byte) 0x0, data, false, routing, keepalive, false);
+			
+			if(hops != 0)
+				System.out.println("WARNING: nonsequence broadcast can only have 0 hops");
 		} else {
 			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F, hops,
 					sequencer.getBroadcast(), data, false, routing, keepalive, false);
