@@ -22,7 +22,6 @@ import main.CallbackException;
 public class NetworkMonitor extends Thread {
 	
 	private Callback broadcast;
-	private Callback newClient;
 	
 	private static long broadcastDelay = 500;
 	private static long dumpDelay = 1500;
@@ -33,10 +32,9 @@ public class NetworkMonitor extends Thread {
 	
 
 	
-	public NetworkMonitor(RoutingInterface router, Callback broadcast, Callback client){
+	public NetworkMonitor(RoutingInterface router, Callback broadcast){
 		this.router = router;
 		this.broadcast = broadcast;
-		this.newClient = client;
 	}
 	
 	
@@ -74,10 +72,7 @@ public class NetworkMonitor extends Thread {
 				// Keep-alive not received
 				if (this.activity.get(key) <= threshold) {
 					this.activity.remove(key);
-					try {
-						this.newClient.invoke(key, NetworkMessage.NOKEEPALIVE);
-						this.router.networkMessage(key, NetworkMessage.NOKEEPALIVE);
-					} catch (CallbackException e) { }
+					this.router.networkMessage(key, NetworkMessage.NOKEEPALIVE);
 				}
 				
 			}
@@ -112,14 +107,7 @@ public class NetworkMonitor extends Thread {
 		if (p.isRouting()) {
 			if (this.activity.containsKey(source)) {
 				this.activity.remove(source);
-				try {
-					this.router.networkMessage(source, NetworkMessage.DROPPED);
-					if (this.router.isReachable(source).equals(Boolean.FALSE))
-						this.newClient.invoke(source, NetworkMessage.DROPPED);
-				}
-				catch (CallbackException e) {
-					System.out.println(e.getLocalizedMessage());
-				}
+				this.router.networkMessage(source, NetworkMessage.DROPPED);
 			}
 			
 			return;
@@ -128,15 +116,8 @@ public class NetworkMonitor extends Thread {
 		// alive
 		if (!this.activity.containsKey(source)) {
 			this.activity.put(source, System.currentTimeMillis());
-			try {
-				
-				if (this.router.isReachable(source).equals(Boolean.FALSE))
-					this.newClient.invoke(source, NetworkMessage.JOINED);
-				this.router.networkMessage(source, NetworkMessage.NEWKEEPALIVE);
-				
-			} catch (CallbackException e) {
-				System.out.println(e.getLocalizedMessage());
-			}
+			this.router.networkMessage(source, NetworkMessage.NEWKEEPALIVE);
+			
 			return;
 		}
 		

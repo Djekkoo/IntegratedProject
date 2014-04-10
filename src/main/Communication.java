@@ -34,7 +34,7 @@ public class Communication {
 			e.printStackTrace();
 		}
 		
-		router = new routing.LinkStateRouting(new Callback(network, "send"));
+		router = new routing.LinkStateRouting(new Callback(network, "send"), new Callback(this, "updateNetwork"));
 		network.setRouter(new Callback(router, "getRoute"));
 //		new Thread(new Runnable() {
 //		     public void run()
@@ -45,7 +45,7 @@ public class Communication {
 		
 		this.client = new Client(new Callback(this, "sendMessage"),router);
 		
-		this.monitor = new NetworkMonitor(this.router, new Callback(network, "broadcast"), new Callback(this, "updateNetwork"));
+		this.monitor = new NetworkMonitor(this.router, new Callback(network, "broadcast"));
 		this.monitor.start();
 		
 	}
