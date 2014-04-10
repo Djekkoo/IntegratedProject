@@ -47,7 +47,7 @@ public class Client {
 	
 	public void setName(String name) {
 		this.name = name;
-		tell("Welcome "+name+"... Please, .. fuck, ... me.");
+		//tell("Welcome "+name+"... Please, .. fuck, ... me.");
 	}
 	
 	public String getName() {
@@ -66,7 +66,7 @@ public class Client {
 		try {
 			data = new String(packet.getData(), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			tell(e.getMessage());
+			System.out.println(e.getMessage());
 		}
 		
 		if (!data.equals("") && data.split(" ").length > 1) {
@@ -78,20 +78,20 @@ public class Client {
 					msg = msg + " " + splitdata[i];
 				}
 				gui.updateChat(msg);
-				tell(msg);
+				//tell(msg);
 				break;
 			case "USER":
 				String usermsg = "";
 				for(int i = 1; i < splitdata.length; i++) {
 					usermsg = usermsg + splitdata[i];
 				}
-				//tell(usermsg +"  en src  "+ packet.getSource());
 				table.put(packet.getSource(),usermsg);
-				tell("Some bitch.. ass... nigger.. "+usermsg+"... joined.");
+				System.out.println(usermsg + " detected.");
+				//tell("Some bitch.. ass... nigger.. "+usermsg+"... joined.");
 				updateUsers();
 				break;
 			default:
-				tell("The received command does not exist.");
+				System.out.println("The received command does not exist.");
 				break;
 			}
 		}
@@ -112,7 +112,7 @@ public class Client {
 			try {
 				sendMsg.invoke("CHAT " + chat,dest);
 			} catch (CallbackException e) {
-				tell(e.getMessage());
+				System.out.println(e.getMessage());
 			}
 		} else {
 			//BROADCAST
@@ -121,7 +121,7 @@ public class Client {
 			try {
 				sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
 			} catch (CallbackException e) {
-				tell(e.getMessage());
+				System.out.println(e.getMessage());
 			}
 		}
 	}
@@ -131,7 +131,7 @@ public class Client {
 		try {
 			sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));
 		} catch (CallbackException e) {
-			tell(e.getMessage());
+			System.out.println(e.getMessage());
 		}
 		updateUsers();
 	}
@@ -149,15 +149,15 @@ public class Client {
 	
 	public void updateNetwork(Byte source, NetworkMessage type) {
 		if (type == NetworkMessage.DROPPED) {
-			tell("Our friend "+table.get(source)+" dropped it like it's hot.");
+			System.out.println("Our friend "+table.get(source)+" dropped it like it's hot.");
 			table.remove(source);
 			updateUsers();
 		} else if (type == NetworkMessage.JOINED) {
-			System.out.println("Someone from source "+source+" joined his sorry ass.");
+			System.out.println("Someone from source "+source+" joined.");
 			try {
 				sendMsg.invoke("USER " + name,source);
 			} catch (CallbackException e) {
-				tell(e.getMessage());
+				System.out.println(e.getMessage());
 			}
 		}
 	}
