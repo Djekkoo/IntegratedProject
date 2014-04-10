@@ -32,15 +32,37 @@ import monitoring.NetworkMessage;
  */
 public class LinkStateRouting implements RoutingInterface {
 	
+	/**
+	 * A map of sets of neighbours paired to the network IDs
+	 */
 	private TreeMap<Byte,TreeSet<Byte>> nw = new TreeMap<Byte,TreeSet<Byte>>();
+	/**
+	 * The timestamp of the last received packet
+	 */
 	private long lastReceivedPacket = 0;
+	/**
+	 * The timestamp of the last sent packet
+	 */
 	private long lastSentPacket = 0;
+	/**
+	 * A callback, invoking this will run networking.Networker.send()
+	 */
 	private Callback send;
+	/**
+	 * The device ID ie., the last byte of the IP on wlan0
+	 */
 	private byte DEVICE;
-	
+	/**
+	 * Contains all the nodes as Vertex objects.
+	 */
 	private Vertex[] vertexArray;
-	
+	/**
+	 * A cache of the next client a packet should go to for a given route.
+	 */
 	private HashMap<Byte,Byte> nextHops = new HashMap<Byte,Byte>();
+	/**
+	 * A cache of the route lengths, from this device to another.
+	 */
 	private HashMap<Byte,Byte> routeLens = new HashMap<Byte,Byte>();
 	
 	public LinkStateRouting(Callback send) {
@@ -115,10 +137,16 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public Boolean isReachable(Byte node) {
 		return (findPath(DEVICE,node) == null);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public Byte getLongestRoute() {
 		Byte max = 0;
 		for(Entry<Byte,Byte> e : routeLens.entrySet()) {
@@ -132,6 +160,14 @@ public class LinkStateRouting implements RoutingInterface {
 	
 	// PRIVATE
 	
+	/**
+	 * Finds a path between to nodes.
+	 * 
+	 * @param	src The source node
+	 * @param	dst The destination node
+	 * @return	A linked list of nodes (A path)
+	 * @since	2014-04-09
+	 */
 	private LinkedList<Vertex> findPath(Byte src, Byte dst) {
 		DijkstraAlgorithm pf;
 		LinkedList<Vertex> path;
@@ -145,6 +181,12 @@ public class LinkStateRouting implements RoutingInterface {
 		return null;
 	}
 	
+	/**
+	 * Finds all the paths from the current node to all other (known) nodes.
+	 * 
+	 * @return	A K,V map of paths set to the device IDs.
+	 * @since	2014-04-09
+	 */
 	private HashMap<Byte,LinkedList<Vertex>> findAllPaths() {
 		DijkstraAlgorithm pf;
 		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
@@ -159,16 +201,35 @@ public class LinkStateRouting implements RoutingInterface {
 		return paths;
 	}
 	
+	/**
+	 * Creates a path between two nodes in the network map.
+	 * 
+	 * @param	A	The first node.
+	 * @param	B	The second node.
+	 * @since	2014-04-09
+	 */
 	public void addPath(Byte A, Byte B) {
 		nw.get((byte)A).add((byte)B);
 		nw.get((byte)B).add((byte)A);
 	}
 	
+	/**
+	 * Removes a path between two nodes in the network map.
+	 * 
+	 * @param	A	The first node.
+	 * @param	B	The second node.
+	 * @since	2014-04-09
+	 */
 	public void removePath(Byte A, Byte B) {
 		nw.get((byte)A).remove((byte)B);
 		nw.get((byte)B).remove((byte)A);
 	}
 	
+	/**
+	 * Builds the cached list of route lengths and next hops.
+	 * 
+	 * @since	2014-04-09
+	 */
 	private void update() {
 		HashMap<Byte,LinkedList<Vertex>> paths = findAllPaths();
 		nextHops.clear();
@@ -186,6 +247,13 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
+	/**
+	 * Takes the network map and puts it in graph form so the pathfinder
+	 * can work with it. Then builds the pathfinder and returns it.
+	 * 
+	 * @return 	The pathfinder object
+	 * @since	2014-04-09
+	 */
 	private DijkstraAlgorithm getPathFinder() {
 		List<Vertex> vertices = new ArrayList<Vertex>();
 		List<Edge> edges = new ArrayList<Edge>();
@@ -209,6 +277,12 @@ public class LinkStateRouting implements RoutingInterface {
 		return dijkstra;
 	}
 	
+	/**
+	 * Sends the data to all the neighbours of the current device.
+	 * 
+	 * @param	data	The bytes to send to the neighbours
+	 * @since	2014-04-09
+	 */
 	private void sendToNeighbours(Byte[] data) {
 		TreeSet<Byte> neighbours = nw.get(DEVICE);
 		for(Byte nb : neighbours) {
@@ -306,6 +380,13 @@ public class LinkStateRouting implements RoutingInterface {
 		return toByteObjectArray(p);
 	}
 	
+	/**
+	 * Prepares the Byte array for sending, then invokes the callback to send.
+	 * 
+	 * @param 	node The node to send to.
+	 * @param 	data The data to send to the node.
+	 * @since	2014-04-09
+	 */
 	private void send(Byte node, Byte[] data) {
 		try {
 			send.invoke(node, toByteArray(data));
@@ -320,7 +401,6 @@ public class LinkStateRouting implements RoutingInterface {
 	 * 
 	 * @since	2014-04-08
 	 */
-	
 	private void showNetwork() {
 		for(Entry<Byte,TreeSet<Byte>> e : nw.entrySet()) {
 			System.out.println(e.getKey() + " to: ");
@@ -330,6 +410,13 @@ public class LinkStateRouting implements RoutingInterface {
 		}
 	}
 	
+	/**
+	 * Takes an ArrayList of Bytes and turns it into a Byte[]
+	 * 
+	 * @param	bytes The ArrayList of Bytes.
+	 * @return	The bytes in the ArrayList, contained in a Byte[]
+	 * @since	2014-04-09
+	 */
 	private Byte[] toByteObjectArray(ArrayList<Byte> bytes) {
 		//ArrayList<Byte> into Byte[]
 		Byte[] byteObjects = new Byte[bytes.size()];
@@ -341,6 +428,13 @@ public class LinkStateRouting implements RoutingInterface {
 		return byteObjects;
 	}
 	
+	/**
+	 * Takes a primitive array of bytes and turns it into a Byte[]
+	 * 
+	 * @param	bytes The primitive byte array.
+	 * @return	The byte array as a Byte[]
+	 * @since	2014-04-09
+	 */
 	private Byte[] toByteObjectArray(byte[] bytes) {
 		//A really hacky way to cast byte[] to Byte[]
 		Byte[] byteObjects = new Byte[bytes.length];
@@ -352,6 +446,14 @@ public class LinkStateRouting implements RoutingInterface {
 		return byteObjects;
 	}
 	
+	/**
+	 * Takes an object array of Bytes and turns it into a primitive
+	 * array of bytes.
+	 * 
+	 * @param	byteObjects The Byte object array.
+	 * @return	The primitive byte array
+	 * @since	2014-04-09
+	 */
 	private byte[] toByteArray(Byte[] byteObjects) {
 		//A really hacky way to cast Byte[] to byte[]
 		byte[] bytes = new byte[byteObjects.length];

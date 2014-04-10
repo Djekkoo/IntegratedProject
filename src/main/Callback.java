@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
  * Provides a callback, a pointer to a method of a specific object. The callback can be invoked in any other method, 
  * without them having a reference to the original object.
  * 
- * @author      Jacco Brandt <j.h.haas@student.utwente.nl>
+ * @author      Jacco Brandt <j.h.brandt@student.utwente.nl>
  * @version     0.1
  * @since       2014-04-07
  */
