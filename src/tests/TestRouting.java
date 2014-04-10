@@ -1,21 +1,10 @@
 package tests;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.SocketException;
-import java.security.SecureRandom;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.LinkedList;
-import java.util.TreeSet;
-
 import routing.LinkStateRouting;
 import routing.RouteNotFoundException;
-import dijkstra.model.Vertex;
-import main.Callback;
 import monitoring.NetworkMessage;
-import networking.DataPacket;
-import networking.DatagramDataSizeException;
-import networking.Networker;
 
 public class TestRouting extends TestCase {
 	public TestRouting(){

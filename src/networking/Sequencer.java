@@ -12,7 +12,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import main.Callback;
 import main.CallbackException;
-import main.IntegrationProject;
 
 /**
  * @author Jacco

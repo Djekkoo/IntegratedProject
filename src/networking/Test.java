@@ -3,7 +3,6 @@ package networking;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.SocketException;
 import java.security.SecureRandom;
 import java.util.LinkedList;
 
