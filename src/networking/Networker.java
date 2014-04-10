@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
@@ -36,6 +37,9 @@ public class Networker {
 
 	Callback routerGetRoute;
 	Callback packetReceived;
+
+	HashMap<Byte, DataPacket> broadcasts = new HashMap<Byte, DataPacket>();
+	HashMap<Byte, HashMap<Byte, DataPacket>> sends = new HashMap<Byte, HashMap<Byte, DataPacket>>();
 	
 	/**
 	 * 
@@ -93,6 +97,8 @@ public class Networker {
 					hops, data, false, routing, keepalive);
 
 			for (DataPacket p : packets) {
+				broadcasts.put(p.getSequenceNumber(), p);
+				
 				mSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
 						multicastAddress, MULTIPORT));
 			}
@@ -241,8 +247,29 @@ public class Networker {
 
 	}
 	
+	/**
+	 * 
+	 * @param destination Destination host
+	 * @param sequencenumber Number to resend
+	 * @param broadcast Whether or not it was a broadcast
+	 */
+	
 	public void resend(Byte destination, Byte sequencenumber, Boolean broadcast){
-		
+		if(broadcast){
+			try {
+				broadcast(broadcasts.get(sequencenumber));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				send(sends.get(destination).get(sequencenumber));
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (BigPacketSentException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private BigPacket processPackets(LinkedList<DataPacket> packets) {
@@ -339,6 +366,7 @@ public class Networker {
 		return ack;
 	}
 
+	@SuppressWarnings("unused")
 	private Byte dummyRoute(Byte b){
 		return (byte) 0x0;
 	}
