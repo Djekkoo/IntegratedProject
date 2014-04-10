@@ -27,7 +27,7 @@ public class TestRouting extends TestCase {
 	}
 	
 	protected void testNetwork() {
-		LinkStateRouting r = new LinkStateRouting(null);
+		LinkStateRouting r = new LinkStateRouting(null,false);
 		
 		Class[] args = new Class[2];
 		args[0] = Byte.class;

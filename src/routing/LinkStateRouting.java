@@ -64,6 +64,10 @@ public class LinkStateRouting implements RoutingInterface {
 	 * A cache of the route lengths, from this device to another.
 	 */
 	private HashMap<Byte,Byte> routeLengths = new HashMap<Byte,Byte>();
+	/**
+	 * 
+	 */
+	private boolean autoUpdate=true;
 	
 	public LinkStateRouting(Callback send) {
 		this.sendMethod = send;
@@ -71,8 +75,21 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		networkTreeMap.put(deviceID, new TreeSet<Byte>());
 		
-		update();
+		if(autoUpdate) {
+			update();	
+		}
+	}
+	
+	public LinkStateRouting(Callback send, boolean autoUpdate) {
+		this.sendMethod = send;
+		this.deviceID = IntegrationProject.DEVICE;
+		this.autoUpdate = autoUpdate;
 		
+		networkTreeMap.put(deviceID, new TreeSet<Byte>());
+		
+		if(autoUpdate) {
+			update();	
+		}
 	}
 	
 	//PUBLIC
@@ -105,7 +122,9 @@ public class LinkStateRouting implements RoutingInterface {
 		Byte nextHop = nextHops.get(destination);
 		Byte routeLen = routeLengths.get(destination);
 		if(nextHop == -1 || routeLen == -1) {
-			update();
+			if(autoUpdate) {
+				update();
+			}
 			throw new RouteNotFoundException("Destination unreachable; no route to host.");
 		}
 		
@@ -121,20 +140,22 @@ public class LinkStateRouting implements RoutingInterface {
 		switch(type) {
 		case NEWKEEPALIVE:
 			System.out.println("New user!");
-			networkTreeMap.get(deviceID).add(node);
+			networkTreeMap.put(node,new TreeSet<Byte>());
+			this.addPath(deviceID, node);
 			send(node,buildPacket());
-			update();
 			break;
 		case DROPPED:
 			networkTreeMap.get(deviceID).remove(node);
-			update();
 			break;
 		case NOKEEPALIVE:
-			update();
 			break;
 		default:
 			break;
 		}
+		if(autoUpdate) {
+			update();
+		}
+		
 	}
 	
 	/**
