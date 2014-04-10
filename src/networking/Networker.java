@@ -38,7 +38,6 @@ public class Networker {
 	Callback routerGetRoute;
 	Callback packetReceived;
 
-	HashMap<Byte, DataPacket> broadcasts = new HashMap<Byte, DataPacket>();
 	HashMap<Byte, HashMap<Byte, DataPacket>> sends = new HashMap<Byte, HashMap<Byte, DataPacket>>();
 	
 	/**
@@ -101,17 +100,6 @@ public class Networker {
 	}
 
 	/**
-	 * Sets the callback for retrieving a route to a node
-	 * 
-	 * @param router Callback to the function of Routing
-	 */
-	public void setRouter(Callback router) {
-		
-		this.routerGetRoute = router;
-		
-	}
-
-	/**
 	 * Sends data to a specific host
 	 * 
 	 * @param destination The end node it should be passed on to
@@ -120,6 +108,8 @@ public class Networker {
 	 */
 	@SuppressWarnings("unchecked")
 	public void send(Byte destination, byte[] data) throws IOException {
+
+		HashMap<Byte, DataPacket> entry;
 
 		Entry<Byte, Byte> connection = null;
 
@@ -135,11 +125,21 @@ public class Networker {
 
 		LinkedList<DataPacket> packets = processData(destination,
 				connection.getValue(), data, false, false, false);
+		
+		if(sends.containsKey(destination)){
+			entry = sends.get(destination);
+		} else {
+			entry = new HashMap<Byte, DataPacket>();
+		}
 
 		for (DataPacket p : packets) {
+			entry.put(p.getSequenceNumber(), p);
+			
 			dSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
 					getFullAddress(connection.getKey()), UNIPORT));
 		}
+		
+		sends.put(destination, entry);
 		
 	}
 
@@ -154,8 +154,18 @@ public class Networker {
 		
 		if (dp instanceof BigPacket)
 			throw new BigPacketSentException();
+		
+		HashMap<Byte, DataPacket> entry;
+		if(sends.containsKey(dp.getDestination())){
+			entry = sends.get(dp.getDestination());
+		} else {
+			entry = new HashMap<Byte, DataPacket>();
+		}
+		entry.put(dp.getSequenceNumber(), dp);
+		sends.put(dp.getDestination(), entry);
 
 		Entry<Byte, Byte> connection;
+		
 		try {
 			Object temp = routerGetRoute.invoke(dp.getDestination());
 			if (temp instanceof Entry)
@@ -235,22 +245,29 @@ public class Networker {
 	 * @param broadcast Whether or not it was a broadcast
 	 */
 	
-	public void resend(Byte destination, Byte sequencenumber, Boolean broadcast){
-		if(broadcast){
-			try {
-				broadcast(broadcasts.get(sequencenumber));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else {
-			try {
-				send(sends.get(destination).get(sequencenumber));
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (BigPacketSentException e) {
-				e.printStackTrace();
-			}
+	public void resend(Byte destination, Byte sequencenumber){
+		try {
+			send(sends.get(destination).get(sequencenumber));
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (BigPacketSentException e) {
+			e.printStackTrace();
 		}
+	}
+	
+	public void handshake(Byte destination){
+		// TODO handshaken
+	}
+
+	/**
+	 * Sets the callback for retrieving a route to a node
+	 * 
+	 * @param router Callback to the function of Routing
+	 */
+	public void setRouter(Callback router) {
+		
+		this.routerGetRoute = router;
+		
 	}
 
 	private BigPacket processPackets(LinkedList<DataPacket> packets) {
