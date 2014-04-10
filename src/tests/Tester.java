@@ -12,7 +12,8 @@ public class Tester {
         System.out.println("Log of " + Tester.class + 
                            ", " + new java.util.Date());
 		//run(new GUITest());	
-		run(new ClientTest());	
+		//run(new ClientTest());	
+        run(new TestRouting());
 		System.out.println("Total errors: " + errors);
     }
 
@@ -20,7 +21,7 @@ public class Tester {
 		System.out.println("Testklasse: "+test.getClass());
 		int error=test.runTest();
         if (error == 0) {
-            System.out.println("    OK");
+            System.out.println("\tTests OK");
         } else {
 			System.out.println("Errors found: "+error);
 		}

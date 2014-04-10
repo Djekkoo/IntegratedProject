@@ -28,35 +28,43 @@ public class TestRouting extends TestCase {
 	
 	protected void testNetwork() {
 		LinkStateRouting r = new LinkStateRouting(null,false);
-		
-		Class[] args = new Class[2];
-		args[0] = Byte.class;
-		args[1] = Byte.class;
-		
-		Method addLink;
 		try {
-			addLink = r.getClass().getDeclaredMethod("addPath", args);
-			addLink.setAccessible(true);
-			
-			Method removeLink = r.getClass().getDeclaredMethod("removePath", args);
-			removeLink.setAccessible(true);
-			
 			System.out.println("Creating router");
-			System.out.println("Placing routes:");
+			System.out.println("Placing routes");
 			
 			r.networkMessage((byte)2, NetworkMessage.NEWKEEPALIVE);
-			r.addPath((byte)1,(byte)2);
 			
-			r.networkMessage((byte)3, NetworkMessage.NEWKEEPALIVE);
+			r.addNode((byte)3);
 			r.addPath((byte)2,(byte)3);
 			
-			r.update();
+			r.addNode((byte)4);
+			r.addPath((byte)3,(byte)4);
 			
-			SimpleEntry<Byte, Byte> route;
-			route = r.getRoute((byte)3);
-			assertEquals("Route from 1->3: nexthop", route.getKey(), (byte)2);
-		} catch (NoSuchMethodException |
-					RouteNotFoundException | SecurityException |
+			r.update();
+			assertEquals("Route 1->2->3->4: nexthop", r.getRoute((byte)4).getKey(), (byte)2);
+			//assertEquals("Max routing distance: ", r.getLongestRoute(), (byte)2);
+			
+			r.networkMessage((byte)5, NetworkMessage.NEWKEEPALIVE);
+			r.addPath((byte)4,(byte)5);
+			
+			r.update();
+			assertEquals("Route 1->5->3: nexthop", r.getRoute((byte)4).getKey(), (byte)5);
+			assertEquals("Max routing distance: ", r.getLongestRoute(), (byte)2);
+			
+			r.removeNode((byte)5);
+			r.update();
+			assertEquals("Route 1->2->3->4: nexthop", r.getRoute((byte)4).getKey(), (byte)2);
+			
+			try {
+				r.removeNode((byte)3);
+				r.update();
+				r.getRoute((byte)4).getKey();
+				System.out.println("FAILED: Route found from 1 to 5");
+			} catch (RouteNotFoundException e) {
+			}
+
+			
+		} catch (RouteNotFoundException | SecurityException |
 					 IllegalArgumentException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
