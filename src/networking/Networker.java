@@ -356,6 +356,8 @@ public class Networker {
 				result.add(dp);
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
+			} catch(NullPointerException e){
+				System.out.println("No route yet?!");
 			}
 		}
 
