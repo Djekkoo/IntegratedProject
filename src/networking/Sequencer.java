@@ -60,7 +60,7 @@ public class Sequencer extends Thread{
 				rStack = iter.next();
 				// broadcast
 				if (rStack == (byte) 0xF0) {
-					
+					rStack |= 0xF0;
 				} else {
 					this.ACKReceived.get(rStack);
 				}
@@ -104,7 +104,7 @@ public class Sequencer extends Thread{
 		this.lock.lock();
 		
 		HashMap<Byte, DataPacket> packets = new HashMap<Byte, DataPacket>();
-		if (this.packets.get(rStack) != null)
+		if (this.packets.containsKey(rStack))
 			packets.putAll(this.packets.get(rStack));
 		
 		
