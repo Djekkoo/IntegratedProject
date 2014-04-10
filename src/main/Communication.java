@@ -49,7 +49,7 @@ public class Communication {
 		this.monitor.start();
 		
 	}
-	
+	 
 	public void updateNetwork(Byte source, NetworkMessage type) {
 		
 		this.client.updateNetwork(source, type);
