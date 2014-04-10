@@ -5,11 +5,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
-import java.util.Random;
 
 import main.Callback;
 import main.CallbackException;
@@ -28,42 +27,53 @@ import main.IntegrationProject;
 public class Networker {
 	public static final int UNIPORT = 1337;
 	public static final int MULTIPORT = 7001;
-	
+
 	public static InetAddress multicastAddress;
+	
+	Sequencer sequencer;
 
 	DatagramSocket dSock;
 	MulticastSocket mSock;
 
 	Callback routerGetRoute;
 	Callback packetReceived;
-	
-	byte sequencenr = (byte) 0;
 
 	public Networker(Callback routerPacketReceived) throws IOException {
+		sequencer = new Sequencer();
 		multicastAddress = InetAddress.getByName(IntegrationProject.BROADCAST);
 		dSock = new DatagramSocket(UNIPORT);
 		mSock = new MulticastSocket(MULTIPORT);
 		mSock.setLoopbackMode(true);
 		mSock.joinGroup(multicastAddress);
-		
+
 		this.packetReceived = routerPacketReceived;
 
 		(new UniMonitor(new Callback(this, "receive"), dSock)).start();
-		
+
 		(new MultiMonitor(new Callback(this, "receive"), mSock)).start();
 	}
 
-	public void broadcast(byte[] data, Byte hops, Boolean ack, Boolean routing,
-			Boolean keepalive) throws IOException, DatagramDataSizeException {
+	public void broadcast(byte[] data, Byte hops, Boolean nonSequence,
+			Boolean routing, Boolean keepalive) throws IOException,
+			DatagramDataSizeException {
 
-		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
-				hops, (byte) 0x0F, data, ack, routing, keepalive, false);
-		
-		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, MULTIPORT));
+		DataPacket dp;
+
+		if (nonSequence) {
+			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F, hops,
+					(byte) 0x0, data, false, routing, keepalive, false);
+		} else {
+			dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F, hops,
+					sequencer.getBroadcast(), data, false, routing, keepalive, false);
+		}
+
+		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
+				multicastAddress, MULTIPORT));
 	}
-	
-	public void broadcast(DataPacket dp) throws IOException{
-		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length, multicastAddress, MULTIPORT));
+
+	public void broadcast(DataPacket dp) throws IOException {
+		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
+				multicastAddress, MULTIPORT));
 	}
 
 	public void setRouter(Callback router) {
@@ -71,37 +81,41 @@ public class Networker {
 	}
 
 	public void send(Byte destination, byte[] data) throws IOException {
-		LinkedList<DataPacket> packets = processData(destination, data);
 
 		Entry<Byte, Byte> connection = null;
 
 		try {
 			Object temp = routerGetRoute.invoke(new Byte(destination));
-			if(temp instanceof Entry)
+			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
 		} catch (CallbackException e1) {
-			System.out.println("Error finding route. Possibly no route to that host.");
+			System.out
+					.println("Error finding route. Possibly no route to that host.");
 			return; // Route not found
 		}
+
+		LinkedList<DataPacket> packets = processData(destination,
+				connection.getValue(), data);
 
 		for (DataPacket p : packets) {
 			dSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
 					getFullAddress(connection.getKey()), UNIPORT));
 		}
 	}
-	
-	public void send(DataPacket dp) throws IOException{
+
+	public void send(DataPacket dp) throws IOException {
 		Entry<Byte, Byte> connection = null;
 
 		try {
 			Object temp = routerGetRoute.invoke(dp.getDestination());
-			if(temp instanceof Entry)
+			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
 		} catch (CallbackException e1) {
-			System.out.println("Error finding route. Possibly no route to that host.");
+			System.out
+					.println("Error finding route. Possibly no route to that host.");
 			return; // Route not found
 		}
-		
+
 		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				getFullAddress(connection.getKey()), UNIPORT));
 	}
@@ -125,13 +139,12 @@ public class Networker {
 		return result;
 	}
 
-	private LinkedList<DataPacket> processData(Byte destination, byte[] data) {
+	private LinkedList<DataPacket> processData(Byte destination, Byte hops,
+			byte[] data) {
 		LinkedList<DataPacket> result = new LinkedList<DataPacket>();
 
 		DataPacket dp;
 
-		byte hops = 0x0F;
-		byte sequencenr = (byte) ((new Random()).nextInt() >>> 24);
 		boolean moar = false;
 
 		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
@@ -149,10 +162,9 @@ public class Networker {
 			}
 
 			try {
-				// TODO fix possible bug when sequencenr reaches max
 				dp = new DataPacket(IntegrationProject.DEVICE, destination,
-						hops, (byte) (sequencenr + i), chunk, false, false,
-						false, moar);
+						hops, sequencer.getTo(destination), chunk, false, false, false,
+						moar);
 				result.add(dp);
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
@@ -165,8 +177,8 @@ public class Networker {
 
 	private InetAddress getFullAddress(Byte postfix) {
 
-		byte[] address = new byte[]{(byte) 192, (byte) 168, (byte) 5, postfix};
-		
+		byte[] address = new byte[] { (byte) 192, (byte) 168, (byte) 5, postfix };
+
 		try {
 			return InetAddress.getByAddress(address);
 		} catch (UnknownHostException e) {
@@ -176,23 +188,25 @@ public class Networker {
 	}
 
 	public void receive(DataPacket d) throws IOException {
+		// TODO Put packets together if necessary
 		if (d.getDestination() == IntegrationProject.DEVICE
-				|| d.getDestination() == (byte) 0x0F){
-			
+				|| d.getDestination() == (byte) 0x0F) {
+
 			System.out.println("Received packet for me");
-			
+
 			try {
 				packetReceived.invoke(d);
 			} catch (CallbackException e) {
 			}
-			
-			if(d.getDestination() == (byte) 0x0F && d.getHops() > 0 && d.getDestination() != IntegrationProject.DEVICE){
+
+			if (d.getDestination() == (byte) 0x0F && d.getHops() > 0
+					&& d.getDestination() != IntegrationProject.DEVICE) {
 				d.decreaseHops();
 				broadcast(d);
 			}
 		} else {
 			d.decreaseHops();
-			if(d.getHops() > 0){
+			if (d.getHops() > 0) {
 				send(d);
 			}
 		}
