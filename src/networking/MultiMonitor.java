@@ -39,12 +39,18 @@ public class MultiMonitor extends Thread {
 	@Override
 	public void run() {
 		byte[] buffer = new byte[1024];
+		byte[] temp;
 		DatagramPacket dpack = new DatagramPacket(buffer, buffer.length);
 
 		while (true) {
 			try {
 				mSock.receive(dpack);
-				received.invoke(new DataPacket(dpack.getData()));
+				
+				temp = new byte[dpack.getLength()];
+				
+				System.arraycopy(dpack.getData(), dpack.getOffset(), temp, 0, dpack.getLength());
+				
+				received.invoke(new DataPacket(temp));
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (DatagramDataSizeException e) {
