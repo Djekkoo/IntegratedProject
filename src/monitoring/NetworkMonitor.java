@@ -23,7 +23,7 @@ import main.CallbackException;
 public class NetworkMonitor extends Thread {
 	
 	private Callback broadcast;
-	private Callback client;
+	private Callback newClient;
 	
 	private static long broadcastDelay = 500;
 	private static long dumpDelay = 1500;
@@ -37,7 +37,7 @@ public class NetworkMonitor extends Thread {
 	public NetworkMonitor(RoutingInterface router, Callback broadcast, Callback client){
 		this.router = router;
 		this.broadcast = broadcast;
-		this.client = client;
+		this.newClient = client;
 	}
 	
 	
@@ -76,7 +76,7 @@ public class NetworkMonitor extends Thread {
 				if (this.activity.get(key) <= threshold) {
 					this.activity.remove(key);
 					try {
-						this.client.invoke(key, NetworkMessage.NOKEEPALIVE);
+						this.newClient.invoke(key, NetworkMessage.NOKEEPALIVE);
 						this.router.networkMessage(key, NetworkMessage.NOKEEPALIVE);
 					} catch (CallbackException e) { }
 				}
@@ -116,7 +116,7 @@ public class NetworkMonitor extends Thread {
 				try {
 					this.router.networkMessage(source, NetworkMessage.DROPPED);
 					if (this.router.isReachable(source).equals(Boolean.FALSE))
-						this.client.invoke(source, NetworkMessage.DROPPED);
+						this.newClient.invoke(source, NetworkMessage.DROPPED);
 				}
 				catch (CallbackException e) {
 					System.out.println(e.getLocalizedMessage());
@@ -132,7 +132,7 @@ public class NetworkMonitor extends Thread {
 			try {
 				
 				if (this.router.isReachable(source).equals(Boolean.FALSE))
-					this.client.invoke(source, NetworkMessage.JOINED);
+					this.newClient.invoke(source, NetworkMessage.JOINED);
 				this.router.networkMessage(source, NetworkMessage.NEWKEEPALIVE);
 				
 			} catch (CallbackException e) {

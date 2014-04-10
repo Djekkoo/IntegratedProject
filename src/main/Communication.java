@@ -5,6 +5,7 @@ import java.net.SocketException;
 
 import application.Client;
 import routing.RoutingInterface;
+import monitoring.NetworkMessage;
 import monitoring.NetworkMonitor;
 import networking.DataPacket;
 import networking.DatagramDataSizeException;
@@ -44,8 +45,16 @@ public class Communication {
 		
 		this.client = new Client(new Callback(this, "sendMessage"));
 		
-		this.monitor = new NetworkMonitor(this.router, new Callback(network, "broadcast"), new Callback(this.client, "updateNetwork"));
+		this.monitor = new NetworkMonitor(this.router, new Callback(network, "broadcast"), new Callback(this, "updateNetwork"));
 		this.monitor.start();
+		
+	}
+	
+	public void updateNetwork(Byte source, NetworkMessage type) {
+		
+		this.client.updateNetwork(source, type);
+		if (NetworkMessage.JOINED.equals(type))
+			this.network.handshake(source);
 		
 	}
 	
