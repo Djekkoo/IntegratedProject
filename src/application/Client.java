@@ -112,20 +112,24 @@ public class Client {
 				} catch (CallbackException e) {
 					System.out.println(e.getMessage());
 				}
+				break;
 			case "/shownetwork":
 				gui.updateChat("Showing network in the console");
 				((LinkStateRouting) router).showNetwork();
+				break;
 			case "/users":
 				gui.updateChat("Showing the user table in Client:");
 				for (Entry<Byte, String> entry : table.entrySet()) {
 					gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
 				}
+				break;
 			case "/hardcore":
 				if (hardcoremode) {
 					hardcoremode = false;
 				} else {
 					hardcoremode = true;
 				}
+				break;
 			}
 			} else {
 			//BROADCAST
