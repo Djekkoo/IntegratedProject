@@ -87,6 +87,7 @@ public class LinkStateRouting implements RoutingInterface {
 		if(autoUpdate) {
 			update();	
 		}
+		
 	}
 	
 	public LinkStateRouting(Callback send, Callback newUser, boolean autoUpdate) {
@@ -123,8 +124,10 @@ public class LinkStateRouting implements RoutingInterface {
 			throws RouteNotFoundException {
 		lock.lock();
 		// TODO Respond whenever a route is requested.
-		if(!networkTreeMap.containsKey(destination))
-		{
+		if(destination == this.deviceID) {
+			lock.unlock();
+			return new SimpleEntry<Byte,Byte>((byte)1,(byte)0);
+		} else if(!networkTreeMap.containsKey(destination)) {
 			lock.unlock();
 			throw new RouteNotFoundException("Destination unknown.");
 		} else if(networkTreeMap.get(destination).isEmpty()
@@ -153,20 +156,24 @@ public class LinkStateRouting implements RoutingInterface {
 	@Override
 	public void networkMessage(Byte node, NetworkMessage type) {
 		// TODO Handle messages
-		switch(type) {
-		case NEWKEEPALIVE:
-			networkTreeMap.put(node,new TreeSet<Byte>());
-			this.addPath(deviceID, node);
-			send(node,buildPacket());
-			break;
-		case DROPPED:
-			this.removeNode(node);
-			break;
-		case NOKEEPALIVE:
-			this.removePath(this.deviceID, node);
-			break;
-		default:
-			break;
+		try {
+			switch(type) {
+			case NEWKEEPALIVE:
+				networkTreeMap.put(node,new TreeSet<Byte>());
+				this.addPath(deviceID, node);
+				send(node,buildPacket());
+				break;
+			case DROPPED:
+				this.removeNode(node);
+				break;
+			case NOKEEPALIVE:
+				this.removePath(this.deviceID, node);
+				break;
+			default:
+				break;
+			}
+		} catch (CallbackException e) {
+			e.getException().printStackTrace();
 		}
 	}
 	
@@ -338,15 +345,12 @@ public class LinkStateRouting implements RoutingInterface {
 	 * 
 	 * @param 	node The node the notification is about.
 	 * @param 	joined True if it's a new node. False if the node dropped.
+	 * @throws CallbackException 
 	 */
-	private void userNotification(Byte node, boolean joined) {
+	private void userNotification(Byte node, boolean joined) throws CallbackException {
 		if(this.updateMethod != null) {
 			NetworkMessage m = (joined) ? NetworkMessage.JOINED : NetworkMessage.DROPPED;
-			try {
-				updateMethod.invoke(node, m);
-			} catch (CallbackException e) {
-				e.getException().printStackTrace();
-			}
+			updateMethod.invoke(node, m);
 		}
 	}
 	
@@ -387,9 +391,13 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	private void sendToNeighbours(Byte[] data) {
-		TreeSet<Byte> neighbours = networkTreeMap.get(deviceID);
-		for(Byte nb : neighbours) {
-			send(nb,data);
+		try {
+			TreeSet<Byte> neighbours = networkTreeMap.get(deviceID);
+			for(Byte nb : neighbours) {
+				send(nb,data);
+			}
+		} catch (CallbackException e) {
+			e.getException().printStackTrace();
 		}
 	}
 	
@@ -443,14 +451,14 @@ public class LinkStateRouting implements RoutingInterface {
 						} else {
 							this.addNode(host);
 							this.addPath(host, nb);
-							sendMethod.invoke(host,NetworkMessage.JOINED);
+							this.userNotification(nb,true);
 							oldNeighbours.remove(nb);
 							updated = true;
 						}
 					}
 					for(Byte nb : oldNeighbours) {
 						this.removeNode(nb);
-						sendMethod.invoke(nb,NetworkMessage.DROPPED);
+						this.userNotification(nb,false);
 						updated = true;
 					}
 				} catch(CallbackException e) {
@@ -499,16 +507,12 @@ public class LinkStateRouting implements RoutingInterface {
 	 * 
 	 * @param 	node The node to send to.
 	 * @param 	data The data to send to the node.
+	 * @throws CallbackException 
 	 * @since	2014-04-09
 	 */
-	private void send(Byte node, Byte[] data) {
-		try {
-			if(sendMethod != null) {
-				sendMethod.invoke(node, toByteArray(data));
-			}
-		} catch (CallbackException e) {
-			// TODO Auto-generated catch block
-			e.getException().printStackTrace();
+	private void send(Byte node, Byte[] data) throws CallbackException {
+		if(sendMethod != null) {
+			sendMethod.invoke(node, toByteArray(data));
 		}
 	}
 	

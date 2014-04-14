@@ -119,8 +119,7 @@ public class Networker {
 			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
 		} catch (CallbackException e1) {
-			System.out
-					.println("Error finding route. Possibly no route to that host.");
+			e1.getException().printStackTrace();
 			return; // Route not found
 		}
 
@@ -357,7 +356,7 @@ public class Networker {
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
 			} catch(NullPointerException e){
-				System.out.println("No route yet?!");
+				e.printStackTrace();
 			}
 		}
 
