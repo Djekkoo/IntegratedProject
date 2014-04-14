@@ -117,7 +117,7 @@ public class Sequencer extends Thread{
 	
 	public Byte getTo(Byte node){
 		lock.lock();
-		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getValue() == (byte)0 || this.oneToOne.get(node).getKey() == (byte) 0) {
+		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getValue() == (byte)0 /*|| this.oneToOne.get(node).getKey() == (byte) 0*/) {
 			System.out.println("Dropped packet, ACK's are not registered");
 			lock.unlock();
 			return null;
@@ -211,7 +211,7 @@ public class Sequencer extends Thread{
 		this.lock.lock();
 		
 		//
-		if (this.oneToOne.containsKey(ackStack) == false || this.oneToOne.get(ackStack).getValue() == (byte)0 || this.oneToOne.get(ackStack).getKey() == (byte) 0) {
+		if (this.oneToOne.containsKey(ackStack) == false/* || this.oneToOne.get(ackStack).getValue() == (byte)0*/ || this.oneToOne.get(ackStack).getKey() == (byte) 0) {
 			
 			System.out.println("Dropped packet, ACK's are not registered");
 			this.lock.unlock();
