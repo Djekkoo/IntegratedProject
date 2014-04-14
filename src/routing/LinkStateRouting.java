@@ -263,9 +263,9 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	public void removeNode(Byte N) {
 		for(Object nb : networkTreeMap.get(N).toArray()) {
-			removePath((Byte)nb, this.deviceID);
+			removePath((Byte)nb, N);
 		}
-		networkTreeMap.put(N, new TreeSet<Byte>());
+		networkTreeMap.remove((byte)N);
 		if(autoUpdate) {
 			update();
 		}
@@ -328,8 +328,9 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private HashMap<Byte,LinkedList<Vertex>> findAllPaths() {
 		DijkstraAlgorithm pf;
-		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
 		pf = getPathFinder();
+		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
+		
 		pf.execute(vertexArray[deviceID]);
 		for(Vertex v : vertexArray) {
 			if(v != null) {
