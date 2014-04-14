@@ -161,9 +161,11 @@ public class LinkStateRouting implements RoutingInterface {
 			case NEWKEEPALIVE:
 				networkTreeMap.put(node,new TreeSet<Byte>());
 				this.addPath(deviceID, node);
+				this.userNotification(node,true);
 				send(node,buildPacket());
 				break;
 			case DROPPED:
+				this.userNotification(node,false);
 				this.removeNode(node);
 				break;
 			case NOKEEPALIVE:
@@ -458,9 +460,15 @@ public class LinkStateRouting implements RoutingInterface {
 						}
 					}
 					for(Byte nb : oldNeighbours) {
-						this.removeNode(nb);
-						this.userNotification(nb,false);
+						networkTreeMap.get(host).remove((byte)nb);
 						updated = true;
+					}
+					for(Object eObj : networkTreeMap.keySet().toArray()) {
+						Entry<Byte,TreeMap<Byte,Byte>> e = (Entry<Byte,TreeMap<Byte,Byte>>)eObj;
+						Byte n = e.getKey();
+						if(e.getValue().isEmpty()) {
+							this.removeNode(n);
+						}
 					}
 				} catch(CallbackException e) {
 					e.getException().printStackTrace();
