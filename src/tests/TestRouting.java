@@ -10,14 +10,13 @@ public class TestRouting extends TestCase {
 	public TestRouting(){
 		//TODO Testing
 		System.out.println("--- Test Starting ---");
-		testNetwork();
-		System.out.println("--- Test Complete ---");
 	}
 	
 	@Override
 	protected int runTest() {
 		// TODO Auto-generated method stub
 		testNetwork();
+		System.out.println("--- Test Complete ---");
 		return 0;
 	}
 
@@ -27,10 +26,11 @@ public class TestRouting extends TestCase {
 	}
 	
 	protected void testNetwork() {
-		LinkStateRouting r = new LinkStateRouting(null,false);
+		LinkStateRouting r = new LinkStateRouting(null,null,false);
 		try {
-			System.out.println("Creating router");
-			System.out.println("Placing routes");
+			System.out.println("Creating router...");
+			System.out.println("Placing routes...");
+			System.out.print("Running tests: ");
 			
 			r.networkMessage((byte)2, NetworkMessage.NEWKEEPALIVE);
 			
@@ -41,20 +41,28 @@ public class TestRouting extends TestCase {
 			r.addPath((byte)3,(byte)4);
 			
 			r.update();
-			assertEquals("Route 1->2->3->4: nexthop", r.getRoute((byte)4).getKey(), (byte)2);
-			//assertEquals("Max routing distance: ", r.getLongestRoute(), (byte)2);
+			System.out.print("1-");
+			assertEquals("Route 1->2->3->4: nexthop", (byte)2, r.getRoute((byte)4).getKey());
+			System.out.print("2-");
+			assertEquals("Max routing distance: ", r.getLongestRoute(), (byte)2);
 			
 			r.networkMessage((byte)5, NetworkMessage.NEWKEEPALIVE);
 			r.addPath((byte)4,(byte)5);
 			
 			r.update();
-			assertEquals("Route 1->5->3: nexthop", r.getRoute((byte)4).getKey(), (byte)5);
-			assertEquals("Max routing distance: ", r.getLongestRoute(), (byte)2);
+			System.out.print("3-");
+			assertEquals("Route 1->5->3: nexthop", (byte)5, r.getRoute((byte)4).getKey());
+			System.out.print("4-");
+			assertEquals("Max routing distance: ", (byte)1, r.getLongestRoute());
 			
 			r.removeNode((byte)5);
 			r.update();
-			assertEquals("Route 1->2->3->4: nexthop", r.getRoute((byte)4).getKey(), (byte)2);
+			System.out.print("5-");
+			assertEquals("Route 1->2->3->4: nexthop", (byte)2, r.getRoute((byte)4).getKey());
+			System.out.print("6-");
+			assertEquals("Max routing distance: ", (byte)2, r.getLongestRoute());
 			
+			System.out.println("7");
 			try {
 				r.removeNode((byte)3);
 				r.update();

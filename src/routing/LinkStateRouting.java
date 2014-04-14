@@ -191,47 +191,18 @@ public class LinkStateRouting implements RoutingInterface {
 		return max;
 	}
 	
-	// PRIVATE
-	
 	/**
-	 * Finds a path between to nodes.
+	 * Prints the nodes and prints what nodes they are connected to.
 	 * 
-	 * @param	src The source node
-	 * @param	dst The destination node
-	 * @return	A linked list of nodes (A path)
-	 * @since	2014-04-09
+	 * @since	2014-04-08
 	 */
-	private LinkedList<Vertex> findPath(Byte src, Byte dst) {
-		DijkstraAlgorithm pf;
-		LinkedList<Vertex> path;
-		pf = getPathFinder();
-		
-		if(vertexArray[src] != null && vertexArray[dst] != null) {
-			pf.execute(vertexArray[src]);
-			path = pf.getPath(vertexArray[dst]);
-			return path;
-		}
-		return null;
-	}
-	
-	/**
-	 * Finds all the paths from the current node to all other (known) nodes.
-	 * 
-	 * @return	A K,V map of paths set to the device IDs.
-	 * @since	2014-04-09
-	 */
-	private HashMap<Byte,LinkedList<Vertex>> findAllPaths() {
-		DijkstraAlgorithm pf;
-		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
-		pf = getPathFinder();
-		pf.execute(vertexArray[deviceID]);
-		for(Vertex v : vertexArray) {
-			if(v != null) {
-				Byte vID = Byte.parseByte(v.getId());
-				paths.put(vID,pf.getPath(v));
+	public void showNetwork() {
+		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
+			System.out.println(e.getKey() + " to: ");
+			for(Byte b : e.getValue()) {
+				System.out.println("\t" + b);
 			}
 		}
-		return paths;
 	}
 	
 	/**
@@ -316,6 +287,67 @@ public class LinkStateRouting implements RoutingInterface {
 			}
 		}
 		lock.unlock();
+	}
+
+	
+	// PRIVATE
+	
+	/**
+	 * Finds a path between to nodes.
+	 * 
+	 * @param	src The source node
+	 * @param	dst The destination node
+	 * @return	A linked list of nodes (A path)
+	 * @since	2014-04-09
+	 */
+	private LinkedList<Vertex> findPath(Byte src, Byte dst) {
+		DijkstraAlgorithm pf;
+		LinkedList<Vertex> path;
+		pf = getPathFinder();
+		
+		if(vertexArray[src] != null && vertexArray[dst] != null) {
+			pf.execute(vertexArray[src]);
+			path = pf.getPath(vertexArray[dst]);
+			return path;
+		}
+		return null;
+	}
+	
+	/**
+	 * Finds all the paths from the current node to all other (known) nodes.
+	 * 
+	 * @return	A K,V map of paths set to the device IDs.
+	 * @since	2014-04-09
+	 */
+	private HashMap<Byte,LinkedList<Vertex>> findAllPaths() {
+		DijkstraAlgorithm pf;
+		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
+		pf = getPathFinder();
+		pf.execute(vertexArray[deviceID]);
+		for(Vertex v : vertexArray) {
+			if(v != null) {
+				Byte vID = Byte.parseByte(v.getId());
+				paths.put(vID,pf.getPath(v));
+			}
+		}
+		return paths;
+	}
+	
+	/**
+	 * Used to send a notification of a non-neighbour node that joined or dropped (it like it's hot).
+	 * 
+	 * @param 	node The node the notification is about.
+	 * @param 	joined True if it's a new node. False if the node dropped.
+	 */
+	private void userNotification(Byte node, boolean joined) {
+		if(this.updateMethod != null) {
+			NetworkMessage m = (joined) ? NetworkMessage.JOINED : NetworkMessage.DROPPED;
+			try {
+				updateMethod.invoke(node, m);
+			} catch (CallbackException e) {
+				e.getException().printStackTrace();
+			}
+		}
 	}
 	
 	/**
@@ -477,20 +509,6 @@ public class LinkStateRouting implements RoutingInterface {
 		} catch (CallbackException e) {
 			// TODO Auto-generated catch block
 			e.getException().printStackTrace();
-		}
-	}
-	
-	/**
-	 * Prints the nodes and prints what nodes they are connected to.
-	 * 
-	 * @since	2014-04-08
-	 */
-	public void showNetwork() {
-		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
-			System.out.println(e.getKey() + " to: ");
-			for(Byte b : e.getValue()) {
-				System.out.println("\t" + b);
-			}
 		}
 	}
 	

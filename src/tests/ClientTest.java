@@ -18,7 +18,7 @@ public class ClientTest extends TestCase {
 	Client client;
 	
     protected void setUp() {
-    	client = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty")));
+    	client = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty"),null));
     }
     
     public void empty(String text,Byte ding) {
