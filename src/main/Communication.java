@@ -51,11 +51,10 @@ public class Communication {
 	}
 	 
 	public void updateNetwork(Byte source, NetworkMessage type) {
-		
-		this.client.updateNetwork(source, type);
-		if (NetworkMessage.JOINED.equals(type))
+		if (type.equals(NetworkMessage.JOINED)) {
 			this.network.handshake(source);
-		
+		}
+		this.client.updateNetwork(source, type);
 	}
 	
 	public void newPacket(DataPacket packet) {

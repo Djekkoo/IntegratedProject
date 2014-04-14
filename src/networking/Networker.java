@@ -9,6 +9,8 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.Random;
 
 import main.Callback;
@@ -38,6 +40,8 @@ public class Networker {
 
 	Callback routerGetRoute;
 	Callback packetReceived;
+	
+	ReentrantLock lock;
 
 	HashMap<Byte, HashMap<Byte, DataPacket>> sends = new HashMap<Byte, HashMap<Byte, DataPacket>>();
 	
@@ -48,6 +52,7 @@ public class Networker {
 	 */
 
 	public Networker(Callback routerPacketReceived) throws IOException {
+		lock = new ReentrantLock();
 		routerGetRoute = new Callback(this, "dummyRoute");
 		
 		sequencer = new Sequencer(new Callback(this, "resend"));
@@ -109,7 +114,6 @@ public class Networker {
 	 */
 	@SuppressWarnings("unchecked")
 	public void send(Byte destination, byte[] data) throws IOException {
-
 		HashMap<Byte, DataPacket> entry;
 
 		Entry<Byte, Byte> connection = null;
@@ -266,6 +270,7 @@ public class Networker {
 	 */
 	@SuppressWarnings("unchecked")
 	public void handshake(Byte destination){
+		lock.lock();
 		byte sequence = (byte) (new Random()).nextInt();
 		while(sequence == 0) sequence = (byte) (new Random()).nextInt();
 		
@@ -279,6 +284,8 @@ public class Networker {
 		} catch (CallbackException e1) {
 			System.out
 					.println("Error finding route. Possibly no route to that host.");
+			lock.unlock();
+			System.out.println("Handshake finished");
 			return;
 		}
 		
@@ -291,6 +298,7 @@ public class Networker {
 		} catch (IOException | BigPacketSentException | DatagramDataSizeException e) {
 			// e.printStackTrace();
 		}
+		lock.unlock();
 	}
 
 	/**
@@ -329,7 +337,7 @@ public class Networker {
 	private LinkedList<DataPacket> processData(Byte destination, Byte hops,
 			byte[] data, boolean ack, boolean routing, boolean keepalive) {
 		LinkedList<DataPacket> result = new LinkedList<DataPacket>();
-
+		lock.lock();
 		DataPacket dp;
 
 		boolean moar = false;
@@ -356,10 +364,12 @@ public class Networker {
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
 			} catch(NullPointerException e){
+				System.out.println("Fuck this");
 				e.printStackTrace();
 			}
 		}
 
+		lock.unlock();
 		return result;
 
 	}

@@ -58,13 +58,21 @@ public class Sequencer extends Thread{
 	
 	public void setSequenceFrom(Byte source, Byte sequence) {
 		this.packets.put(source, new HashMap<Byte, DataPacket>());
-		this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(this.oneToOne.get(source).getKey(), sequence));
+		if(this.oneToOne.containsKey(source)) {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(this.oneToOne.get(source).getKey(),sequence));
+		} else {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>((byte)0,sequence));
+		}
 		this.ACK.put(source, sequence);
 		this.RET.put(source, sequence);
 	}
 	
 	public void setSequenceTo(Byte source, Byte sequence) {
-		this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, this.oneToOne.get(source).getValue()));
+		if(this.oneToOne.containsKey(source)) {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, this.oneToOne.get(source).getValue()));
+		} else {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, (byte)0));
+		}
 		this.ACKReceived.put(source, sequence);
 	}
 	
@@ -117,8 +125,9 @@ public class Sequencer extends Thread{
 	
 	public Byte getTo(Byte node){
 		lock.lock();
+		Byte v = this.oneToOne.get(node).getValue();
 		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getValue() == (byte)0 /*|| this.oneToOne.get(node).getKey() == (byte) 0*/) {
-			System.out.println("Dropped packet, ACK's are not registered");
+			System.out.println("No sequence available, ACK's are not registered");
 			lock.unlock();
 			return null;
 		}
