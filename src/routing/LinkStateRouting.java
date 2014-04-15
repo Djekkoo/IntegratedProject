@@ -428,6 +428,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private boolean parsePacket(byte[] p) {
 		//Retrieve the timestamp from the packet
+		System.out.println("Routing packet received, info.");
 		long timestamp = 0;
 	    ByteBuffer buffer = ByteBuffer.wrap(p,0,8);
 	    timestamp = buffer.getLong();
@@ -461,10 +462,12 @@ public class LinkStateRouting implements RoutingInterface {
 								//Do nothing
 							} else {
 								this.addPath(host, nb);
+								System.out.println("New path.");
 								updated = true;
 							}
 							oldNeighbours.remove(nb);
 						} else {
+							System.out.println("New host.");
 							this.addNode(host);
 							this.addPath(host, nb);
 							this.userNotification(nb,true);
@@ -475,14 +478,15 @@ public class LinkStateRouting implements RoutingInterface {
 					for(Byte nb : oldNeighbours) {
 						networkTreeMap.get(host).remove((byte)nb);
 						updated = true;
+						System.out.println("Host removed.");
 					}
-					for(Object eObj : networkTreeMap.keySet().toArray()) {
+					/*for(Object eObj : networkTreeMap.keySet().toArray()) {
 						Entry<Byte,TreeMap<Byte,Byte>> e = (Entry<Byte,TreeMap<Byte,Byte>>)eObj;
 						Byte n = e.getKey();
 						if(e.getValue().isEmpty()) {
 							this.removeNode(n);
 						}
-					}
+					}*/
 				} catch(CallbackException e) {
 					e.getException().printStackTrace();
 				}
