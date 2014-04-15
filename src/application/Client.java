@@ -84,6 +84,7 @@ public class Client {
 						break;
 					}
 				}
+				break;
 			case "USER":
 				String usermsg = "";
 				for(int i = 1; i < splitdata.length; i++) {
