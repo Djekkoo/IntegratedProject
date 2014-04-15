@@ -221,10 +221,11 @@ public class Networker {
 					throw new NullPointerException();
 
 				byte ack = offer(d);
-
-				send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
-						connection.getValue(), ack, new byte[0], true, false,
-						false, false));
+				
+				if(ack != 0)
+					send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
+							connection.getValue(), ack, new byte[0], true, false,
+							false, false));
 
 			} catch (CallbackException e1) {
 				System.out
@@ -393,7 +394,9 @@ public class Networker {
 
 	private byte offer(DataPacket d) throws CallbackException{
 		System.out.println("Offering");
-		byte ack = sequencer.put(d);
+		Byte ack = sequencer.put(d);
+		
+		if(ack == null) return 0;
 
 		System.out.println("Getting packets");
 		LinkedList<DataPacket> readyPackets = sequencer.getPackets(
