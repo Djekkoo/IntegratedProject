@@ -230,24 +230,32 @@ public class Networker {
 				System.out.println("Got a handshake!");
 				sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
 				return; // Job done, no bubbling up
-			}
+			} 
 			try {
-				Entry<Byte, Byte> connection = null;
-
-				System.out.println("Source to find route to: " + d.getSource());
-				Object temp = routerGetRoute.invoke(new Byte(d.getSource()));
-				
-				if (temp instanceof Entry)
-					connection = (Entry<Byte, Byte>) temp;
-				else
-					throw new NullPointerException();
-
-				byte ack = offer(d);
-				
-				if(ack != 0)
+				if(d.getSource() == port.getAddress()[3]){
+					byte ack = offer(d);
 					send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
-							connection.getValue(), ack, new byte[0], true, false,
+							(byte) 0x0, ack, new byte[0], true, false,
 							false, false), port);
+				} else {
+			
+					Entry<Byte, Byte> connection = null;
+	
+					System.out.println("Source to find route to: " + d.getSource());
+					Object temp = routerGetRoute.invoke(new Byte(d.getSource()));
+					
+					if (temp instanceof Entry)
+						connection = (Entry<Byte, Byte>) temp;
+					else
+						throw new NullPointerException();
+	
+					byte ack = offer(d);
+					
+					if(ack != 0)
+						send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
+								connection.getValue(), ack, new byte[0], true, false,
+								false, false));
+				}
 
 			} catch (CallbackException e1) {
 				System.out
