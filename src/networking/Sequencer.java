@@ -99,10 +99,12 @@ public class Sequencer extends Thread{
 				tAck = this.ACKReceived.get(rStack);
 				
 				byte temp = 0;
-				if(tAck != null)
+				if(tAck != null){
 					temp = tAck;
-				else
+				} else {
 					System.out.println("tAck == null");
+					continue;
+				}
 				
 				for (int i = 0; i < retransmitThreshold; i++) {
 					if ((byte) tAck == (byte)this.oneToOne.get(rStack).getKey()) {

@@ -50,7 +50,7 @@ public class MultiMonitor extends Thread {
 				
 				System.arraycopy(dpack.getData(), dpack.getOffset(), temp, 0, dpack.getLength());
 				
-				received.invoke(new DataPacket(temp));
+				received.invoke(new DataPacket(temp), dpack.getAddress());
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (DatagramDataSizeException e) {

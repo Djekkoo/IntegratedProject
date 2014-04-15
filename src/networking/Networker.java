@@ -187,6 +187,24 @@ public class Networker {
 				getFullAddress(connection.getKey()), UNIPORT));
 		
 	}
+	
+	public void send(DataPacket dp, InetAddress port) throws BigPacketSentException, IOException{
+		
+		if (dp instanceof BigPacket)
+			throw new BigPacketSentException();
+		
+		HashMap<Byte, DataPacket> entry;
+		if(sends.containsKey(dp.getDestination())){
+			entry = sends.get(dp.getDestination());
+		} else {
+			entry = new HashMap<Byte, DataPacket>();
+		}
+		entry.put(dp.getSequenceNumber(), dp);
+		sends.put(dp.getDestination(), entry);
+
+		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
+				port, UNIPORT));
+	}
 	/**
 	 * When one of the monitors receives a DataPacket it should pass it on to here
 	 * 
@@ -195,7 +213,7 @@ public class Networker {
 	 */
 	
 	@SuppressWarnings("unchecked")
-	public void receive(DataPacket d) throws IOException {
+	public void receive(DataPacket d, InetAddress port) throws IOException {
 		if (d.getDestination() == (byte) 0x0F) {// Multicast
 			try {
 				packetReceived.invoke(d);
@@ -208,6 +226,7 @@ public class Networker {
 			}
 		} else if (d.getDestination() == IntegrationProject.DEVICE) { // Meant for me
 			if(d.getSequenceNumber() == 0 && !d.isAck() && !d.isKeepAlive() && !d.isRouting() && !d.hasMore()){
+				System.out.println("Got a handshake!");
 				sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
 				return; // Job done, no bubbling up
 			}
@@ -216,6 +235,7 @@ public class Networker {
 
 				System.out.println("Source to find route to: " + d.getSource());
 				Object temp = routerGetRoute.invoke(new Byte(d.getSource()));
+				
 				if (temp instanceof Entry)
 					connection = (Entry<Byte, Byte>) temp;
 				else
@@ -226,7 +246,7 @@ public class Networker {
 				if(ack != 0)
 					send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
 							connection.getValue(), ack, new byte[0], true, false,
-							false, false));
+							false, false), port);
 
 			} catch (CallbackException e1) {
 				System.out
@@ -292,7 +312,6 @@ public class Networker {
 			System.out
 					.println("Error finding route. Possibly no route to that host.");
 			lock.unlock();
-			System.out.println("Handshake finished");
 			return;
 		}
 		
@@ -303,9 +322,11 @@ public class Networker {
 			send(dp); // the first packet
 			send(dp); // actually arrives
 		} catch (IOException | BigPacketSentException | DatagramDataSizeException e) {
-			// e.printStackTrace();
+			System.out.println("BAM JONGÛH!");
+			e.printStackTrace();
 		}
 		lock.unlock();
+		System.out.println("Handshake finished");
 	}
 
 	/**
