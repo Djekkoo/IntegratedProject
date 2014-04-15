@@ -3,6 +3,7 @@ package networking;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
@@ -213,7 +214,7 @@ public class Networker {
 	 */
 	
 	@SuppressWarnings("unchecked")
-	public void receive(DataPacket d, InetAddress port) throws IOException {
+	public void receive(DataPacket d, Inet4Address port) throws IOException {
 		if (d.getDestination() == (byte) 0x0F) {// Multicast
 			try {
 				packetReceived.invoke(d);
