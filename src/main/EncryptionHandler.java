@@ -7,6 +7,7 @@ import java.io.RandomAccessFile;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
@@ -28,10 +29,15 @@ public class EncryptionHandler {
 				KeyPair kp = generateKeyPair();
 				
 				privateKeyRAF.setLength(0);
+				privateKeyRAF.write("-----BEGIN RSA PRIVATE KEY-----\n".getBytes());
 				privateKeyRAF.write(DatatypeConverter.printBase64Binary(kp.getPrivate().getEncoded()).getBytes());
+				privateKeyRAF.write("\n-----END RSA PRIVATE KEY-----".getBytes());
 				
 				publicKeyRAF.setLength(0);
+				publicKeyRAF.write("-----BEGIN RSA PUBLIC KEY-----\n".getBytes());
 				publicKeyRAF.write(DatatypeConverter.printBase64Binary(kp.getPublic().getEncoded()).getBytes());
+				publicKeyRAF.write("\n-----END RSA PUBLIC KEY-----".getBytes());
+				
 				System.out.println("Keys generated");
 				//DatatypeConverter
 			} catch (IOException | NoSuchAlgorithmException e) {
@@ -43,7 +49,7 @@ public class EncryptionHandler {
 	
 	private KeyPair generateKeyPair() throws NoSuchAlgorithmException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(512);
+        keyGen.initialize(1024);
         KeyPair keys = keyGen.genKeyPair();
         return keys;
 	}
