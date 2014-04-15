@@ -28,9 +28,9 @@ public class TestRouting extends TestCase {
 	protected void testNetwork() {
 		LinkStateRouting r = new LinkStateRouting(null,null,false);
 		try {
-			System.out.println("Creating router...");
-			System.out.println("Placing routes...");
-			System.out.print("Running tests: ");
+			System.out.println("Creating router");
+			System.out.println("Placing routes");
+			System.out.println("Running tests");
 			
 			r.networkMessage((byte)2, NetworkMessage.NEWKEEPALIVE);
 			
@@ -83,7 +83,6 @@ public class TestRouting extends TestCase {
 
 			r.networkMessage((byte)2, NetworkMessage.NOKEEPALIVE);
 			r.update();
-			r.showNetwork();
 			assertEquals("Route 1->3->6->5: nexthop", (byte)3, r.getRoute((byte)5).getKey());
 
 			
