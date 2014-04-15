@@ -214,6 +214,7 @@ public class Networker {
 			try {
 				Entry<Byte, Byte> connection = null;
 
+				System.out.println("Source to find route to: " + d.getSource());
 				Object temp = routerGetRoute.invoke(new Byte(d.getSource()));
 				if (temp instanceof Entry)
 					connection = (Entry<Byte, Byte>) temp;
@@ -313,7 +314,7 @@ public class Networker {
 	 * @param router Callback to the function of Routing
 	 */
 	public void setRouter(Callback router) {
-		
+		System.out.println("Set router!");
 		this.routerGetRoute = router;
 		
 	}
@@ -363,10 +364,15 @@ public class Networker {
 			}
 
 			try {
-				dp = new DataPacket(IntegrationProject.DEVICE, destination,
-						hops, sequencer.getTo(destination), chunk, ack,
-						routing, keepalive, moar);
-				result.add(dp);
+				Byte sequencenr = sequencer.getTo(destination);
+				if(!(sequencenr == null)){
+					dp = new DataPacket(IntegrationProject.DEVICE, destination,
+							hops, sequencer.getTo(destination), chunk, ack,
+							routing, keepalive, moar);
+					result.add(dp);
+				} else {
+					System.out.println("Dropped packet because getTo return NULL GODDAMMIT!");
+				}
 			} catch (DatagramDataSizeException e) {
 				e.printStackTrace();
 			} catch(NullPointerException e){

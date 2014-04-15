@@ -208,6 +208,7 @@ public class LinkStateRouting implements RoutingInterface {
 		int i = 0;
 		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
 			devs[i] = e.getKey();
+			i++;
 		}
 		return devs;
 	}

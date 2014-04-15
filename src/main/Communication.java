@@ -77,7 +77,9 @@ public class Communication {
 		if (destination.equals(Byte.valueOf((byte) 0x0F))) {
 			
 			for(Byte knownDestination : router.getDevices()){
-				this.network.send(knownDestination, message.getBytes());
+				System.out.println("Know destination: " + knownDestination);
+				if(knownDestination.byteValue() != IntegrationProject.DEVICE)
+					this.network.send(knownDestination, message.getBytes());
 			}
 			
 		} else {

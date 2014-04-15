@@ -134,9 +134,8 @@ public class Sequencer extends Thread{
 	
 	public Byte getTo(Byte node){
 		lock.lock();
-		Byte v = this.oneToOne.get(node).getValue();
+
 		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getKey() == (byte)0) {
-			System.out.println(this.oneToOne.get(node).getKey());
 			System.out.println("No sequence available, ACK's are not registered");
 			lock.unlock();
 			return null;
