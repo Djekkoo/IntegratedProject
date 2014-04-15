@@ -14,6 +14,7 @@ public class Tester {
 		//run(new GUITest());	
 		//run(new ClientTest());	
         run(new TestRouting());
+        run(new CryptoTest());
 		System.out.println("Total errors: " + errors);
     }
 
