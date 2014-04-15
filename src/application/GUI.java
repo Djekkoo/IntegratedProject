@@ -5,12 +5,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.ListModel;
 import javax.swing.text.DefaultCaret;
 
+import main.FileTransferHandler;
+
 import java.awt.event.KeyEvent;
+import java.io.File;
 
 /** 
  * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
@@ -153,7 +157,7 @@ public class GUI extends javax.swing.JFrame {
 		});
 
 		sendBtn.setFont(standardFont); // NOI18N
-		sendBtn.setText("Send!");
+		sendBtn.setText("+");
 		sendBtn.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				sendBtnActionPerformed(evt);
@@ -283,7 +287,41 @@ public class GUI extends javax.swing.JFrame {
 	}
 
 	private void sendBtnActionPerformed(java.awt.event.ActionEvent evt) {
-		sendChat(inputText.getText());
+		JFileChooser chooser = new JFileChooser();
+        chooser.setMultiSelectionEnabled(true);
+        int option = chooser.showOpenDialog(GUI.this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+          File[] sf = chooser.getSelectedFiles();
+          String filelist = "nothing";
+          if (sf.length > 0) filelist = sf[0].getName();
+          for (int i = 1; i < sf.length; i++) {
+            filelist += ", " + sf[i].getName();
+          }
+          inputText.setText("/send " + filelist);
+          //TODO JOEY FIX DIT
+          FileTransferHandler fthr;
+	  		try {
+	  			fthr = new FileTransferHandler(filelist,"r");
+	  			FileTransferHandler fthw = new FileTransferHandler(filelist,"rw");
+	  			fthw.writeFile(fthw.parsePacket(fthr.getPacket()));
+	  		} catch (Exception e) {	}
+        }
+        else {
+        	inputText.setText("FUCK ME, SEND A FILE");
+        }
+	}
+	
+	public void saveDialog(String receivename) {
+		JFileChooser chooser = new JFileChooser();
+		File file = new File(receivename);
+		chooser.setSelectedFile(file);
+        int option = chooser.showSaveDialog(GUI.this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+          //statusbar.setText("You saved " + ((chooser.getSelectedFile()!=null)?chooser.getSelectedFile().getName():"nothing"));
+        }
+        else {
+          //statusbar.setText("You canceled.");
+        }
 	}
 
 	private void SendPanelKeyPressed(java.awt.event.KeyEvent evt) {
@@ -340,4 +378,4 @@ public class GUI extends javax.swing.JFrame {
 	private javax.swing.JList<String> userList;
 	private javax.swing.JScrollPane userScrollpane;
 	// End of variables declaration
-}
+	}

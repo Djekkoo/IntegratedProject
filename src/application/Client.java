@@ -76,7 +76,14 @@ public class Client {
 					msg = msg + " " + splitdata[i];
 				}
 				gui.updateChat(msg);
-				break;
+				//Check for commands
+				if (data.split(" ")[1].contains("/")) {
+					switch (data.split(" ")[1]) {
+					case "/send":
+						gui.saveDialog(data.split(" ")[2]);
+						break;
+					}
+				}
 			case "USER":
 				String usermsg = "";
 				for(int i = 1; i < splitdata.length; i++) {
@@ -109,6 +116,15 @@ public class Client {
 				gui.updateChat(chat);
 				try {
 					sendMsg.invoke("CHAT " + chat,dest);
+				} catch (CallbackException e) {
+					System.out.println(e.getMessage());
+				}
+				break;
+			case "/send":
+				String sendje = getName() + ": " + text;
+				gui.updateChat(sendje);
+				try {
+					sendMsg.invoke("CHAT " + sendje,Byte.valueOf((byte) 0x0F));
 				} catch (CallbackException e) {
 					System.out.println(e.getMessage());
 				}
