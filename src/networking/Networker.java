@@ -232,22 +232,6 @@ public class Networker {
 				sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
 				return; // Job done, no bubbling up
 			} 
-
-			LinkedList<DataPacket> templist = new LinkedList<DataPacket>();
-			LinkedList<DataPacket> available = new LinkedList<DataPacket>();
-			
-			while(!available.isEmpty()){
-				templist.offer(available.poll());
-				if(!templist.peekLast().hasMore()){
-					try {
-						packetReceived.invoke(processPackets(templist));
-					} catch (CallbackException e) {
-						e.printStackTrace();
-					} finally {
-						templist.clear();
-					}
-				}
-			}
 			
 			try {
 				if(d.getSource() == port.getAddress()[3]){
@@ -372,8 +356,10 @@ public class Networker {
 		DataPacket first = packets.peek();
 
 		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
-		int length = (packets.size() - 1) * maxChunkSize
-				+ packets.getLast().getData().length;
+		int length = 0;
+		if(packets.size() > 0)
+			length = packets.size() * maxChunkSize
+					+ packets.getLast().getData().length;
 
 		byte[] result = new byte[length];
 		byte[] buffer = new byte[0];
@@ -455,7 +441,10 @@ public class Networker {
 
 		System.out.println("Getting packets");
 		LinkedList<DataPacket> readyPackets = sequencer.getPackets(
-				d.getSource(), false);
+				d.getSource());
+		
+		System.out.println("YAY! " + readyPackets.size() + " packets to process! WOOOO!");
+		
 		LinkedList<DataPacket> buffer = new LinkedList<DataPacket>();
 
 		System.out.println("Looping packets");

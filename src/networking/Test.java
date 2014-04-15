@@ -94,9 +94,13 @@ public class Test {
 				e.printStackTrace();
 			}
 			
-			Class[] args = new Class[2];
+			Class[] args = new Class[6];
 			args[0] = Byte.class;
-			args[1] = byte[].class;
+			args[1] = Byte.class;
+			args[2] = byte[].class;
+			args[3] = Boolean.TYPE;
+			args[4] = Boolean.TYPE;
+			args[5] = Boolean.TYPE;
 			
 			Method processData = networker.getClass().getDeclaredMethod("processData", args);
 			processData.setAccessible(true);
@@ -107,7 +111,7 @@ public class Test {
 			Method processPackets = networker.getClass().getDeclaredMethod("processPackets", args);
 			processPackets.setAccessible(true);
 			
-			packets = (LinkedList<DataPacket>) processData.invoke(networker, (byte) 15, data);
+			packets = (LinkedList<DataPacket>) processData.invoke(networker, (byte) 15, (byte) 15, data, false, false, false);
 			
 			byte[] result = (byte[]) processPackets.invoke(networker, packets);
 			

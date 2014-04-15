@@ -64,8 +64,8 @@ public class Sequencer extends Thread{
 		} else {
 			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>((byte)0,sequence));
 		}
-		this.ACK.put(source, sequence);
-		this.RET.put(source, sequence);
+		this.ACK.put(source, this.prevSEQ(sequence));
+		this.RET.put(source, this.prevSEQ(sequence));
 		this.lock.unlock();
 	}
 	
@@ -76,7 +76,7 @@ public class Sequencer extends Thread{
 		} else {
 			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, (byte)0));
 		}
-		this.ACKReceived.put(source, sequence);
+		this.ACKReceived.put(source, this.prevSEQ(sequence));
 		this.lock.unlock();
 	}
 	
@@ -150,7 +150,7 @@ public class Sequencer extends Thread{
 		return b;
 	}
 	
-	public LinkedList<DataPacket> getPackets(Byte source, Boolean broadcast) {
+	public LinkedList<DataPacket> getPackets(Byte source) {
 		
 		byte rStack = source;
 		LinkedList<DataPacket> res = new LinkedList<DataPacket>();
@@ -166,7 +166,9 @@ public class Sequencer extends Thread{
 		byte temp = 0x00;
 		LinkedList<DataPacket> tList = new LinkedList<DataPacket>();
 		
-		while(packets.containsKey(bRet)) {
+		while(packets.containsKey(this.nextSEQ(bRet))) {
+			
+			bRet = this.nextSEQ(bRet);
 			
 			if (!packets.get(bRet).hasMore()) {
 				
@@ -182,7 +184,6 @@ public class Sequencer extends Thread{
 					}
 					
 					tList = new LinkedList<DataPacket>();
-					bRet = this.nextSEQ(bRet);
 					
 					continue;
 				}
@@ -201,15 +202,13 @@ public class Sequencer extends Thread{
 				
 			}
 			
-			bRet = this.nextSEQ(bRet);
-			
 		}
 
 		if (temp != (byte) 0x00) {
 			bRet = temp;
 		}
 		
-		this.RET.put(rStack, this.prevSEQ(bRet));
+		this.RET.put(rStack, bRet);
 		
 		this.lock.unlock();
 		
