@@ -79,10 +79,10 @@ public class Communication {
 			for(Byte knownDestination : router.getDevices()){
 				this.network.send(knownDestination, message.getBytes());
 			}
-			return;
+			
+		} else {
+			this.network.send(destination, message.getBytes());
 		}
-		
-		this.network.send(destination, message.getBytes());
 		
 	}
 
