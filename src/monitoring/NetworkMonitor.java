@@ -110,6 +110,7 @@ public class NetworkMonitor extends Thread {
 				this.router.networkMessage(source, NetworkMessage.DROPPED);
 			}
 			
+			this.lock.unlock();
 			return;
 		}
 		
@@ -118,6 +119,7 @@ public class NetworkMonitor extends Thread {
 			this.activity.put(source, System.currentTimeMillis());
 			this.router.networkMessage(source, NetworkMessage.NEWKEEPALIVE);
 			
+			this.lock.unlock();
 			return;
 		}
 		

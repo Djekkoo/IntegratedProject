@@ -57,6 +57,7 @@ public class Networker {
 		
 		sequencer = new Sequencer(new Callback(this, "resend"));
 		multicastAddress = InetAddress.getByName(IntegrationProject.BROADCAST);
+		
 		dSock = new DatagramSocket(UNIPORT);
 		mSock = new MulticastSocket(MULTIPORT);
 		mSock.setLoopbackMode(true);
@@ -225,10 +226,11 @@ public class Networker {
 						connection.getValue(), ack, new byte[0], true, false,
 						false, false));
 
-			} catch (NullPointerException | CallbackException e1) {
+			} catch (CallbackException e1) {
 				System.out
 						.println("Error finding route for an ack! Possibly no route to that host. Which is strange, because somehow it did arrive.");
-			} catch (BigPacketSentException | DatagramDataSizeException e) {
+				e1.getException().printStackTrace();
+			} catch (NullPointerException | BigPacketSentException | DatagramDataSizeException e) {
 				// Can't really happen, but oh well...
 				e.printStackTrace();
 			}
@@ -270,12 +272,15 @@ public class Networker {
 	 */
 	@SuppressWarnings("unchecked")
 	public void handshake(Byte destination){
+		System.out.println("Handshaking initialized");
 		lock.lock();
 		byte sequence = (byte) (new Random()).nextInt();
 		while(sequence == 0) sequence = (byte) (new Random()).nextInt();
 		
 		sequencer.setSequenceTo(destination, sequence);
 
+		System.out.println("Sequencer aware of new sequencenr: " + sequence);
+		
 		Entry<Byte, Byte> connection = null;
 		try {
 			Object temp = routerGetRoute.invoke(new Byte(destination));

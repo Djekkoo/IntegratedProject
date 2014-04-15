@@ -57,6 +57,7 @@ public class Sequencer extends Thread{
 	}
 	
 	public void setSequenceFrom(Byte source, Byte sequence) {
+		this.lock.lock();
 		this.packets.put(source, new HashMap<Byte, DataPacket>());
 		if(this.oneToOne.containsKey(source)) {
 			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(this.oneToOne.get(source).getKey(),sequence));
@@ -65,15 +66,18 @@ public class Sequencer extends Thread{
 		}
 		this.ACK.put(source, sequence);
 		this.RET.put(source, sequence);
+		this.lock.unlock();
 	}
 	
 	public void setSequenceTo(Byte source, Byte sequence) {
+		this.lock.lock();
 		if(this.oneToOne.containsKey(source)) {
 			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, this.oneToOne.get(source).getValue()));
 		} else {
 			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, (byte)0));
 		}
 		this.ACKReceived.put(source, sequence);
+		this.lock.unlock();
 	}
 	
 	// check for ACK's waiting too long
@@ -93,7 +97,12 @@ public class Sequencer extends Thread{
 				rStack = iter.next();
 				resend = true;
 				tAck = this.ACKReceived.get(rStack);
-				byte temp = tAck;
+				
+				byte temp = 0;
+				if(tAck != null)
+					temp = tAck;
+				else
+					System.out.println("tAck == null");
 				
 				for (int i = 0; i < retransmitThreshold; i++) {
 					if ((byte) tAck == (byte)this.oneToOne.get(rStack).getKey()) {
@@ -126,7 +135,8 @@ public class Sequencer extends Thread{
 	public Byte getTo(Byte node){
 		lock.lock();
 		Byte v = this.oneToOne.get(node).getValue();
-		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getValue() == (byte)0 /*|| this.oneToOne.get(node).getKey() == (byte) 0*/) {
+		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getKey() == (byte)0) {
+			System.out.println(this.oneToOne.get(node).getKey());
 			System.out.println("No sequence available, ACK's are not registered");
 			lock.unlock();
 			return null;
@@ -220,7 +230,7 @@ public class Sequencer extends Thread{
 		this.lock.lock();
 		
 		//
-		if (this.oneToOne.containsKey(ackStack) == false/* || this.oneToOne.get(ackStack).getValue() == (byte)0*/ || this.oneToOne.get(ackStack).getKey() == (byte) 0) {
+		if (this.oneToOne.containsKey(ackStack) == false/* || this.oneToOne.get(ackStack).getValue() == (byte)0*/ || this.oneToOne.get(ackStack).getValue() == (byte) 0) {
 			
 			System.out.println("Dropped packet, ACK's are not registered");
 			this.lock.unlock();
