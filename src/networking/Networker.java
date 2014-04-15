@@ -232,6 +232,22 @@ public class Networker {
 				sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
 				return; // Job done, no bubbling up
 			} 
+
+			LinkedList<DataPacket> templist = new LinkedList<DataPacket>();
+			LinkedList<DataPacket> available = new LinkedList<DataPacket>();
+			
+			while(!available.isEmpty()){
+				templist.offer(available.poll());
+				if(!templist.peekLast().hasMore()){
+					try {
+						packetReceived.invoke(processPackets(templist));
+					} catch (CallbackException e) {
+						e.printStackTrace();
+					} finally {
+						templist.clear();
+					}
+				}
+			}
 			
 			try {
 				packetReceived.invoke(d);
