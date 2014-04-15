@@ -231,12 +231,19 @@ public class Networker {
 				sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
 				return; // Job done, no bubbling up
 			} 
+			
+			try {
+				packetReceived.invoke(d);
+			} catch (CallbackException e) {
+			}
+			
 			try {
 				if(d.getSource() == port.getAddress()[3]){
 					byte ack = offer(d);
-					send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
-							(byte) 0x0, ack, new byte[0], true, false,
-							false, false), port);
+					if(ack != (byte) 0)
+						send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
+								(byte) 0x0, ack, new byte[0], true, false,
+								false, false), port);
 				} else {
 			
 					Entry<Byte, Byte> connection = null;
@@ -251,7 +258,7 @@ public class Networker {
 	
 					byte ack = offer(d);
 					
-					if(ack != 0)
+					if(ack != (byte) 0)
 						send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
 								connection.getValue(), ack, new byte[0], true, false,
 								false, false));
