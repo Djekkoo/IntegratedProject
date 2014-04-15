@@ -52,4 +52,11 @@ public interface RoutingInterface {
 	 * @return 	The amount of hops the longest route takes.
 	 */
 	public Byte getLongestRoute();
+	
+	/**
+	 * Returns a list of all devices on the network.
+	 * 
+	 * @return 	The list of devices on the network.
+	 */
+	public Byte[] getDevices();
 }

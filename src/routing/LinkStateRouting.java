@@ -201,6 +201,18 @@ public class LinkStateRouting implements RoutingInterface {
 	}
 	
 	/**
+	 * {@inheritDoc}
+	 */
+	public Byte[] getDevices() {
+		Byte[] devs = new Byte[networkTreeMap.size()];
+		int i = 0;
+		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
+			devs[i] = e.getKey();
+		}
+		return devs;
+	}
+	
+	/**
 	 * Prints the nodes and prints what nodes they are connected to.
 	 * 
 	 * @since	2014-04-08
