@@ -250,12 +250,6 @@ public class Networker {
 			}
 			
 			try {
-				packetReceived.invoke(d);
-			} catch (CallbackException e) {
-				e.getException().printStackTrace();
-			}
-			
-			try {
 				if(d.getSource() == port.getAddress()[3]){
 					byte ack = offer(d);
 					if(ack != (byte) 0)
