@@ -11,11 +11,8 @@ import javax.swing.JOptionPane;
 import javax.swing.ListModel;
 import javax.swing.text.DefaultCaret;
 
-import main.FileTransferHandler;
-
 import java.awt.event.KeyEvent;
 import java.io.File;
-
 /** 
  * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
  * @version     0.7
@@ -298,13 +295,7 @@ public class GUI extends javax.swing.JFrame {
             filelist += ", " + sf[i].getName();
           }
           inputText.setText("/send " + filelist);
-          //TODO JOEY FIX DIT
-          FileTransferHandler fthr;
-	  		try {
-	  			fthr = new FileTransferHandler(filelist,"r");
-	  			FileTransferHandler fthw = new FileTransferHandler(filelist,"rw");
-	  			fthw.writeFile(fthw.parsePacket(fthr.getPacket()));
-	  		} catch (Exception e) {	}
+          client.sendFile(filelist);
         }
         else {
         	inputText.setText("FUCK ME, SEND A FILE");

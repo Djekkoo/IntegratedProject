@@ -9,6 +9,7 @@ import routing.RoutingInterface;
 import networking.DataPacket;
 import main.Callback;
 import main.CallbackException;
+import main.FileTransferHandler;
 import main.IntegrationProject;
 import monitoring.NetworkMessage;
 
@@ -168,6 +169,16 @@ public class Client {
 		try {	sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));} catch (CallbackException e) { System.out.println(e.getMessage());}
 		updateUsers();
 	}
+	
+	public void sendFile(String filename) {
+		try {
+			FileTransferHandler fthr = new FileTransferHandler(filename,"r");
+			sendMsg.invoke("FILE " + fthr.parsePacket(fthr.getPacket()),Byte.valueOf((byte) 0x0F));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
 
 	public void updateUsers() {
 		String[] lijstje = new String[table.size()];
