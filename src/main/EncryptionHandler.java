@@ -33,6 +33,7 @@ public class EncryptionHandler {
 				publicKeyRAF.setLength(0);
 				publicKeyRAF.write(DatatypeConverter.printBase64Binary(kp.getPublic().getEncoded()).getBytes());
 				System.out.println("Keys generated");
+				//DatatypeConverter
 			} catch (IOException | NoSuchAlgorithmException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
