@@ -219,6 +219,7 @@ public class Networker {
 			try {
 				packetReceived.invoke(d);
 			} catch (CallbackException e) {
+				//e.getException().printStackTrace();
 			}
 
 			if (d.getHops() > 0) {
@@ -235,6 +236,7 @@ public class Networker {
 			try {
 				packetReceived.invoke(d);
 			} catch (CallbackException e) {
+				e.getException().printStackTrace();
 			}
 			
 			try {
@@ -404,7 +406,7 @@ public class Networker {
 				Byte sequencenr = sequencer.getTo(destination);
 				if(!(sequencenr == null)){
 					dp = new DataPacket(IntegrationProject.DEVICE, destination,
-							hops, sequencer.getTo(destination), chunk, ack,
+							hops, sequencenr, chunk, ack,
 							routing, keepalive, moar);
 					result.add(dp);
 				} else {

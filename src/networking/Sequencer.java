@@ -222,10 +222,6 @@ public class Sequencer extends Thread{
 	public Byte put(DataPacket packet) {
 		
 		byte ackStack = 0x00;
-		if (packet.getDestination() == (byte) 0x0F) {
-			ackStack |= 0xF0;
-		}
-		
 		ackStack |= packet.getSource();
 		
 		this.lock.lock();
@@ -242,6 +238,7 @@ public class Sequencer extends Thread{
 		if (packet.isAck()) {
 			
 			this.ACKReceived.put(ackStack, packet.getSequenceNumber());
+			System.out.println("RECEIVED ACK: " + ackStack + ":" + packet.getSequenceNumber());
 			this.lock.unlock();
 			return null;
 			
@@ -249,8 +246,6 @@ public class Sequencer extends Thread{
 		
 		if (!this.packets.containsKey(ackStack)) {
 			this.packets.put(ackStack, new HashMap<Byte, DataPacket>());
-			this.ACK.put(ackStack, (byte) 0);
-			this.RET.put(ackStack, (byte) 0);
 		}
 		
 		if ((this.ACK.get(ackStack) < packet.getSequenceNumber() && packet.getSequenceNumber() - this.ACK.get(ackStack) >= 127)
@@ -263,16 +258,16 @@ public class Sequencer extends Thread{
 			
 			HashMap<Byte, DataPacket> packets = this.packets.get(ackStack);
 			packets.put(packet.getSequenceNumber(), packet);
-		
+			System.out.println("Package received with seq="+packet.getSequenceNumber());
+			this.packets.put(ackStack, packets);
 		}
 		
 		// get last ACK
 		byte lAck = this.ACK.get(ackStack);
-		while(packets.containsKey(lAck)) {
+		while(packets.get(ackStack).containsKey(this.nextSEQ(lAck))) {
 			lAck = this.nextSEQ(lAck);
-		}
+		} 
 		
-		lAck = this.prevSEQ(lAck);
 		this.ACK.put(ackStack, lAck);
 		
 		this.lock.unlock();
