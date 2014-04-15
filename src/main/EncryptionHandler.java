@@ -113,6 +113,29 @@ public class EncryptionHandler {
 	}
 	
 	/**
+	 * 
+	 * @return
+	 */
+	public String parsePubKeyPacket(byte[] packet) {
+		byte[] pubKey = new byte[(packet.length-7)];
+		System.arraycopy(packet, 7, pubKey, 0, pubKey.length);
+	    return new String(pubKey);
+	}
+	
+	/**
+	 * Fetches the packet for a public key share.
+	 * 
+	 * @return	The packet used for public key sharing.
+	 */
+	public byte[] getPubKeyPacket() {
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("PUBKEY ");
+	    sb.append(DatatypeConverter.printBase64Binary(myKeys.getPublic().getEncoded()));
+	    return sb.toString().getBytes();
+	}
+	
+	
+	/**
 	 * Returns the public key for this instance.
 	 * 
 	 * @return Public key for this instance.
