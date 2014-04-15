@@ -65,8 +65,17 @@ public class EncryptionHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-
+	}
+	
+	/**
+	 * Fetches the public key from a received packet.
+	 * 
+	 * @return The public key contained in the packet
+	 */
+	public static String parsePubKeyPacket(byte[] packet) {
+		byte[] pubKey = new byte[(packet.length-7)];
+		System.arraycopy(packet, 7, pubKey, 0, pubKey.length);
+	    return new String(pubKey);
 	}
 	
 	/**
@@ -110,16 +119,6 @@ public class EncryptionHandler {
 	        e.printStackTrace();
 	    }
 	    return null;
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public String parsePubKeyPacket(byte[] packet) {
-		byte[] pubKey = new byte[(packet.length-7)];
-		System.arraycopy(packet, 7, pubKey, 0, pubKey.length);
-	    return new String(pubKey);
 	}
 	
 	/**
