@@ -59,7 +59,9 @@ public class Communication {
 	
 	public void newPacket(DataPacket packet) {
 		
-		System.out.println(packet.getSource() + "-" + new String(packet.getData()));
+		if(packet.getData().length > 0)
+			System.out.println(packet.getSource() + "-" + new String(packet.getData()));
+		
 		if (packet.isKeepAlive()) {
 			this.monitor.messageReceived(packet);
 		}
