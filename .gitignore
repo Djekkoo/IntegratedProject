@@ -40,3 +40,9 @@ local.properties
 
 # TeXlipse plugin
 .texlipse
+
+#LaTeX
+.log
+.aux
+.out
+.toc
