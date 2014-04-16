@@ -27,8 +27,11 @@ public class CryptoTest extends TestCase {
 		
 		System.out.println("Encrypt/Decrypt tests running");
 		
+//		System.out.println(testmessage);
 		byte[] encrypted = EH1.encrypt(testmessage.getBytes(), (byte)2);
+//		System.out.println(new String(encrypted));
 		byte[] decrypted = EH2.decrypt(encrypted);
+//		System.out.println(new String(decrypted));
 		assertEquals("Decrypted message #1", testmessage, new String(decrypted));
 		
 		decrypted = EH3.decrypt(EH2.encrypt(testmessage.getBytes(), (byte)3));
@@ -41,7 +44,7 @@ public class CryptoTest extends TestCase {
 		validated = EH2.validate((byte)1, testmessage.getBytes(), signedHash);
 		assertEquals("Validating packet from 1 to 2", true, validated);
 		
-		//EH2 does NOT know EH1s pubKey
+		//EH3 does NOT know EH1s pubKey
 		validated = EH3.validate((byte)1, testmessage.getBytes(), signedHash);
 		assertEquals("Validating packet from 1 to 3", false, validated);
 		
