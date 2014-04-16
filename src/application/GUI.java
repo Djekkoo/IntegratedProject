@@ -29,7 +29,11 @@ public class GUI extends javax.swing.JFrame {
 		this.client = client;
 		String name = "";
 		while (name.equals("")) {
+<<<<<<< HEAD
 			name = JOptionPane.showInputDialog("Hoe wil je heten?","");
+=======
+			name = JOptionPane.showInputDialog("Hoe wil je haten?","");
+>>>>>>> f3687ca60e58e1cb4754c71ba21205893b2c43ef
 			if (name == null) {
 				System.exit(0);
 			}
@@ -286,6 +290,7 @@ public class GUI extends javax.swing.JFrame {
 
 	private void sendBtnActionPerformed(java.awt.event.ActionEvent evt) {
 		JFileChooser chooser = new JFileChooser();
+<<<<<<< HEAD
 	    int returnVal = chooser.showOpenDialog(this);
 	    if(returnVal == JFileChooser.APPROVE_OPTION) {
 	    	client.sendChat("/send " + chooser.getSelectedFile().getName());
@@ -294,6 +299,24 @@ public class GUI extends javax.swing.JFrame {
 	    } else {
 	    	inputText.setText("FUCK ME, SEND A FILE");
 	    }
+=======
+        chooser.setMultiSelectionEnabled(true);
+        int option = chooser.showOpenDialog(GUI.this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+          File[] sf = chooser.getSelectedFiles();
+          String filelist = "nothing";
+          if (sf.length > 0) filelist = sf[0].getName();
+          for (int i = 1; i < sf.length; i++) {
+            filelist += ", " + sf[i].getName();
+          }
+          client.sendChat("/send " + filelist);
+          try {	Thread.sleep(1000);	} catch(Exception e) {	};
+          client.sendFile(filelist);
+        }
+        else {
+        	inputText.setText("FUCK ME, SEND A FILE");
+        }
+>>>>>>> f3687ca60e58e1cb4754c71ba21205893b2c43ef
 	}
 	
 	public String saveDialog(String receivename) {
@@ -307,7 +330,11 @@ public class GUI extends javax.swing.JFrame {
         else {
           //statusbar.setText("You canceled.");
         }
+<<<<<<< HEAD
         return ((chooser.getSelectedFile()!=null)?chooser.getSelectedFile().getAbsolutePath():"nothing");
+=======
+        return ((chooser.getSelectedFile()!=null)?chooser.getSelectedFile().getName():"nothing");
+>>>>>>> f3687ca60e58e1cb4754c71ba21205893b2c43ef
 	}
 
 	private void SendPanelKeyPressed(java.awt.event.KeyEvent evt) {

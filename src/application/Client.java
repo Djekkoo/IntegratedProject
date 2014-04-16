@@ -80,8 +80,17 @@ public class Client {
 				}
 				gui.updateChat(msg);
 				//Check for commands
+<<<<<<< HEAD
 				if (data.contains("/send")) {
 					this.filename = gui.saveDialog(data.split("/send ")[1]);
+=======
+				if (data.split(" ")[1].contains("/")) {
+					switch (data.split(" ")[1]) {
+					case "/send":
+						this.filename = gui.saveDialog(data.split(" ")[2]);
+						break;
+					}
+>>>>>>> f3687ca60e58e1cb4754c71ba21205893b2c43ef
 				}
 				break;
 			case "USER":
@@ -94,7 +103,10 @@ public class Client {
 				updateUsers();
 				break;
 			case "FILE":
+<<<<<<< HEAD
 				System.out.println("FILE INCOMING");
+=======
+>>>>>>> f3687ca60e58e1cb4754c71ba21205893b2c43ef
 				try {
 					FileTransferHandler fth = new FileTransferHandler();
 					byte[] filedata = new byte[packet.getData().length-5];
@@ -107,7 +119,10 @@ public class Client {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+<<<<<<< HEAD
 				System.out.println("FILE WRITED");
+=======
+>>>>>>> f3687ca60e58e1cb4754c71ba21205893b2c43ef
 			default:
 				System.out.println("The received command does not exist.");
 				break;
@@ -145,6 +160,7 @@ public class Client {
 						sendMsg.invoke("CHAT " + sendje,Byte.valueOf((byte) 0x0F));
 					} catch (CallbackException e) {
 						System.out.println(e.getMessage());
+<<<<<<< HEAD
 					}
 					break;
 				case "/shownetwork":
@@ -157,6 +173,20 @@ public class Client {
 						gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
 					}
 					break;
+=======
+					}
+					break;
+				case "/shownetwork":
+					gui.updateChat("Showing network in the console");
+					((LinkStateRouting) router).showNetwork();
+					break;
+				case "/users":
+					gui.updateChat("Showing the user table in Client:");
+					for (Entry<Byte, String> entry : table.entrySet()) {
+						gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
+					}
+					break;
+>>>>>>> f3687ca60e58e1cb4754c71ba21205893b2c43ef
 				case "/showkeys":
 					gui.updateChat("JoeyIsEchtGeenVirus.jpg.exe not found error");
 					break;
