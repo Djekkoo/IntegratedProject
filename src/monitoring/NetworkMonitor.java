@@ -2,6 +2,8 @@ package monitoring;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -67,15 +69,22 @@ public class NetworkMonitor extends Thread {
 			keys = this.activity.keySet();
 			i    = keys.iterator();
 			threshold = System.currentTimeMillis() - dumpDelay;
+			
+			List<Byte> l = new LinkedList<Byte>();
+			
 			while(i.hasNext()) {
 				key = i.next();
 				
 				// Keep-alive not received
 				if (this.activity.get(key) <= threshold) {
-					this.activity.remove(key);
-					this.router.networkMessage(key, NetworkMessage.NOKEEPALIVE);
+					l.add(key);
 				}
 				
+			}
+			
+			for(Byte b : l){
+				this.activity.remove(b);
+				this.router.networkMessage(b, NetworkMessage.NOKEEPALIVE);
 			}
 			
 			this.lock.unlock();
