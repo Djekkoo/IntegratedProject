@@ -17,6 +17,8 @@ import java.util.Random;
 import main.Callback;
 import main.CallbackException;
 import main.Communication;
+import main.CryptoException;
+import main.EncryptionHandler;
 import main.IntegrationProject;
 
 /**
@@ -42,6 +44,7 @@ public class Networker {
 
 	Callback routerGetRoute;
 	Communication packetReceived;
+	EncryptionHandler eh;
 	
 	ReentrantLock lock;
 
@@ -56,6 +59,8 @@ public class Networker {
 	public Networker(Communication packetReceived) throws IOException {
 		lock = new ReentrantLock();
 		routerGetRoute = new Callback(this, "dummyRoute");
+		
+		eh = new EncryptionHandler("adhoc_key");
 		
 		sequencer = new Sequencer(new Callback(this, "resend"));
 		multicastAddress = InetAddress.getByName(IntegrationProject.BROADCAST);
@@ -119,6 +124,7 @@ public class Networker {
 	 */
 	@SuppressWarnings("unchecked")
 	public void send(Byte destination, byte[] data) throws IOException {
+		
 		HashMap<Byte, SmallPacket> entry;
 
 		Entry<Byte, Byte> connection = null;
@@ -234,7 +240,11 @@ public class Networker {
 		} else if (d.getDestination() == IntegrationProject.DEVICE) { // Meant for me
 			if(d.getSequenceNumber() == 0 && !d.isAck() && !d.isKeepAlive() && !d.isRouting() && !d.hasMore()){
 				System.out.println("Got a handshake!");
-				sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
+				if(d.getData().length == 1)
+					sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is handshake packet
+				else
+					eh.addPubKey(d.getSource(), EncryptionHandler.parsePubKeyPacket(d.getData()));
+				
 				return; // Job done, no bubbling up
 			} 
 			
@@ -341,6 +351,13 @@ public class Networker {
 			send(dp); // We cannot assume
 			send(dp); // the first packet
 			send(dp); // actually arrives
+
+			
+			
+			dp = new SmallPacket(IntegrationProject.DEVICE, destination, connection.getValue(), (byte) 0x0, eh.getPubKeyPacket(), false, false, false, false);
+			send(dp); // We cannot assume
+			send(dp); // the first packet
+			send(dp); // actually arrives
 		} catch (IOException | BigPacketSentException | DatagramDataSizeException e) {
 			System.out.println("BAM JONGÛH!");
 			e.printStackTrace();
@@ -378,6 +395,12 @@ public class Networker {
 			System.arraycopy(buffer, 0, result, i * maxChunkSize, buffer.length);
 			i++;
 		}
+		
+		try {
+			result = eh.parsePacket(result, first.getSource());
+		} catch (CryptoException e) {
+			System.out.println(e.getMessage());
+		}
 
 		return new BigPacket(first.getSource(), first.getDestination(),
 				first.getHops(), first.getSequenceNumber(), result,
@@ -386,6 +409,9 @@ public class Networker {
 
 	private LinkedList<SmallPacket> processData(Byte destination, Byte hops,
 			byte[] data, boolean ack, boolean routing, boolean keepalive) {
+		
+		data = eh.getPacket(data, destination);
+		
 		LinkedList<SmallPacket> result = new LinkedList<SmallPacket>();
 		lock.lock();
 		SmallPacket dp;
