@@ -296,11 +296,14 @@ public class Networker {
 			e.printStackTrace();
 		} catch (BigPacketSentException e) {
 			e.printStackTrace();
+		} finally {
+			System.out.println("Attempted resend of " + sequencenumber + " to " + destination);
 		}
 	}
 	
 	/**
-	 * Should be called when a new node is discovered. It sends 
+	 * Should be called when a new node is discovered. It generates a new sequencenumber
+	 * and sends it 3 times to the newly discovered node.
 	 * 
 	 * @param destination
 	 */
