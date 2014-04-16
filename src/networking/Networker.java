@@ -137,7 +137,7 @@ public class Networker {
 	 * @param data
 	 *            The data to be sent
 	 * @param routing
-	 *            Whether or not it is meant for routing
+	 *            Whether or not it is meant for routing. This will skip sequencer
 	 * @throws IOException
 	 *             When the socket can be reached
 	 */
@@ -288,6 +288,8 @@ public class Networker {
 				} else if (d.isRouting() && !d.isAck() && !d.isKeepAlive()
 						&& !d.hasMore()) {
 					router.packetReceived(d);
+					
+					return;
 				}
 			}
 
@@ -441,7 +443,7 @@ public class Networker {
 		int maxChunkSize = 1024 - SmallPacket.HEADER_LENGTH;
 		int length = 0;
 		if (packets.size() > 0)
-			length = packets.size() * maxChunkSize
+			length = (packets.size() - 1) * maxChunkSize
 					+ packets.getLast().getData().length;
 
 		byte[] result = new byte[length];
