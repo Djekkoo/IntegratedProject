@@ -119,9 +119,7 @@ public class Client {
 					//DIRECT SEND
 					Byte dest = 0x00;
 					for (Entry<Byte, String> entry : table.entrySet()) {
-						System.out.println("=> " + text.split(" ")[1] + ", Value = " + entry.getValue());
-						System.out.println(entry.getValue().length() + " - " + ((text.split(" ")[1])).length());
-						if (entry.getValue().contains(text.split(" ")[1])) {
+						if (entry.getValue().contains(text.split("/pvt ")[1].split(":")[0])) {
 							dest = entry.getKey();
 						}
 					}
