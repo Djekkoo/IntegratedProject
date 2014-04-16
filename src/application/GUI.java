@@ -297,7 +297,8 @@ public class GUI extends javax.swing.JFrame {
           for (int i = 1; i < sf.length; i++) {
             filelist += ", " + sf[i].getName();
           }
-          inputText.setText("/send " + filelist);
+          client.sendChat("/send " + filelist);
+          try {	Thread.sleep(1000);	} catch(Exception e) {	};
           client.sendFile(filelist);
         }
         else {
@@ -305,7 +306,7 @@ public class GUI extends javax.swing.JFrame {
         }
 	}
 	
-	public void saveDialog(String receivename) {
+	public String saveDialog(String receivename) {
 		JFileChooser chooser = new JFileChooser();
 		File file = new File(receivename);
 		chooser.setSelectedFile(file);
@@ -316,6 +317,7 @@ public class GUI extends javax.swing.JFrame {
         else {
           //statusbar.setText("You canceled.");
         }
+        return ((chooser.getSelectedFile()!=null)?chooser.getSelectedFile().getName():"nothing");
 	}
 
 	private void SendPanelKeyPressed(java.awt.event.KeyEvent evt) {

@@ -25,6 +25,7 @@ public class Client {
 	private Callback sendMsg;
 	private GUI gui;
 	private String name;
+	private String filename = "file";
 	private Map<Byte,String> table;
 	private RoutingInterface router;
 	private boolean hardcoremode;
@@ -82,7 +83,7 @@ public class Client {
 				if (data.split(" ")[1].contains("/")) {
 					switch (data.split(" ")[1]) {
 					case "/send":
-						gui.saveDialog(data.split(" ")[2]);
+						this.filename = gui.saveDialog(data.split(" ")[2]);
 						break;
 					}
 				}
@@ -96,6 +97,19 @@ public class Client {
 				System.out.println(usermsg + " detected.");
 				updateUsers();
 				break;
+			case "FILE":
+				try {
+					FileTransferHandler fth = new FileTransferHandler();
+					byte[] filedata = new byte[packet.getData().length-5];
+					System.arraycopy(packet.getData(), 5, filedata, 0, filedata.length);
+					byte[] file = fth.parsePacket(filedata);
+					// TODO Save shit
+					String filename = this.filename;
+					fth.setFile(filename, "rw");
+					fth.writeFile(file);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			default:
 				System.out.println("The received command does not exist.");
 				break;
@@ -179,7 +193,7 @@ public class Client {
 	public void sendFile(String filename) {
 		try {
 			FileTransferHandler fthr = new FileTransferHandler(filename,"r");
-			sendMsg.invoke("FILE " + fthr.parsePacket(fthr.getPacket()),Byte.valueOf((byte) 0x0F));
+			sendMsg.invoke("FILE " + fthr.getPacket(),Byte.valueOf((byte) 0x0F));
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
