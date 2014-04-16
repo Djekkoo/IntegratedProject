@@ -341,7 +341,7 @@ public class GUI extends javax.swing.JFrame {
 		for (int i=0;i<chatArr.length;i++) {
 			result = result + chatArr[i].trim() + '\n';
 		}
-		chatTextPane.setText(result + lastmsg);
+		chatTextPane.setText((result + lastmsg).trim());
 	}
 	
 	public String[] getChat() {
