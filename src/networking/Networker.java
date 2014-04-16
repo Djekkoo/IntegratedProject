@@ -528,7 +528,8 @@ public class Networker {
 		System.out.println("Looping packets");
 		while (!readyPackets.isEmpty()) {
 			if (!readyPackets.peek().hasMore()) {
-				packetReceived.newPacket(readyPackets.poll());
+				buffer.add(readyPackets.poll());
+				packetReceived.newPacket(processPackets(buffer));
 			} else {
 				while (!readyPackets.isEmpty() && readyPackets.peek().hasMore()) {
 					buffer.add(readyPackets.poll());
@@ -537,6 +538,7 @@ public class Networker {
 
 				packetReceived.newPacket(processPackets(buffer));
 			}
+			buffer = new LinkedList<DataPacket>();
 		}
 
 		return ack;
