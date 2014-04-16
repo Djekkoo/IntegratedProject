@@ -44,7 +44,7 @@ public class Networker {
 
 	Callback routerGetRoute;
 	Communication packetReceived;
-	EncryptionHandler eh;
+//	EncryptionHandler eh;
 
 	ReentrantLock lock;
 
@@ -61,7 +61,7 @@ public class Networker {
 		lock = new ReentrantLock();
 		routerGetRoute = new Callback(this, "dummyRoute");
 
-		eh = new EncryptionHandler("adhoc_key");
+//		eh = new EncryptionHandler("adhoc_key");
 
 		sequencer = new Sequencer(new Callback(this, "resend"));
 		multicastAddress = InetAddress.getByName(IntegrationProject.BROADCAST);
@@ -271,8 +271,8 @@ public class Networker {
 				} else {
 					System.out.println(EncryptionHandler.parsePubKeyPacket(d
 							.getData()));
-					eh.addPubKey(d.getSource(),
-							EncryptionHandler.parsePubKeyPacket(d.getData()));
+//					eh.addPubKey(d.getSource(),
+//							EncryptionHandler.parsePubKeyPacket(d.getData()));
 				}
 				return; // Job done, no bubbling up
 			}
@@ -436,12 +436,12 @@ public class Networker {
 			System.arraycopy(buffer, 0, result, i * maxChunkSize, buffer.length);
 			i++;
 		}
-
-		try {
-			result = eh.parsePacket(result, first.getSource());
-		} catch (CryptoException e) {
-			System.out.println(e.getMessage());
-		}
+//
+//		try {
+//			result = eh.parsePacket(result, first.getSource());
+//		} catch (CryptoException e) {
+//			System.out.println(e.getMessage());
+//		}
 
 		return new BigPacket(first.getSource(), first.getDestination(),
 				first.getHops(), first.getSequenceNumber(), result,
@@ -451,7 +451,7 @@ public class Networker {
 	private LinkedList<SmallPacket> processData(Byte destination, Byte hops,
 			byte[] data, boolean ack, boolean routing, boolean keepalive) {
 
-		data = eh.getPacket(data, destination);
+//		data = eh.getPacket(data, destination);
 
 		LinkedList<SmallPacket> result = new LinkedList<SmallPacket>();
 		lock.lock();

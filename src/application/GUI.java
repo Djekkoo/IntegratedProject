@@ -29,7 +29,7 @@ public class GUI extends javax.swing.JFrame {
 		this.client = client;
 		String name = "";
 		while (name.equals("")) {
-			name = JOptionPane.showInputDialog("Hoe wil je heten?","");
+			name = JOptionPane.showInputDialog("Hoe wil je haten?","");
 			if (name == null) {
 				System.exit(0);
 			}

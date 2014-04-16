@@ -189,10 +189,10 @@ public class EncryptionHandler {
 				}
 			    try {
 			        Cipher rsa;
-			        rsa = Cipher.getInstance("RSA");
+			        rsa = Cipher.getInstance("RSA/ECB/NoPadding");
 			        rsa.init(Cipher.ENCRYPT_MODE, pubKey);
 			        byte[] tempCipherText = rsa.doFinal(toBeEncrypted);
-			        System.arraycopy(tempCipherText, 0, cipherText, 128*i, 128);
+			        System.arraycopy(tempCipherText, 0, cipherText, 117*i, 117);//, 128*i, 128);
 			    } catch (Exception e) {
 			        e.printStackTrace();
 			    }
@@ -222,7 +222,7 @@ public class EncryptionHandler {
 	    		byte[] toBeDecrypted = new byte[128];
 	    		System.arraycopy(in, i*128, toBeDecrypted, 0, 128);
 	    		Cipher rsa;
-	 	        rsa = Cipher.getInstance("RSA");
+	 	        rsa = Cipher.getInstance("RSA/ECB/NoPadding");
 	 	        rsa.init(Cipher.DECRYPT_MODE, myKeys.getPrivate());
 	 	        byte[] tempMessage = rsa.doFinal(toBeDecrypted);
 	 	        System.arraycopy(tempMessage, 0, message, messageLen, tempMessage.length);
@@ -251,7 +251,7 @@ public class EncryptionHandler {
 			
 			PrivateKey privKey = myKeys.getPrivate();
 	        Cipher rsa;
-	        rsa = Cipher.getInstance("RSA");
+	        rsa = Cipher.getInstance("RSA/ECB/NoPadding");
 	        rsa.init(Cipher.ENCRYPT_MODE, privKey);
 	        byte[] sign = rsa.doFinal(hash);
 	        return sign;
@@ -275,19 +275,18 @@ public class EncryptionHandler {
 	    	PublicKey pubKey = pubKeys.get(host);
 	    	if(pubKey != null) {
 		        Cipher rsa;
-		        rsa = Cipher.getInstance("RSA");
+		        rsa = Cipher.getInstance("RSA/ECB/NoPadding");
 		        rsa.init(Cipher.DECRYPT_MODE, pubKey);
 		        byte[] realHash = rsa.doFinal(hmac);
 		        
-		        boolean correct = true;
-		        int i = 0;
-		        for(byte hashByte : realHash) {
-		        	if(hashByte != checkHash[i]) {
-		        		correct = false;
+		        if(realHash.length != checkHash.length) return false;
+		        
+		        for(int i = 0; i < checkHash.length; i++) {
+		        	if(realHash[i] != checkHash[i]) {
+		        		return false;
 		        	}
-		        	i++;
 		        }
-		        return correct;
+		        return true;
 	    	} else {
 	    		System.out.println("Key for host " + host + " not found. Cannot validate.");
 	    	}
@@ -362,7 +361,7 @@ public class EncryptionHandler {
 	 * @param	size The size of the new keys, in bits.
 	 */
 	private KeyPair generateKeyPair(int size) throws NoSuchAlgorithmException {
-		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA/ECB/NoPadding");
         keyGen.initialize(size);
         KeyPair keys = keyGen.genKeyPair();
         return keys;
