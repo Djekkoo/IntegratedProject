@@ -9,15 +9,13 @@ import monitoring.NetworkMessage;
 public class TestRouting extends TestCase {
 	public TestRouting(){
 		//TODO Testing
-		System.out.println("--- Test Starting ---");
 	}
 	
 	@Override
 	protected int runTest() {
 		// TODO Auto-generated method stub
-		testNetwork();
-		System.out.println("--- Test Complete ---");
-		return 0;
+		
+		return testNetwork();
 	}
 
 	@Override
@@ -25,7 +23,7 @@ public class TestRouting extends TestCase {
 		// TODO Auto-generated method stub
 	}
 	
-	protected void testNetwork() {
+	protected int testNetwork() {
 		LinkStateRouting r = new LinkStateRouting(null,null,false);
 		try {
 			System.out.println("Creating router");
@@ -85,11 +83,11 @@ public class TestRouting extends TestCase {
 			r.update();
 			assertEquals("Route 1->3->6->5: nexthop", (byte)3, r.getRoute((byte)5).getKey());
 
-			
 		} catch (RouteNotFoundException | SecurityException |
 					 IllegalArgumentException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		return errors;
 	}
 }
