@@ -8,6 +8,7 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -22,7 +23,13 @@ import javax.xml.bind.DatatypeConverter;
 
 public class EncryptionHandler {
 
+	/**
+	 * Contains the public and private key.
+	 */
 	private KeyPair myKeys;
+	/**
+	 * Contains the public keys of remote hosts.
+	 */
 	private TreeMap<Byte, PublicKey> pubKeys = new TreeMap<Byte,PublicKey>();
 	
 	public EncryptionHandler() {
@@ -79,6 +86,58 @@ public class EncryptionHandler {
 	}
 	
 	/**
+	 * Builds a packet from supplied data. Appends the signature in front of the encrypted data.
+	 * 
+	 * @param 	in The data to encrypt and to make a signature of.
+	 * @param 	host The host whose public key should be used to encrypt.
+	 * @return	The packet, encrypted and with a signature.
+	 */
+	public byte[] getPacket(byte[] in, byte host) {
+		byte[] encryptedData = this.encrypt(in, host);
+		byte[] signedHash = this.sign(in);
+		if(encryptedData != null) {
+			byte[] finalPacket = new byte[encryptedData.length+signedHash.length];
+			System.arraycopy(signedHash, 0, finalPacket, 0, signedHash.length);
+			System.arraycopy(encryptedData, 0, finalPacket, signedHash.length, encryptedData.length);
+			
+		    return finalPacket;
+		} else {
+			return null;
+		}
+		
+		
+		
+	}
+	
+	/**
+	 * Takes a packet, decrypts the data and validates the signature.
+	 * 
+	 * @param 	in An encrypted packet.
+	 * @param 	host The host the packet is from.
+	 * @return	The unencrypted data contained by the packet.
+	 */
+	public byte[] parsePacket(byte[] in, byte host) {
+		byte[] signedHash = new byte[128];
+		if(in != null) {
+			byte[] encryptedData = new byte[in.length-128];
+			
+			System.arraycopy(in, 0, signedHash, 0, 128);
+			System.arraycopy(in, 128, encryptedData, 0, encryptedData.length);
+			
+			byte[] decryptedData = this.decrypt(encryptedData);
+			boolean validated = this.validate(host, decryptedData, signedHash);
+			if(validated) {
+				return decryptedData;
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	    
+	}
+	
+	/**
 	 * Encrypts a message with a hosts public key.
 	 * 
 	 * @param 	in Bytes to encrypt
@@ -86,16 +145,36 @@ public class EncryptionHandler {
 	 * @return	in bytes encrypted with the hosts public key.
 	 */
 	public byte[] encrypt(byte[] in, byte host) {
+		int iterations = 1;
+		int modulo = 0;
+		if(in.length > 117) {
+			iterations = (int)Math.ceil(in.length/117);
+			iterations++;
+		}
+		modulo = in.length % 117;
+		byte[] cipherText = new byte[iterations*128];
 		PublicKey pubKey = pubKeys.get(host);
 		if(pubKey != null) {
-		    try {
-		        Cipher rsa;
-		        rsa = Cipher.getInstance("RSA");
-		        rsa.init(Cipher.ENCRYPT_MODE, pubKey);
-		        return rsa.doFinal(in);
-		    } catch (Exception e) {
-		        e.printStackTrace();
-		    }
+			for(int i = 0; i < iterations; i++) {
+				byte[] toBeEncrypted;
+				if(iterations == i+1) {
+					toBeEncrypted = new byte[modulo];
+					System.arraycopy(in, (i*117), toBeEncrypted, 0, modulo);
+				} else {
+					toBeEncrypted = new byte[117];
+					System.arraycopy(in, (i*117), toBeEncrypted, 0, 117);
+				}
+			    try {
+			        Cipher rsa;
+			        rsa = Cipher.getInstance("RSA");
+			        rsa.init(Cipher.ENCRYPT_MODE, pubKey);
+			        byte[] tempCipherText = rsa.doFinal(toBeEncrypted);
+			        System.arraycopy(tempCipherText, 0, cipherText, 128*i, 128);
+			    } catch (Exception e) {
+			        e.printStackTrace();
+			    }
+			}
+			return cipherText;
 		} else {
 			System.out.println("Key for host " + host + " not found. Cannot encrypt.");
 		}
@@ -109,16 +188,90 @@ public class EncryptionHandler {
 	 * @return	Decrypted bytes from in
 	 */
 	public byte[] decrypt(byte[] in) {
+		int iterations = 1;
+		if(in.length > 128) {
+			iterations = (int)Math.ceil(in.length/128);
+		}
+		int  messageLen = 0;
+		byte[] message = new byte[iterations * 117];
 	    try {
-
-	        Cipher rsa;
-	        rsa = Cipher.getInstance("RSA");
-	        rsa.init(Cipher.DECRYPT_MODE, myKeys.getPrivate());
-	        return rsa.doFinal(in);
+	    	for(int i = 0; i < iterations; i++){
+	    		byte[] toBeDecrypted = new byte[128];
+	    		System.arraycopy(in, i*128, toBeDecrypted, 0, 128);
+	    		Cipher rsa;
+	 	        rsa = Cipher.getInstance("RSA");
+	 	        rsa.init(Cipher.DECRYPT_MODE, myKeys.getPrivate());
+	 	        byte[] tempMessage = rsa.doFinal(toBeDecrypted);
+	 	        System.arraycopy(tempMessage, 0, message, messageLen, tempMessage.length);
+	 	        messageLen += tempMessage.length;
+	    	}
+	    	byte[] finalMessage = new byte[messageLen];
+	    	System.arraycopy(message, 0, finalMessage, 0, messageLen);
+	    	return finalMessage;
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	    }
 	    return null;
+	}
+	
+	/**
+	 * Signs a packet, takes the checksum of the payload, then encrypts it with the private key.
+	 * 
+	 * @param 	in The payload to take the checksum of.
+	 * @return	The checksum, encrypted with the private key.
+	 */
+	public byte[] sign(byte[] in) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+	
+			byte[] hash = digest.digest(in);
+			
+			PrivateKey privKey = myKeys.getPrivate();
+	        Cipher rsa;
+	        rsa = Cipher.getInstance("RSA");
+	        rsa.init(Cipher.ENCRYPT_MODE, privKey);
+	        byte[] sign = rsa.doFinal(hash);
+	        return sign;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    return null;
+	}
+	
+	/**
+	 * Validates a packet signature, checks if it's signed by the correct host.
+	 * 
+	 * @return	True if the signature is correct.
+	 * 			False if the signature is invalid.
+	 */
+	public boolean validate(Byte host, byte[] data, byte[] hmac) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] checkHash = digest.digest(data);
+	    	PublicKey pubKey = pubKeys.get(host);
+	    	if(pubKey != null) {
+		        Cipher rsa;
+		        rsa = Cipher.getInstance("RSA");
+		        rsa.init(Cipher.DECRYPT_MODE, pubKey);
+		        byte[] realHash = rsa.doFinal(hmac);
+		        
+		        boolean correct = true;
+		        int i = 0;
+		        for(byte hashByte : realHash) {
+		        	if(hashByte != checkHash[i]) {
+		        		correct = false;
+		        	}
+		        	i++;
+		        }
+		        return correct;
+	    	} else {
+	    		System.out.println("Key for host " + host + " not found. Cannot validate.");
+	    	}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 	
 	/**
@@ -158,6 +311,16 @@ public class EncryptionHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Removes a public key from the list of known keys.
+	 * 
+	 * @param 	host The host the public key was for.
+	 * @param	pubKey The public key to remove.
+	 */
+	public void removePubKey(Byte host, String pubKey) {
+		pubKeys.remove(host);
 	}
 	
 	/**
