@@ -13,7 +13,7 @@ public class Tester {
                            ", " + new java.util.Date());
 		//run(new GUITest());	
 		//run(new ClientTest());	
-        run(new TestRouting());
+        //run(new TestRouting());
         run(new CryptoTest());
 		System.out.println("Total errors: " + errors);
     }

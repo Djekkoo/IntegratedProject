@@ -136,10 +136,13 @@ public class EncryptionHandler {
 		byte[] signedHash = new byte[128];
 		if(in[0] == (byte)0xFF) {
 			System.out.println("Decrypting!");
-			byte[] encryptedData = new byte[in.length-128];
+			byte[] newIn = new byte[in.length-1];
+			System.arraycopy(in, 1, newIn, 0, newIn.length);
 			
-			System.arraycopy(in, 0, signedHash, 0, 128);
-			System.arraycopy(in, 128, encryptedData, 0, encryptedData.length);
+			byte[] encryptedData = new byte[newIn.length-128];
+			//We took the first byte off here
+			System.arraycopy(newIn, 0, signedHash, 0, 128);
+			System.arraycopy(newIn, 128, encryptedData, 0, encryptedData.length);
 			
 			byte[] decryptedData = this.decrypt(encryptedData);
 			boolean validated = this.validate(host, decryptedData, signedHash);
@@ -149,10 +152,10 @@ public class EncryptionHandler {
 				throw new CryptoException("Cannot validate packet.");
 			}
 		} else {
-			System.out.println("No need for decrypt!");
-			byte[] ret = new byte[in.length-1];
-			System.arraycopy(in, 1, ret, 0, ret.length);
-			return ret;
+			System.out.println("No need to decrypt!");
+			byte[] out = new byte[in.length-1];
+			System.arraycopy(in, 1, out, 0, out.length);
+			return out;
 		}
 	    
 	}

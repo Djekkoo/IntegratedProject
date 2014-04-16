@@ -71,6 +71,7 @@ public class CryptoTest extends TestCase {
 		
 		System.out.println("Combined tests running");
 		
+		EH3.addPubKey((byte)1, EH1.getPubKey());
 		EH1.addPubKey((byte)3, EH3.getPubKey());
 		byte[] encFor2 = EH1.getPacket(randomBytes, (byte)2);
 		byte[] encFor3 = EH1.getPacket(randomBytes, (byte)3);
