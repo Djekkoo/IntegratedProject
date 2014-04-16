@@ -499,9 +499,7 @@ public class LinkStateRouting implements RoutingInterface {
 					for(byte nb : neighbours) {
 						//Do we have a host that we have no record of?
 						if(networkTreeMap.containsKey(host)) {
-							if(networkTreeMap.get(host).contains(nb)) {
-								//Do nothing
-							} else {
+							if(!networkTreeMap.get(host).contains(nb)){
 								this.addPath(host, nb);
 								System.out.println("New path.");
 								updated = true;
