@@ -116,12 +116,11 @@ public class Client {
 					}
 				}
 				//parse
-				String msg = text.split(":")[1] + "";
-				String chat = "(PM "+getName() + "): " + msg;
-				gui.updateChat(chat);
+				String chat = "(PM "+getName() + "): " + text.split(":")[1];
+				gui.updateChat("Private Message send to "+ text.split(":")[0]);
 
 				try {
-					sendMsg.invoke("CHAT " + msg,dest);
+					sendMsg.invoke("CHAT " + chat,dest);
 				} catch (CallbackException e) {
 					System.out.println(e.getMessage());
 				}
@@ -144,6 +143,9 @@ public class Client {
 				for (Entry<Byte, String> entry : table.entrySet()) {
 					gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
 				}
+				break;
+			case "/showkeys":
+				gui.updateChat("JoeyIsEchtGeenVirus.jpg.exe not found error");
 				break;
 			case "/hardcore":
 				if (hardcoremode) {
