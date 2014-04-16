@@ -31,7 +31,7 @@ public class Client {
 	private boolean hardcoremode;
 	
 	public Client(Callback sendMsg, RoutingInterface router) {
-		hardcoremode = false;
+		hardcoremode = true;
 		this.sendMsg = sendMsg;
 		this.router = router;
 		table = new HashMap<Byte,String>();
