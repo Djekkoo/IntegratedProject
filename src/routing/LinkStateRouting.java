@@ -75,6 +75,10 @@ public class LinkStateRouting implements RoutingInterface {
 	 * Locks some methods while busy.
 	 */
 	private ReentrantLock lock = new ReentrantLock();
+	/**
+	 * Sends the routing table every couple of seconds.
+	 */
+	private RoutingRepeater repeater = new RoutingRepeater(this,5000);
 	
 	//PUBLIC
 	
@@ -86,8 +90,10 @@ public class LinkStateRouting implements RoutingInterface {
 		networkTreeMap.put(deviceID, new TreeSet<Byte>());
 		
 		if(autoUpdate) {
-			update();	
+			update();
+			this.repeater.start();
 		}
+		
 		
 	}
 	
@@ -101,6 +107,7 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		if(autoUpdate) {
 			update();	
+			this.repeater.start();
 		}
 	}
 	
@@ -164,13 +171,16 @@ public class LinkStateRouting implements RoutingInterface {
 				this.addPath(deviceID, node);
 				this.userNotification(node,true);
 				send(node,buildPacket());
+//				System.out.println("Host new.");
 				break;
 			case DROPPED:
 				this.userNotification(node,false);
 				this.removeNode(node);
+//				System.out.println("Host dropped.");
 				break;
 			case NOKEEPALIVE:
 				this.removePath(this.deviceID, node);
+//				System.out.println("Host nokeepalive.");
 				break;
 			default:
 				break;
@@ -401,6 +411,10 @@ public class LinkStateRouting implements RoutingInterface {
 		return dijkstra;
 	}
 	
+	public void transmit() {
+		sendToNeighbours(this.buildPacket());
+	}
+	
 	/**
 	 * Sends the data to all the neighbours of the current device.
 	 * 
@@ -409,12 +423,15 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private void sendToNeighbours(Byte[] data) {
 		try {
+			lock.lock();
 			TreeSet<Byte> neighbours = networkTreeMap.get(deviceID);
 			for(Byte nb : neighbours) {
 				send(nb,data);
 			}
 		} catch (CallbackException e) {
 			e.getException().printStackTrace();
+		} finally {
+			lock.unlock();
 		}
 	}
 	
@@ -481,13 +498,13 @@ public class LinkStateRouting implements RoutingInterface {
 						updated = true;
 						System.out.println("Host removed.");
 					}
-					/*for(Object eObj : networkTreeMap.keySet().toArray()) {
+					for(Object eObj : networkTreeMap.keySet().toArray()) {
 						Entry<Byte,TreeMap<Byte,Byte>> e = (Entry<Byte,TreeMap<Byte,Byte>>)eObj;
 						Byte n = e.getKey();
 						if(e.getValue().isEmpty()) {
 							this.removeNode(n);
 						}
-					}*/
+					}
 				} catch(CallbackException e) {
 					e.getException().printStackTrace();
 				}
