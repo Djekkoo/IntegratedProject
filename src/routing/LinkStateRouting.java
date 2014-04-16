@@ -306,7 +306,7 @@ public class LinkStateRouting implements RoutingInterface {
 	public void update() {
 		lock.lock();
 		for(Object eObj : networkTreeMap.entrySet().toArray()) {
-			Entry<Byte,TreeMap<Byte,Byte>> e = (Entry<Byte,TreeMap<Byte,Byte>>)eObj;
+			Entry<Byte,TreeSet<Byte>> e = (Entry<Byte,TreeSet<Byte>>)eObj;
 			Byte n = e.getKey();
 			if(e.getValue().isEmpty()) {
 				this.removeNode(n);
@@ -432,8 +432,11 @@ public class LinkStateRouting implements RoutingInterface {
 		try {
 			lock.lock();
 			TreeSet<Byte> neighbours = networkTreeMap.get(deviceID);
-			for(Byte nb : neighbours) {
-				send(nb,data);
+			
+			if(neighbours != null){
+				for(Byte nb : neighbours) {
+					send(nb,data);
+				}
 			}
 		} catch (CallbackException e) {
 			e.getException().printStackTrace();

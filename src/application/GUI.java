@@ -29,7 +29,7 @@ public class GUI extends javax.swing.JFrame {
 		this.client = client;
 		String name = "";
 		while (name.equals("")) {
-			name = JOptionPane.showInputDialog("Hoe wil je heten?","0779 Cappuchino");
+			name = JOptionPane.showInputDialog("Hoe wil je heten?","");
 			if (name == null) {
 				System.exit(0);
 			}
@@ -138,8 +138,6 @@ public class GUI extends javax.swing.JFrame {
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         chatScrollpane.setViewportView(chatTextPane);
 		chatTextPane.setFont(standardFont); // NOI18N
-		chatTextPane
-				.setText("                                                               Chat Venster");
 		chatTextPane.setLineWrap(true);
 		
 		inputText.setFont(standardFont); // NOI18N
