@@ -30,7 +30,7 @@ public class IntegrationProject {
 		if (isWindows) {
 			
 			System.out.println("Please boot this application on Linux");
-			//System.exit(0);  even weggehaald omdat ik anders niet kan testen <3 FLO
+			System.exit(0);//  even weggehaald omdat ik anders niet kan testen <3 FLO
 			
 			// linux
 		} else {
