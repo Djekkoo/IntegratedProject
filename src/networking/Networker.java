@@ -142,7 +142,7 @@ public class Networker {
 	 *             When the socket can be reached
 	 */
 	@SuppressWarnings("unchecked")
-	public void send(Byte destination, byte[] data, boolean routing)
+	public void send(Byte destination, byte[] data, Boolean routing)
 			throws IOException {
 
 		HashMap<Byte, SmallPacket> entry;
