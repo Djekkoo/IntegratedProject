@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import main.CryptoException;
 import main.EncryptionHandler;
 
 public class CryptoTest extends TestCase {
@@ -74,8 +75,12 @@ public class CryptoTest extends TestCase {
 		byte[] encFor2 = EH1.getPacket(randomBytes, (byte)2);
 		byte[] encFor3 = EH1.getPacket(randomBytes, (byte)3);
 		
-		byte[] decBy2 = EH2.parsePacket(encFor2, (byte)1);
-		byte[] decBy3 = EH3.parsePacket(encFor3, (byte)1);
+		try {
+			byte[] decBy2 = EH2.parsePacket(encFor2, (byte)1);
+			byte[] decBy3 = EH3.parsePacket(encFor3, (byte)1);
+		} catch (CryptoException e) {
+			e.printStackTrace();
+		}
 		
 		return 0;
 	}
