@@ -42,7 +42,11 @@ local.properties
 .texlipse
 
 #LaTeX
-.log
-.aux
-.out
-.toc
+*.log
+*.aux
+*.out
+*.toc
+
+#Keyfiles
+*.pem
+*.pub
