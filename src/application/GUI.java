@@ -96,7 +96,15 @@ public class GUI extends javax.swing.JFrame {
 		          int index = theList.locationToIndex(mouseEvent.getPoint());
 		          if (index >= 0) {
 		            Object o = theList.getModel().getElementAt(index);
-		            inputText.setText("/pvt "+o.toString()+": ");
+		            String name = o.toString();
+//		            String name = "";
+//		            for (int i = 0; i < check.length(); i++) {
+//		            	if (check.charAt(i) == (char)0) {
+//		            		break;
+//		            	}
+//		            	name = name + check.charAt(i);
+//		            }
+		            inputText.setText("/pvt "+name+": ");
 		            inputText.requestFocusInWindow();
 		          }
 		        }

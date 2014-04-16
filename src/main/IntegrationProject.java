@@ -19,7 +19,7 @@ public class IntegrationProject {
 	
 	public static byte DEVICE = 1;
 	public static byte GROUP = 14;
-	public static String WLAN = "wlan0";
+	public static String WLAN = "wlan1";
 	public static String BROADCAST = "226.0.0.0";
 	
 	private static Communication Communication;
@@ -35,7 +35,7 @@ public class IntegrationProject {
 			// linux
 		} else {
 			try {
-				DEVICE = getIP("wlan0").getAddress()[3];
+				DEVICE = getIP("wlan1").getAddress()[3];
 				System.out.println(DEVICE + " ");
 			} catch (SocketException | UnknownHostException e) {
 				// TODO Auto-generated catch block

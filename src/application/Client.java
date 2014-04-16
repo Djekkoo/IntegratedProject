@@ -64,11 +64,7 @@ public class Client {
 
 	public void packetReceived(DataPacket packet) {
 		String data = "";
-		try {
-			data = new String(packet.getData(), "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			System.out.println(e.getMessage());
-		}
+		data = new String(packet.getData());
 		
 		if (!data.equals("") && data.split(" ").length > 1) {
 			String[] splitdata = data.split(" ");
@@ -123,7 +119,8 @@ public class Client {
 					//DIRECT SEND
 					Byte dest = 0x00;
 					for (Entry<Byte, String> entry : table.entrySet()) {
-						//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+						System.out.println("=> " + text.split(" ")[1] + ", Value = " + entry.getValue());
+						System.out.println(entry.getValue().length() + " - " + ((text.split(" ")[1])).length());
 						if (entry.getValue().contains(text.split(" ")[1])) {
 							dest = entry.getKey();
 						}
@@ -183,7 +180,7 @@ public class Client {
 	
 	//Always to everyone (BROADCAST)
 	public void sendIdentity() {
-		table.put(IntegrationProject.DEVICE,name);
+		table.put(IntegrationProject.DEVICE,name); // YOURSELF
 		try {	sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));} catch (CallbackException e) { System.out.println(e.getMessage());}
 		updateUsers();
 	}
