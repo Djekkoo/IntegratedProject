@@ -391,12 +391,12 @@ public class Networker {
 			send(dp); // the first packet
 			send(dp); // actually arrives
 
-			dp = new SmallPacket(IntegrationProject.DEVICE, destination,
-					connection.getValue(), (byte) 0x0, eh.getPubKeyPacket(),
-					false, false, false, false);
-			send(dp); // We cannot assume
-			send(dp); // the first packet
-			send(dp); // actually arrives
+//			dp = new SmallPacket(IntegrationProject.DEVICE, destination,
+//					connection.getValue(), (byte) 0x0, eh.getPubKeyPacket(),
+//					false, false, false, false);
+//			send(dp); // We cannot assume
+//			send(dp); // the first packet
+//			send(dp); // actually arrives
 		} catch (IOException | BigPacketSentException
 				| DatagramDataSizeException e) {
 			System.out.println("BAM JONGÛH!");
