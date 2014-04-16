@@ -96,7 +96,7 @@ public class GUI extends javax.swing.JFrame {
 		          int index = theList.locationToIndex(mouseEvent.getPoint());
 		          if (index >= 0) {
 		            Object o = theList.getModel().getElementAt(index);
-		            inputText.setText("/pvt "+o.toString()+" ");
+		            inputText.setText("/pvt "+o.toString()+": ");
 		            inputText.requestFocusInWindow();
 		          }
 		        }
@@ -119,14 +119,7 @@ public class GUI extends javax.swing.JFrame {
 				userScrollpane, javax.swing.GroupLayout.DEFAULT_SIZE, 328,
 				Short.MAX_VALUE));
 
-		chatScrollpane.setAutoscrolls(true);
-
-		chatTextPane.setFont(standardFont); // NOI18N
-		chatTextPane
-				.setText("                                                               Chat Venster");
-		chatScrollpane.setViewportView(chatTextPane);
-		DefaultCaret caret = (DefaultCaret)chatTextPane.getCaret();
-		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+				
 		javax.swing.GroupLayout ChatPanelLayout = new javax.swing.GroupLayout(
 				ChatPanel);
 		ChatPanel.setLayout(ChatPanelLayout);
@@ -136,9 +129,19 @@ public class GUI extends javax.swing.JFrame {
 		ChatPanelLayout.setVerticalGroup(ChatPanelLayout.createParallelGroup(
 				javax.swing.GroupLayout.Alignment.LEADING).addComponent(
 				chatScrollpane));
-
+		chatScrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		chatScrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		SendPanel.setOpaque(false);
 
+		chatTextPane.setEditable(false);
+        DefaultCaret caret = (DefaultCaret)chatTextPane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        chatScrollpane.setViewportView(chatTextPane);
+		chatTextPane.setFont(standardFont); // NOI18N
+		chatTextPane
+				.setText("                                                               Chat Venster");
+
+		
 		inputText.setFont(standardFont); // NOI18N
 		inputText.setText("");
 		inputText.setFocusable(true);

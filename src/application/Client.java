@@ -115,10 +115,13 @@ public class Client {
 						dest = entry.getKey();
 					}
 				}
-				String chat = getName() + "(pvt): " + text;
+				//parse
+				String msg = text.split(":")[1] + "";
+				String chat = "(PM "+getName() + "): " + msg;
 				gui.updateChat(chat);
+
 				try {
-					sendMsg.invoke("CHAT " + chat,dest);
+					sendMsg.invoke("CHAT " + msg,dest);
 				} catch (CallbackException e) {
 					System.out.println(e.getMessage());
 				}
@@ -151,11 +154,9 @@ public class Client {
 				break;
 			}
 			} else {
-			//BROADCAST
 			String chat = getName() + ": " + text;
 			gui.updateChat(chat);
-			
-			//TODO Unicast toevoegen
+
 			try {
 				sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
 			} catch (CallbackException e) {
