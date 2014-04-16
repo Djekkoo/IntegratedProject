@@ -115,7 +115,8 @@ public class LinkStateRouting implements RoutingInterface {
 	 * {@inheritDoc}
 	 */
 	public void packetReceived(DataPacket p) {
-		// TODO Handle packet receives
+		if(p == null) return;
+		
 		boolean updated = parsePacket(p.getData());
 		if(updated) {
 			sendToNeighbours(buildPacket());
@@ -488,6 +489,9 @@ public class LinkStateRouting implements RoutingInterface {
 					offset += numNeighbours+2;
 					
 					TreeSet<Byte> oldNeighbours = new TreeSet<Byte>();
+					if(!networkTreeMap.containsKey(host))
+						networkTreeMap.put(host, new TreeSet<Byte>());
+					
 					for(Object nb : networkTreeMap.get(host).toArray()) {
 						oldNeighbours.add((Byte)nb);
 					}

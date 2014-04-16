@@ -335,10 +335,13 @@ public class Networker {
 				e.printStackTrace();
 			}
 		} else { // Must pass it on
-			d.decreaseHops();
+			System.out.println("Will the middleman");
 			if (d.getHops() > 0) {
+				d.decreaseHops();
+				System.out.println("Going to be the middleman");
 				try {
 					send(d);
+					System.out.println("Been the middleman");
 				} catch (BigPacketSentException e) {
 					// Can't really happen, but oh well...
 					e.printStackTrace();
