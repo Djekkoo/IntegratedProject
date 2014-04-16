@@ -57,7 +57,7 @@ public class GUI extends javax.swing.JFrame {
 		userList = new javax.swing.JList<String>();
 		ChatPanel = new javax.swing.JPanel();
 		chatScrollpane = new javax.swing.JScrollPane();
-		chatTextPane = new javax.swing.JTextPane();
+		chatTextPane = new javax.swing.JTextArea();
 		SendPanel = new javax.swing.JPanel();
 		inputText = new javax.swing.JTextField();
 		sendBtn = new javax.swing.JButton();
@@ -140,7 +140,7 @@ public class GUI extends javax.swing.JFrame {
 		chatTextPane.setFont(standardFont); // NOI18N
 		chatTextPane
 				.setText("                                                               Chat Venster");
-
+		chatTextPane.setLineWrap(true);
 		
 		inputText.setFont(standardFont); // NOI18N
 		inputText.setText("");
@@ -363,7 +363,7 @@ public class GUI extends javax.swing.JFrame {
 	private javax.swing.JPanel UserPanel;
 	private javax.swing.JLabel backgroundLabel;
 	private javax.swing.JScrollPane chatScrollpane;
-	private javax.swing.JTextPane chatTextPane;
+	private javax.swing.JTextArea chatTextPane;
 	private javax.swing.JTextField inputText;
 	private javax.swing.JPasswordField jPasswordField1;
 	@SuppressWarnings("unused")
