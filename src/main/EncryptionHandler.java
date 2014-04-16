@@ -42,8 +42,8 @@ public class EncryptionHandler {
 	}
 	
 	public EncryptionHandler(String filename) {
-		File privateKeyFile = new File("/home/joeyjo0/"+filename+".pem");
-		File publicKeyFile = new File("/home/joeyjo0/"+filename+".pub");
+		File privateKeyFile = new File(filename+".pem");
+		File publicKeyFile = new File(filename+".pub");
 		try {
 			if(!privateKeyFile.exists() || !publicKeyFile.exists()) {
 				RandomAccessFile privateKeyRAF = new RandomAccessFile(privateKeyFile, "rw");
@@ -61,13 +61,13 @@ public class EncryptionHandler {
 				publicKeyRAF.write(DatatypeConverter.printBase64Binary(kp.getPublic().getEncoded()).getBytes());
 				publicKeyRAF.write("\n-----END RSA PUBLIC KEY-----".getBytes());
 				
-				System.out.println("New keys generated");
+				System.out.println("New keys generated and written to disk.");
 			}
 			
 			myKeys = readKeys(publicKeyFile, privateKeyFile);
 			
-			//System.out.println(DatatypeConverter.printBase64Binary(myKeys.getPrivate().getEncoded()));
-			//System.out.println(DatatypeConverter.printBase64Binary(myKeys.getPublic().getEncoded()));
+			System.out.println(DatatypeConverter.printBase64Binary(myKeys.getPrivate().getEncoded()));
+			System.out.println(DatatypeConverter.printBase64Binary(myKeys.getPublic().getEncoded()));
 		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -294,6 +294,16 @@ public class EncryptionHandler {
 	 */
 	public String getPubKey() {
 		return DatatypeConverter.printBase64Binary(myKeys.getPublic().getEncoded());
+	}
+	
+	/**
+	 * Checks if a public key for a given host exists.
+	 * 
+	 * @return 	True is the public key exists in the table.
+	 * 			False if no public key is known.
+	 */
+	public boolean pubKeyExists(byte host) {
+		return this.pubKeys.containsKey(host);
 	}
 	
 	/**
