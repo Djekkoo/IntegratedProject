@@ -104,65 +104,67 @@ public class Client {
 	}
 
 	public void sendChat(String text) {
-		if (text.split(" ")[0].contains("/")) {
-			switch (text.split(" ")[0]) {
-			case "/pvt":
-				//DIRECT SEND
-				Byte dest = 0x00;
-				for (Entry<Byte, String> entry : table.entrySet()) {
-					//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-					if (entry.getValue().contains(text.split(" ")[1])) {
-						dest = entry.getKey();
+		if (!text.equals("")) {
+			if (text.split(" ")[0].contains("/")) {
+				switch (text.split(" ")[0]) {
+				case "/pvt":
+					//DIRECT SEND
+					Byte dest = 0x00;
+					for (Entry<Byte, String> entry : table.entrySet()) {
+						//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+						if (entry.getValue().contains(text.split(" ")[1])) {
+							dest = entry.getKey();
+						}
 					}
-				}
-				//parse
-				String chat = "(PM "+getName() + "): " + text.split(":")[1];
-				gui.updateChat("Private Message send to "+ text.split(":")[0]);
+					//parse
+					String chat = "(PM "+getName() + "): " + text.split(":")[1];
+					gui.updateChat("Private Message send to "+ text.split(":")[0]);
 
-				try {
-					sendMsg.invoke("CHAT " + chat,dest);
-				} catch (CallbackException e) {
-					System.out.println(e.getMessage());
+					try {
+						sendMsg.invoke("CHAT " + chat,dest);
+					} catch (CallbackException e) {
+						System.out.println(e.getMessage());
+					}
+					break;
+				case "/send":
+					String sendje = getName() + ": " + text;
+					gui.updateChat(sendje);
+					try {
+						sendMsg.invoke("CHAT " + sendje,Byte.valueOf((byte) 0x0F));
+					} catch (CallbackException e) {
+						System.out.println(e.getMessage());
+					}
+					break;
+				case "/shownetwork":
+					gui.updateChat("Showing network in the console");
+					((LinkStateRouting) router).showNetwork();
+					break;
+				case "/users":
+					gui.updateChat("Showing the user table in Client:");
+					for (Entry<Byte, String> entry : table.entrySet()) {
+						gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
+					}
+					break;
+				case "/showkeys":
+					gui.updateChat("JoeyIsEchtGeenVirus.jpg.exe not found error");
+					break;
+				case "/hardcore":
+					if (hardcoremode) {
+						hardcoremode = false;
+					} else {
+						hardcoremode = true;
+					}
+					break;
 				}
-				break;
-			case "/send":
-				String sendje = getName() + ": " + text;
-				gui.updateChat(sendje);
-				try {
-					sendMsg.invoke("CHAT " + sendje,Byte.valueOf((byte) 0x0F));
-				} catch (CallbackException e) {
-					System.out.println(e.getMessage());
-				}
-				break;
-			case "/shownetwork":
-				gui.updateChat("Showing network in the console");
-				((LinkStateRouting) router).showNetwork();
-				break;
-			case "/users":
-				gui.updateChat("Showing the user table in Client:");
-				for (Entry<Byte, String> entry : table.entrySet()) {
-					gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
-				}
-				break;
-			case "/showkeys":
-				gui.updateChat("JoeyIsEchtGeenVirus.jpg.exe not found error");
-				break;
-			case "/hardcore":
-				if (hardcoremode) {
-					hardcoremode = false;
 				} else {
-					hardcoremode = true;
-				}
-				break;
-			}
-			} else {
-			String chat = getName() + ": " + text;
-			gui.updateChat(chat);
+				String chat = getName() + ": " + text;
+				gui.updateChat(chat);
 
-			try {
-				sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
-			} catch (CallbackException e) {
-				System.out.println(e.getMessage());
+				try {
+					sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
+				} catch (CallbackException e) {
+					System.out.println(e.getMessage());
+				}
 			}
 		}
 	}
