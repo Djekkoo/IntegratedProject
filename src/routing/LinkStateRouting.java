@@ -305,6 +305,13 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	public void update() {
 		lock.lock();
+		for(Object eObj : networkTreeMap.keySet().toArray()) {
+			Entry<Byte,TreeMap<Byte,Byte>> e = (Entry<Byte,TreeMap<Byte,Byte>>)eObj;
+			Byte n = e.getKey();
+			if(e.getValue().isEmpty()) {
+				this.removeNode(n);
+			}
+		}
 		HashMap<Byte,LinkedList<Vertex>> paths = findAllPaths();
 		nextHops.clear();
 		routeLengths.clear();
