@@ -15,6 +15,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -76,6 +77,15 @@ public class EncryptionHandler {
 		}
 	}
 	
+	public String showKeys() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Public keys:\n");
+		for(Entry<Byte,PublicKey> e : pubKeys.entrySet()) {
+			sb.append("Host: " + e.getKey() + " => " + e.getValue());
+		}
+		return sb.toString();
+	}
+	
 	/**
 	 * Fetches the public key from a received packet.
 	 * 
@@ -125,6 +135,7 @@ public class EncryptionHandler {
 	public byte[] parsePacket(byte[] in, byte host) throws CryptoException {
 		byte[] signedHash = new byte[128];
 		if(in[0] == (byte)0xFF) {
+			System.out.println("Decrypting!");
 			byte[] encryptedData = new byte[in.length-128];
 			
 			System.arraycopy(in, 0, signedHash, 0, 128);
@@ -138,6 +149,7 @@ public class EncryptionHandler {
 				throw new CryptoException("Cannot validate packet.");
 			}
 		} else {
+			System.out.println("No need for decrypt!");
 			byte[] ret = new byte[in.length-1];
 			System.arraycopy(in, 1, ret, 0, ret.length);
 			return ret;
@@ -185,8 +197,8 @@ public class EncryptionHandler {
 			return cipherText;
 		} else {
 			System.out.println("Key for host " + host + " not found. Cannot encrypt.");
+			return null;
 		}
-	    return null;
 	}
 	
 	/**
