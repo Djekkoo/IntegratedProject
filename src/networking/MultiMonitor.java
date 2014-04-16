@@ -12,9 +12,9 @@ import java.io.IOException;
  */
 
 import java.net.DatagramPacket;
+import java.net.Inet4Address;
 import java.net.MulticastSocket;
 
-import main.Callback;
 import main.CallbackException;
 
 /**
@@ -29,9 +29,9 @@ import main.CallbackException;
 public class MultiMonitor extends Thread {
 
 	MulticastSocket mSock = null;
-	Callback received = null;
+	Networker received = null;
 	
-	public MultiMonitor(Callback received, MulticastSocket mSock){
+	public MultiMonitor(Networker received, MulticastSocket mSock){
 		this.received = received;
 		this.mSock = mSock;
 	}
@@ -41,6 +41,7 @@ public class MultiMonitor extends Thread {
 		byte[] buffer = new byte[1024];
 		byte[] temp;
 		DatagramPacket dpack = new DatagramPacket(buffer, buffer.length);
+		SmallPacket dp;
 
 		while (true) {
 			try {
@@ -50,12 +51,12 @@ public class MultiMonitor extends Thread {
 				
 				System.arraycopy(dpack.getData(), dpack.getOffset(), temp, 0, dpack.getLength());
 				
-				received.invoke(new SmallPacket(temp), dpack.getAddress());
+				dp = new SmallPacket(temp);
+				
+				received.receive(dp, (Inet4Address) dpack.getAddress());
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (DatagramDataSizeException e) {
-				e.printStackTrace();
-			} catch (CallbackException e) {
 				e.printStackTrace();
 			} finally {
 				buffer = new byte[1024];

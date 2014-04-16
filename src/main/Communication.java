@@ -27,7 +27,7 @@ public class Communication {
 	public Communication() {
 		
 		try {
-			network = new networking.Networker(new Callback(this, "newPacket"));
+			network = new networking.Networker(this);
 		} catch (SocketException e) {
 			System.out.println("Something terrible happened, Sander screwed up his class: " + e.getMessage());
 			System.exit(0);
@@ -59,6 +59,8 @@ public class Communication {
 	}
 	
 	public void newPacket(DataPacket packet) {
+		
+		System.out.println("Communication liked receiving :D");
 		
 		if(packet.getData().length > 0)
 			System.out.println(packet.getSource() + "-" + new String(packet.getData()));

@@ -16,6 +16,7 @@ import java.util.Random;
 
 import main.Callback;
 import main.CallbackException;
+import main.Communication;
 import main.IntegrationProject;
 
 /**
@@ -40,7 +41,7 @@ public class Networker {
 	MulticastSocket mSock;
 
 	Callback routerGetRoute;
-	Callback packetReceived;
+	Communication packetReceived;
 	
 	ReentrantLock lock;
 
@@ -48,11 +49,11 @@ public class Networker {
 	
 	/**
 	 * 
-	 * @param routerPacketReceived callback to function that handles incoming packets
+	 * @param packetReceived callback to function that handles incoming packets
 	 * @throws IOException
 	 */
 
-	public Networker(Callback routerPacketReceived) throws IOException {
+	public Networker(Communication packetReceived) throws IOException {
 		lock = new ReentrantLock();
 		routerGetRoute = new Callback(this, "dummyRoute");
 		
@@ -64,11 +65,11 @@ public class Networker {
 		mSock.setLoopbackMode(true);
 		mSock.joinGroup(multicastAddress);
 
-		this.packetReceived = routerPacketReceived;
+		this.packetReceived = packetReceived;
 
-		(new UniMonitor(new Callback(this, "receive"), dSock)).start();
+		(new UniMonitor(this, dSock)).start();
 
-		(new MultiMonitor(new Callback(this, "receive"), mSock)).start();
+		(new MultiMonitor(this, mSock)).start();
 	}
 
 	/**
@@ -98,9 +99,11 @@ public class Networker {
 	 * 
 	 * @param dp Preformed DataPacket
 	 * @throws IOException When the socket can be reached
+	 * @throws BigPacketSentException 
 	 */
 
-	public void broadcast(SmallPacket dp) throws IOException {
+	public void broadcast(DataPacket dp) throws IOException, BigPacketSentException {
+		if(dp instanceof BigPacket) throw new BigPacketSentException();
 		
 		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				multicastAddress, MULTIPORT));
@@ -152,28 +155,28 @@ public class Networker {
 	/**
 	 * Sends a preformed DataPacket
 	 * 
-	 * @param dp The DataPacket it should send
+	 * @param d The DataPacket it should send
 	 * @throws IOException When the socket can be reached
 	 */
 	@SuppressWarnings("unchecked")
-	public void send(SmallPacket dp) throws IOException, BigPacketSentException {
+	public void send(DataPacket d) throws IOException, BigPacketSentException {
 		
-		if (dp instanceof BigPacket)
+		if (d instanceof BigPacket)
 			throw new BigPacketSentException();
 		
 		HashMap<Byte, SmallPacket> entry;
-		if(sends.containsKey(dp.getDestination())){
-			entry = sends.get(dp.getDestination());
+		if(sends.containsKey(d.getDestination())){
+			entry = sends.get(d.getDestination());
 		} else {
 			entry = new HashMap<Byte, SmallPacket>();
 		}
-		entry.put(dp.getSequenceNumber(), dp);
-		sends.put(dp.getDestination(), entry);
+		entry.put(d.getSequenceNumber(), (SmallPacket) d);
+		sends.put(d.getDestination(), entry);
 
 		Entry<Byte, Byte> connection;
 		
 		try {
-			Object temp = routerGetRoute.invoke(dp.getDestination());
+			Object temp = routerGetRoute.invoke(d.getDestination());
 			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
 			else
@@ -184,7 +187,7 @@ public class Networker {
 			return;
 		}
 
-		dSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
+		dSock.send(new DatagramPacket(d.getRaw(), d.getRaw().length,
 				getFullAddress(connection.getKey()), UNIPORT));
 		
 	}
@@ -215,16 +218,18 @@ public class Networker {
 	
 	@SuppressWarnings("unchecked")
 	public void receive(SmallPacket d, Inet4Address port) throws IOException {
+		System.out.println("Networker received");
 		if (d.getDestination() == (byte) 0x0F) {// Multicast
-			try {
-				packetReceived.invoke(d);
-			} catch (CallbackException e) {
-				//e.getException().printStackTrace();
-			}
+			
+			packetReceived.newPacket(d);
 
 			if (d.getHops() > 0) {
 				d.decreaseHops();
-				broadcast(d);
+				try {
+					broadcast(d);
+				} catch (BigPacketSentException e) {
+					System.out.println("Received a BigPacket, apparently... Which cannot happen. Really. It should have crashed earlier.");
+				}
 			}
 		} else if (d.getDestination() == IntegrationProject.DEVICE) { // Meant for me
 			if(d.getSequenceNumber() == 0 && !d.isAck() && !d.isKeepAlive() && !d.isRouting() && !d.hasMore()){
@@ -235,7 +240,7 @@ public class Networker {
 			
 			try {
 				if(d.getSource() == port.getAddress()[3]){
-					byte ack = offer(d);
+					byte ack = offer((SmallPacket) d);
 					if(ack != (byte) 0)
 						send(new SmallPacket(IntegrationProject.DEVICE, d.getSource(),
 								(byte) 0x0, ack, new byte[0], true, false,
@@ -252,7 +257,7 @@ public class Networker {
 					else
 						throw new NullPointerException();
 	
-					byte ack = offer(d);
+					byte ack = offer((SmallPacket) d);
 					
 					if(ack != (byte) 0)
 						send(new SmallPacket(IntegrationProject.DEVICE, d.getSource(),
@@ -355,8 +360,8 @@ public class Networker {
 		
 	}
 
-	private BigPacket processPackets(LinkedList<SmallPacket> packets) {
-		SmallPacket first = packets.peek();
+	private BigPacket processPackets(LinkedList<DataPacket> packets) {
+		DataPacket first = packets.peek();
 
 		int maxChunkSize = 1024 - SmallPacket.HEADER_LENGTH;
 		int length = 0;
@@ -443,17 +448,17 @@ public class Networker {
 		if(ack == null) return 0;
 
 		System.out.println("Getting packets");
-		LinkedList<SmallPacket> readyPackets = sequencer.getPackets(
+		LinkedList<DataPacket> readyPackets = sequencer.getPackets(
 				d.getSource());
 		
 		System.out.println("YAY! " + readyPackets.size() + " packets to process! WOOOO!");
 		
-		LinkedList<SmallPacket> buffer = new LinkedList<SmallPacket>();
+		LinkedList<DataPacket> buffer = new LinkedList<DataPacket>();
 
 		System.out.println("Looping packets");
 		while (!readyPackets.isEmpty()) {
 			if (!readyPackets.peek().hasMore()) {
-				packetReceived.invoke(readyPackets.poll());
+				packetReceived.newPacket(readyPackets.poll());
 			} else {
 				while (!readyPackets.isEmpty()
 						&& readyPackets.peek().hasMore()) {
@@ -461,7 +466,7 @@ public class Networker {
 				}
 				buffer.add(readyPackets.poll());
 
-				packetReceived.invoke(processPackets(buffer));
+				packetReceived.newPacket(processPackets(buffer));
 			}
 		}
 		
