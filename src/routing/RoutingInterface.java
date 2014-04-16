@@ -2,6 +2,7 @@ package routing;
 
 import java.util.AbstractMap.SimpleEntry;
 
+import networking.DataPacket;
 import networking.SmallPacket;
 import monitoring.NetworkMessage;
 
@@ -17,9 +18,9 @@ public interface RoutingInterface {
 	/**
 	 * Called if a packet is received.
 	 * 
-	 * @param 	p The data packet that is received
+	 * @param 	packet The data packet that is received
 	 */
-	public void packetReceived(SmallPacket p);
+	public void packetReceived(DataPacket packet);
 	
 	/**
 	 * Gets the fastest route to a given destination.

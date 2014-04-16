@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import routing.LinkStateRouting;
 import routing.RoutingInterface;
+import networking.DataPacket;
 import networking.SmallPacket;
 import main.Callback;
 import main.CallbackException;
@@ -60,7 +61,7 @@ public class Client {
 	 * USER Name;Name;Name;..
 	 */
 
-	public void packetReceived(SmallPacket packet) {
+	public void packetReceived(DataPacket packet) {
 		String data = "";
 		try {
 			data = new String(packet.getData(), "UTF-8");

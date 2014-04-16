@@ -8,6 +8,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import routing.RoutingInterface;
+import networking.DataPacket;
 import networking.SmallPacket;
 import main.Callback;
 import main.CallbackException;
@@ -93,18 +94,18 @@ public class NetworkMonitor extends Thread {
 	}
 	
 	// Received a new notification, putting heads-up at the data
-	public void messageReceived(SmallPacket p) {
+	public void messageReceived(DataPacket packet) {
 		
-		if (!p.isKeepAlive()) {
+		if (!packet.isKeepAlive()) {
 			System.out.println("Error, packet delivered at network monitor is NOT a keep-alive packet!");
 			return;
 		}
 		
-		Byte source = p.getSource();
+		Byte source = packet.getSource();
 		this.lock.lock();
 		
 		// shutdown?
-		if (p.isRouting()) {
+		if (packet.isRouting()) {
 			if (this.activity.containsKey(source)) {
 				this.activity.remove(source);
 				this.router.networkMessage(source, NetworkMessage.DROPPED);
