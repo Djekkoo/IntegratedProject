@@ -21,6 +21,8 @@ import java.util.TreeSet;
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
 
+import tests.CryptoTest;
+
 public class EncryptionHandler {
 
 	/**
@@ -96,13 +98,16 @@ public class EncryptionHandler {
 		byte[] encryptedData = this.encrypt(in, host);
 		byte[] signedHash = this.sign(in);
 		if(encryptedData != null) {
-			byte[] finalPacket = new byte[encryptedData.length+signedHash.length];
-			System.arraycopy(signedHash, 0, finalPacket, 0, signedHash.length);
-			System.arraycopy(encryptedData, 0, finalPacket, signedHash.length, encryptedData.length);
-			
+			byte[] finalPacket = new byte[encryptedData.length+signedHash.length+1];
+			finalPacket[0] = (byte)0xFF;
+			System.arraycopy(signedHash, 0, finalPacket, 1, signedHash.length);
+			System.arraycopy(encryptedData, 0, finalPacket, signedHash.length+1, encryptedData.length);
 		    return finalPacket;
 		} else {
-			return null;
+			byte[] finalPacket = new byte[in.length+1];
+			finalPacket[0] = (byte)0x00;
+			System.arraycopy(in, 0, finalPacket, 1, in.length);
+			return finalPacket;
 		}
 		
 		
@@ -115,10 +120,11 @@ public class EncryptionHandler {
 	 * @param 	in An encrypted packet.
 	 * @param 	host The host the packet is from.
 	 * @return	The unencrypted data contained by the packet.
+	 * @throws CryptoException 
 	 */
-	public byte[] parsePacket(byte[] in, byte host) {
+	public byte[] parsePacket(byte[] in, byte host) throws CryptoException {
 		byte[] signedHash = new byte[128];
-		if(in != null) {
+		if(in[0] == (byte)0xFF) {
 			byte[] encryptedData = new byte[in.length-128];
 			
 			System.arraycopy(in, 0, signedHash, 0, 128);
@@ -129,10 +135,12 @@ public class EncryptionHandler {
 			if(validated) {
 				return decryptedData;
 			} else {
-				return null;
+				throw new CryptoException("Cannot validate packet.");
 			}
 		} else {
-			return null;
+			byte[] ret = new byte[in.length-1];
+			System.arraycopy(in, 1, ret, 0, ret.length);
+			return ret;
 		}
 	    
 	}
