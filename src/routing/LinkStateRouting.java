@@ -443,7 +443,8 @@ public class LinkStateRouting implements RoutingInterface {
 			
 			if(neighbours != null){
 				for(Byte nb : neighbours) {
-					send(nb,data);
+					send(nb, data);
+					System.out.println("Sending to neighbour: " + nb);
 				}
 			}
 		} catch (CallbackException e) {

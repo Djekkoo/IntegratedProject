@@ -38,6 +38,7 @@ public class MultiMonitor extends Thread {
 	
 	@Override
 	public void run() {
+		Thread.currentThread().setName("Multicast Monitor");
 		byte[] buffer = new byte[1024];
 		byte[] temp;
 		DatagramPacket dpack = new DatagramPacket(buffer, buffer.length);

@@ -28,6 +28,7 @@ public class UniMonitor extends Thread {
 	
 	@Override
 	public void run() {
+		Thread.currentThread().setName("Unicast Monitor");
 		byte[] buffer = new byte[1024];
 		byte[] temp;
 		DatagramPacket dpack = new DatagramPacket(buffer, buffer.length);
