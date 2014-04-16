@@ -518,9 +518,6 @@ public class LinkStateRouting implements RoutingInterface {
 						if(networkTreeMap.containsKey(host))
 							networkTreeMap.get(host).remove((byte)nb);
 						
-						if(networkTreeMap.containsKey(nb))
-							networkTreeMap.get((byte)nb).remove(host);
-						
 						updated = true;
 						System.out.println("Host removed.");
 					}
