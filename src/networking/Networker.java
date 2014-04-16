@@ -14,6 +14,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.Random;
 
+import routing.LinkStateRouting;
+import routing.RouteNotFoundException;
+import routing.RoutingInterface;
 import main.Callback;
 import main.CallbackException;
 import main.Communication;
@@ -42,9 +45,9 @@ public class Networker {
 	DatagramSocket dSock;
 	MulticastSocket mSock;
 
-	Callback routerGetRoute;
-	Communication packetReceived;
-//	EncryptionHandler eh;
+	RoutingInterface router;
+	Communication communication;
+	// EncryptionHandler eh;
 
 	ReentrantLock lock;
 
@@ -59,9 +62,8 @@ public class Networker {
 
 	public Networker(Communication packetReceived) throws IOException {
 		lock = new ReentrantLock();
-		routerGetRoute = new Callback(this, "dummyRoute");
 
-//		eh = new EncryptionHandler("adhoc_key");
+		// eh = new EncryptionHandler("adhoc_key");
 
 		sequencer = new Sequencer(new Callback(this, "resend"));
 		multicastAddress = InetAddress.getByName(IntegrationProject.BROADCAST);
@@ -71,7 +73,7 @@ public class Networker {
 		mSock.setLoopbackMode(true);
 		mSock.joinGroup(multicastAddress);
 
-		this.packetReceived = packetReceived;
+		this.communication = packetReceived;
 
 		(new UniMonitor(this, dSock)).start();
 
@@ -134,27 +136,30 @@ public class Networker {
 	 *            The end node it should be passed on to
 	 * @param data
 	 *            The data to be sent
+	 * @param routing
+	 *            Whether or not it is meant for routing
 	 * @throws IOException
 	 *             When the socket can be reached
 	 */
 	@SuppressWarnings("unchecked")
-	public void send(Byte destination, byte[] data) throws IOException {
+	public void send(Byte destination, byte[] data, boolean routing)
+			throws IOException {
 
 		HashMap<Byte, SmallPacket> entry;
 
 		Entry<Byte, Byte> connection = null;
 
 		try {
-			Object temp = routerGetRoute.invoke(new Byte(destination));
+			Object temp = router.getRoute(new Byte(destination));
 			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
-		} catch (CallbackException e1) {
-			e1.getException().printStackTrace();
-			return; // Route not found
+		} catch (RouteNotFoundException e) {
+			e.printStackTrace();
+			return;
 		}
 
 		LinkedList<SmallPacket> packets = processData(destination,
-				connection.getValue(), data, false, false, false);
+				connection.getValue(), data, false, routing, false);
 
 		if (sends.containsKey(destination)) {
 			entry = sends.get(destination);
@@ -171,6 +176,10 @@ public class Networker {
 
 		sends.put(destination, entry);
 
+	}
+
+	public void send(Byte destination, byte[] data) throws IOException {
+		send(destination, data, false);
 	}
 
 	/**
@@ -199,12 +208,12 @@ public class Networker {
 		Entry<Byte, Byte> connection;
 
 		try {
-			Object temp = routerGetRoute.invoke(d.getDestination());
+			Object temp = router.getRoute(d.getDestination());
 			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
 			else
 				throw new NullPointerException();
-		} catch (NullPointerException | CallbackException e1) {
+		} catch (NullPointerException | RouteNotFoundException e1) {
 			System.out
 					.println("Error finding route. Possibly no route to that host.");
 			return;
@@ -248,7 +257,7 @@ public class Networker {
 	public void receive(SmallPacket d, Inet4Address port) throws IOException {
 		if (d.getDestination() == (byte) 0x0F) {// Multicast
 
-			packetReceived.newPacket(d);
+			communication.newPacket(d);
 
 			if (d.getHops() > 0) {
 				d.decreaseHops();
@@ -259,22 +268,27 @@ public class Networker {
 							.println("Received a BigPacket, apparently... Which cannot happen. Really. It should have crashed earlier.");
 				}
 			}
-		} else if (d.getDestination() == IntegrationProject.DEVICE) { // Meant
-																		// for
-																		// me
-			if (d.getSequenceNumber() == 0 && !d.isAck() && !d.isKeepAlive()
-					&& !d.isRouting() && !d.hasMore()) {
-				System.out.println("Got a handshake!");
-				if (d.getData().length == 1) {
-					sequencer.setSequenceFrom(d.getSource(), d.getData()[0]); // Is
-																				// packet
-				} else {
-					System.out.println(EncryptionHandler.parsePubKeyPacket(d
-							.getData()));
-//					eh.addPubKey(d.getSource(),
-//							EncryptionHandler.parsePubKeyPacket(d.getData()));
+		} else if (d.getDestination() == IntegrationProject.DEVICE) {
+			if (d.getSequenceNumber() == 0) {
+				if (!d.isAck() && !d.isKeepAlive() && !d.isRouting()
+						&& !d.hasMore()) {
+
+					System.out.println("Got a handshake!");
+
+					if (d.getData().length == 1) {
+						sequencer
+								.setSequenceFrom(d.getSource(), d.getData()[0]);
+					} else {
+						System.out.println(EncryptionHandler
+								.parsePubKeyPacket(d.getData()));
+						// eh.addPubKey(d.getSource(),
+						// EncryptionHandler.parsePubKeyPacket(d.getData()));
+					}
+					return; // Job done, no bubbling up
+				} else if (d.isRouting() && !d.isAck() && !d.isKeepAlive()
+						&& !d.hasMore()) {
+					router.packetReceived(d);
 				}
-				return; // Job done, no bubbling up
 			}
 
 			try {
@@ -290,8 +304,8 @@ public class Networker {
 
 					System.out.println("Source to find route to: "
 							+ d.getSource());
-					Object temp = routerGetRoute
-							.invoke(new Byte(d.getSource()));
+					Object temp = router.getRoute(new Byte(d
+							.getSource()));
 
 					if (temp instanceof Entry)
 						connection = (Entry<Byte, Byte>) temp;
@@ -313,6 +327,9 @@ public class Networker {
 			} catch (NullPointerException | BigPacketSentException
 					| DatagramDataSizeException e) {
 				// Can't really happen, but oh well...
+				e.printStackTrace();
+			} catch (RouteNotFoundException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else { // Must pass it on
@@ -372,10 +389,10 @@ public class Networker {
 
 		Entry<Byte, Byte> connection = null;
 		try {
-			Object temp = routerGetRoute.invoke(new Byte(destination));
+			Object temp = router.getRoute(new Byte(destination));
 			if (temp instanceof Entry)
 				connection = (Entry<Byte, Byte>) temp;
-		} catch (CallbackException e1) {
+		} catch (RouteNotFoundException e1) {
 			System.out
 					.println("Error finding route. Possibly no route to that host.");
 			lock.unlock();
@@ -391,12 +408,12 @@ public class Networker {
 			send(dp); // the first packet
 			send(dp); // actually arrives
 
-//			dp = new SmallPacket(IntegrationProject.DEVICE, destination,
-//					connection.getValue(), (byte) 0x0, eh.getPubKeyPacket(),
-//					false, false, false, false);
-//			send(dp); // We cannot assume
-//			send(dp); // the first packet
-//			send(dp); // actually arrives
+			// dp = new SmallPacket(IntegrationProject.DEVICE, destination,
+			// connection.getValue(), (byte) 0x0, eh.getPubKeyPacket(),
+			// false, false, false, false);
+			// send(dp); // We cannot assume
+			// send(dp); // the first packet
+			// send(dp); // actually arrives
 		} catch (IOException | BigPacketSentException
 				| DatagramDataSizeException e) {
 			System.out.println("BAM JONGÛH!");
@@ -412,9 +429,9 @@ public class Networker {
 	 * @param router
 	 *            Callback to the function of Routing
 	 */
-	public void setRouter(Callback router) {
+	public void setRouter(RoutingInterface router) {
 		System.out.println("Set router!");
-		this.routerGetRoute = router;
+		this.router = router;
 
 	}
 
@@ -436,12 +453,12 @@ public class Networker {
 			System.arraycopy(buffer, 0, result, i * maxChunkSize, buffer.length);
 			i++;
 		}
-//
-//		try {
-//			result = eh.parsePacket(result, first.getSource());
-//		} catch (CryptoException e) {
-//			System.out.println(e.getMessage());
-//		}
+		//
+		// try {
+		// result = eh.parsePacket(result, first.getSource());
+		// } catch (CryptoException e) {
+		// System.out.println(e.getMessage());
+		// }
 
 		return new BigPacket(first.getSource(), first.getDestination(),
 				first.getHops(), first.getSequenceNumber(), result,
@@ -451,7 +468,7 @@ public class Networker {
 	private LinkedList<SmallPacket> processData(Byte destination, Byte hops,
 			byte[] data, boolean ack, boolean routing, boolean keepalive) {
 
-//		data = eh.getPacket(data, destination);
+		// data = eh.getPacket(data, destination);
 
 		LinkedList<SmallPacket> result = new LinkedList<SmallPacket>();
 		lock.lock();
@@ -474,7 +491,10 @@ public class Networker {
 			}
 
 			try {
-				Byte sequencenr = sequencer.getTo(destination);
+				Byte sequencenr = 0;
+				if (!routing)
+					sequencenr = sequencer.getTo(destination);
+
 				if (!(sequencenr == null)) {
 					dp = new SmallPacket(IntegrationProject.DEVICE,
 							destination, hops, sequencenr, chunk, ack, routing,
@@ -529,14 +549,14 @@ public class Networker {
 		while (!readyPackets.isEmpty()) {
 			if (!readyPackets.peek().hasMore()) {
 				buffer.add(readyPackets.poll());
-				packetReceived.newPacket(processPackets(buffer));
+				communication.newPacket(processPackets(buffer));
 			} else {
 				while (!readyPackets.isEmpty() && readyPackets.peek().hasMore()) {
 					buffer.add(readyPackets.poll());
 				}
 				buffer.add(readyPackets.poll());
 
-				packetReceived.newPacket(processPackets(buffer));
+				communication.newPacket(processPackets(buffer));
 			}
 			buffer = new LinkedList<DataPacket>();
 		}

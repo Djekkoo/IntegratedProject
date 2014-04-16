@@ -575,7 +575,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private void send(Byte node, Byte[] data) throws CallbackException {
 		if(sendMethod != null) {
-			sendMethod.invoke(node, toByteArray(data));
+			sendMethod.invoke(node, toByteArray(data), Boolean.TRUE);
 		}
 	}
 	

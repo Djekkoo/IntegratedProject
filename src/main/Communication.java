@@ -36,7 +36,7 @@ public class Communication {
 		}
 		
 		router = new routing.LinkStateRouting(new Callback(network, "send"), new Callback(this, "updateNetwork"));
-		network.setRouter(new Callback(router, "getRoute"));
+		network.setRouter(router);
 //		new Thread(new Runnable() {
 //		     public void run()
 //		     {
