@@ -10,7 +10,7 @@ package networking;
  * @since       2014-04-08
  */
 
-public class BigPacket extends DataPacket {
+public class BigPacket extends SmallPacket implements DataPacket {
 	
 	/**
 	 * 

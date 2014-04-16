@@ -1,7 +1,7 @@
 package tests;
 
 import routing.LinkStateRouting;
-import networking.DataPacket;
+import networking.SmallPacket;
 import networking.DatagramDataSizeException;
 import main.Callback;
 import monitoring.NetworkMessage;
@@ -18,7 +18,7 @@ public class ClientTest extends TestCase {
 	Client client;
 	
     protected void setUp() {
-    	client = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty")));
+    	client = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty"),null));
     }
     
     public void empty(String text,Byte ding) {
@@ -92,12 +92,12 @@ public class ClientTest extends TestCase {
     	try { Thread.sleep(1000);} catch (InterruptedException e) {	}
     }
     
-    protected DataPacket parseDatapacket(String data, byte src) {
-    	DataPacket packet = null;
+    protected SmallPacket parseDatapacket(String data, byte src) {
+    	SmallPacket packet = null;
     	 byte[] b = data.getBytes();
          //byte[] b = data.getBytes(Charset.forName("UTF-8"));
          try {
-        	 packet = new DataPacket((byte) src, (byte) 0xf, (byte) 0xf, (byte) 0xf, b, (Boolean) true, (Boolean) true, (Boolean) true, (Boolean) true);
+        	 packet = new SmallPacket((byte) src, (byte) 0xf, (byte) 0xf, (byte) 0xf, b, (Boolean) true, (Boolean) true, (Boolean) true, (Boolean) true);
 		} catch (DatagramDataSizeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

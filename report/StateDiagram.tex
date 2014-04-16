@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{framed,graphicx,xcolor,hyperref}
+\usepackage{tikz}
+\setlength{\parskip}{10pt plus 1pt minus 1pt}
+\author{Sander Koning, Florian Fikkert, Jacco Brandt, Joey Haas}
+\date{\today}
+\title{Integration project}
+\usetikzlibrary{automata,positioning}
+\begin{document}
+	\definecolor{shadecolor}{HTML}{A9A9F6}
+	\begin{tikzpicture}[shorten >=1pt,node distance=5cm,on grid,auto] 
+ 		\node[state,initial] (q_start)   {Waiting};
+		\node[state] (q_0) [right=of q_start] {Keepalive received}; 
+		\node[state] (q_1) [below=of q_start] {SeqNo received}; 
+		\node[state] (q_2) [below=of q_0] {SeqNo sent}; 
+		\node[state] (q_3) [below=of q_1] {Connection};
+		\node[state] (q_4) [below=of q_2] {Closed};
+	    	\path[->] 
+			(q_start) edge  node [swap] {keepalive/-} (q_0)
+			(q_start) edge  node [swap] {SeqNo/keepalive} (q_1)
+			(q_0)	  edge  node [swap] {-/SeqNo} (q_2)
+			(q_1) 	  edge  node [swap] {-/SeqNo} (q_3)
+			(q_2) 	  edge  node [swap] {SeqNo/-} (q_3)
+			(q_3) 	  edge [bend left] node [above] {-/drop} (q_4)
+				  edge [bend right] node [below] {drop/-} (q_4);
+	\end{tikzpicture}
+\end{document}

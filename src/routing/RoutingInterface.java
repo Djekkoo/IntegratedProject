@@ -3,6 +3,7 @@ package routing;
 import java.util.AbstractMap.SimpleEntry;
 
 import networking.DataPacket;
+import networking.SmallPacket;
 import monitoring.NetworkMessage;
 
 /**
@@ -17,9 +18,9 @@ public interface RoutingInterface {
 	/**
 	 * Called if a packet is received.
 	 * 
-	 * @param 	p The data packet that is received
+	 * @param 	packet The data packet that is received
 	 */
-	public void packetReceived(DataPacket p);
+	public void packetReceived(DataPacket packet);
 	
 	/**
 	 * Gets the fastest route to a given destination.
@@ -52,4 +53,11 @@ public interface RoutingInterface {
 	 * @return 	The amount of hops the longest route takes.
 	 */
 	public Byte getLongestRoute();
+	
+	/**
+	 * Returns a list of all devices on the network.
+	 * 
+	 * @return 	The list of devices on the network.
+	 */
+	public Byte[] getDevices();
 }

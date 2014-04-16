@@ -3,6 +3,8 @@ package main;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import networking.DataPacket;
+
 /**
  * Provides a callback, a pointer to a method of a specific object. The callback can be invoked in any other method, 
  * without them having a reference to the original object.

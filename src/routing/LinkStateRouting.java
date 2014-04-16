@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import dijkstra.DijkstraAlgorithm;
 import dijkstra.model.*;
 import networking.DataPacket;
+import networking.SmallPacket;
 import main.Callback;
 import main.CallbackException;
 import main.IntegrationProject;
@@ -74,6 +75,10 @@ public class LinkStateRouting implements RoutingInterface {
 	 * Locks some methods while busy.
 	 */
 	private ReentrantLock lock = new ReentrantLock();
+	/**
+	 * Sends the routing table every couple of seconds.
+	 */
+	private RoutingRepeater repeater = new RoutingRepeater(this,5000);
 	
 	//PUBLIC
 	
@@ -85,8 +90,11 @@ public class LinkStateRouting implements RoutingInterface {
 		networkTreeMap.put(deviceID, new TreeSet<Byte>());
 		
 		if(autoUpdate) {
-			update();	
+			update();
+			this.repeater.start();
 		}
+		
+		
 	}
 	
 	public LinkStateRouting(Callback send, Callback newUser, boolean autoUpdate) {
@@ -99,6 +107,7 @@ public class LinkStateRouting implements RoutingInterface {
 		
 		if(autoUpdate) {
 			update();	
+			this.repeater.start();
 		}
 	}
 	
@@ -123,8 +132,10 @@ public class LinkStateRouting implements RoutingInterface {
 			throws RouteNotFoundException {
 		lock.lock();
 		// TODO Respond whenever a route is requested.
-		if(!networkTreeMap.containsKey(destination))
-		{
+		if(destination == this.deviceID) {
+			lock.unlock();
+			return new SimpleEntry<Byte,Byte>((byte)1,(byte)0);
+		} else if(!networkTreeMap.containsKey(destination)) {
 			lock.unlock();
 			throw new RouteNotFoundException("Destination unknown.");
 		} else if(networkTreeMap.get(destination).isEmpty()
@@ -153,20 +164,29 @@ public class LinkStateRouting implements RoutingInterface {
 	@Override
 	public void networkMessage(Byte node, NetworkMessage type) {
 		// TODO Handle messages
-		switch(type) {
-		case NEWKEEPALIVE:
-			networkTreeMap.put(node,new TreeSet<Byte>());
-			this.addPath(deviceID, node);
-			send(node,buildPacket());
-			break;
-		case DROPPED:
-			this.removeNode(node);
-			break;
-		case NOKEEPALIVE:
-			this.removePath(this.deviceID, node);
-			break;
-		default:
-			break;
+		try {
+			switch(type) {
+			case NEWKEEPALIVE:
+				networkTreeMap.put(node,new TreeSet<Byte>());
+				this.addPath(deviceID, node);
+				this.userNotification(node,true);
+				send(node,buildPacket());
+//				System.out.println("Host new.");
+				break;
+			case DROPPED:
+				this.userNotification(node,false);
+				this.removeNode(node);
+//				System.out.println("Host dropped.");
+				break;
+			case NOKEEPALIVE:
+				this.removePath(this.deviceID, node);
+//				System.out.println("Host nokeepalive.");
+				break;
+			default:
+				break;
+			}
+		} catch (CallbackException e) {
+			e.getException().printStackTrace();
 		}
 	}
 	
@@ -191,47 +211,31 @@ public class LinkStateRouting implements RoutingInterface {
 		return max;
 	}
 	
-	// PRIVATE
-	
 	/**
-	 * Finds a path between to nodes.
-	 * 
-	 * @param	src The source node
-	 * @param	dst The destination node
-	 * @return	A linked list of nodes (A path)
-	 * @since	2014-04-09
+	 * {@inheritDoc}
 	 */
-	private LinkedList<Vertex> findPath(Byte src, Byte dst) {
-		DijkstraAlgorithm pf;
-		LinkedList<Vertex> path;
-		pf = getPathFinder();
-		
-		if(vertexArray[src] != null && vertexArray[dst] != null) {
-			pf.execute(vertexArray[src]);
-			path = pf.getPath(vertexArray[dst]);
-			return path;
+	public Byte[] getDevices() {
+		Byte[] devs = new Byte[networkTreeMap.size()];
+		int i = 0;
+		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
+			devs[i] = e.getKey();
+			i++;
 		}
-		return null;
+		return devs;
 	}
 	
 	/**
-	 * Finds all the paths from the current node to all other (known) nodes.
+	 * Prints the nodes and prints what nodes they are connected to.
 	 * 
-	 * @return	A K,V map of paths set to the device IDs.
-	 * @since	2014-04-09
+	 * @since	2014-04-08
 	 */
-	private HashMap<Byte,LinkedList<Vertex>> findAllPaths() {
-		DijkstraAlgorithm pf;
-		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
-		pf = getPathFinder();
-		pf.execute(vertexArray[deviceID]);
-		for(Vertex v : vertexArray) {
-			if(v != null) {
-				Byte vID = Byte.parseByte(v.getId());
-				paths.put(vID,pf.getPath(v));
+	public void showNetwork() {
+		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
+			System.out.println(e.getKey() + " to: ");
+			for(Byte b : e.getValue()) {
+				System.out.println("\t" + b);
 			}
 		}
-		return paths;
 	}
 	
 	/**
@@ -242,8 +246,14 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	public void addPath(Byte A, Byte B) {
+		if(!networkTreeMap.containsKey(A))
+			networkTreeMap.put(A, new TreeSet<Byte>());
+		if(!networkTreeMap.containsKey(B))
+			networkTreeMap.put(B, new TreeSet<Byte>());
+		
 		networkTreeMap.get((byte)A).add((byte)B);
 		networkTreeMap.get((byte)B).add((byte)A);
+		
 		if(autoUpdate) {
 			update();
 		}
@@ -284,10 +294,12 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-10
 	 */
 	public void removeNode(Byte N) {
-		for(Object nb : networkTreeMap.get(N).toArray()) {
-			removePath((Byte)nb, this.deviceID);
+		if(networkTreeMap.get(N) != null){
+			for(Object nb : networkTreeMap.get(N)) {
+				removePath((Byte)nb, N);
+			}
 		}
-		networkTreeMap.put(N, new TreeSet<Byte>());
+		networkTreeMap.remove((byte)N);
 		if(autoUpdate) {
 			update();
 		}
@@ -301,6 +313,13 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	public void update() {
 		lock.lock();
+		for(Object eObj : networkTreeMap.entrySet().toArray()) {
+			Entry<Byte,TreeSet<Byte>> e = (Entry<Byte,TreeSet<Byte>>)eObj;
+			Byte n = e.getKey();
+			if(e.getValue().isEmpty()) {
+				this.removeNode(n);
+			}
+		}
 		HashMap<Byte,LinkedList<Vertex>> paths = findAllPaths();
 		nextHops.clear();
 		routeLengths.clear();
@@ -316,6 +335,65 @@ public class LinkStateRouting implements RoutingInterface {
 			}
 		}
 		lock.unlock();
+	}
+
+	
+	// PRIVATE
+	
+	/**
+	 * Finds a path between to nodes.
+	 * 
+	 * @param	src The source node
+	 * @param	dst The destination node
+	 * @return	A linked list of nodes (A path)
+	 * @since	2014-04-09
+	 */
+	private LinkedList<Vertex> findPath(Byte src, Byte dst) {
+		DijkstraAlgorithm pf;
+		LinkedList<Vertex> path;
+		pf = getPathFinder();
+		
+		if(vertexArray[src] != null && vertexArray[dst] != null) {
+			pf.execute(vertexArray[src]);
+			path = pf.getPath(vertexArray[dst]);
+			return path;
+		}
+		return null;
+	}
+	
+	/**
+	 * Finds all the paths from the current node to all other (known) nodes.
+	 * 
+	 * @return	A K,V map of paths set to the device IDs.
+	 * @since	2014-04-09
+	 */
+	private HashMap<Byte,LinkedList<Vertex>> findAllPaths() {
+		DijkstraAlgorithm pf;
+		pf = getPathFinder();
+		HashMap<Byte, LinkedList<Vertex>> paths = new HashMap<Byte,LinkedList<Vertex>>();
+		
+		pf.execute(vertexArray[deviceID]);
+		for(Vertex v : vertexArray) {
+			if(v != null) {
+				Byte vID = Byte.parseByte(v.getId());
+				paths.put(vID,pf.getPath(v));
+			}
+		}
+		return paths;
+	}
+	
+	/**
+	 * Used to send a notification of a non-neighbour node that joined or dropped (it like it's hot).
+	 * 
+	 * @param 	node The node the notification is about.
+	 * @param 	joined True if it's a new node. False if the node dropped.
+	 * @throws CallbackException 
+	 */
+	private void userNotification(Byte node, boolean joined) throws CallbackException {
+		if(this.updateMethod != null) {
+			NetworkMessage m = (joined) ? NetworkMessage.JOINED : NetworkMessage.DROPPED;
+			updateMethod.invoke(node, m);
+		}
 	}
 	
 	/**
@@ -348,6 +426,10 @@ public class LinkStateRouting implements RoutingInterface {
 		return dijkstra;
 	}
 	
+	public void transmit() {
+		sendToNeighbours(this.buildPacket());
+	}
+	
 	/**
 	 * Sends the data to all the neighbours of the current device.
 	 * 
@@ -355,9 +437,19 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	private void sendToNeighbours(Byte[] data) {
-		TreeSet<Byte> neighbours = networkTreeMap.get(deviceID);
-		for(Byte nb : neighbours) {
-			send(nb,data);
+		try {
+			lock.lock();
+			TreeSet<Byte> neighbours = networkTreeMap.get(deviceID);
+			
+			if(neighbours != null){
+				for(Byte nb : neighbours) {
+					send(nb,data);
+				}
+			}
+		} catch (CallbackException e) {
+			e.getException().printStackTrace();
+		} finally {
+			lock.unlock();
 		}
 	}
 	
@@ -372,6 +464,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	private boolean parsePacket(byte[] p) {
 		//Retrieve the timestamp from the packet
+		System.out.println("Routing packet received, info.");
 		long timestamp = 0;
 	    ByteBuffer buffer = ByteBuffer.wrap(p,0,8);
 	    timestamp = buffer.getLong();
@@ -405,21 +498,30 @@ public class LinkStateRouting implements RoutingInterface {
 								//Do nothing
 							} else {
 								this.addPath(host, nb);
+								System.out.println("New path.");
 								updated = true;
 							}
 							oldNeighbours.remove(nb);
 						} else {
+							System.out.println("New host.");
 							this.addNode(host);
 							this.addPath(host, nb);
-							sendMethod.invoke(host,NetworkMessage.JOINED);
+							this.userNotification(nb,true);
 							oldNeighbours.remove(nb);
 							updated = true;
 						}
 					}
 					for(Byte nb : oldNeighbours) {
-						this.removeNode(nb);
-						sendMethod.invoke(nb,NetworkMessage.DROPPED);
+						networkTreeMap.get(host).remove((byte)nb);
 						updated = true;
+						System.out.println("Host removed.");
+					}
+					for(Object eObj : networkTreeMap.entrySet().toArray()) {
+						Entry<Byte,TreeMap<Byte,Byte>> e = (Entry<Byte,TreeMap<Byte,Byte>>)eObj;
+						Byte n = e.getKey();
+						if(e.getValue().isEmpty()) {
+							this.removeNode(n);
+						}
 					}
 				} catch(CallbackException e) {
 					e.getException().printStackTrace();
@@ -467,30 +569,12 @@ public class LinkStateRouting implements RoutingInterface {
 	 * 
 	 * @param 	node The node to send to.
 	 * @param 	data The data to send to the node.
+	 * @throws CallbackException 
 	 * @since	2014-04-09
 	 */
-	private void send(Byte node, Byte[] data) {
-		try {
-			if(sendMethod != null) {
-				sendMethod.invoke(node, toByteArray(data));
-			}
-		} catch (CallbackException e) {
-			// TODO Auto-generated catch block
-			e.getException().printStackTrace();
-		}
-	}
-	
-	/**
-	 * Prints the nodes and prints what nodes they are connected to.
-	 * 
-	 * @since	2014-04-08
-	 */
-	public void showNetwork() {
-		for(Entry<Byte,TreeSet<Byte>> e : networkTreeMap.entrySet()) {
-			System.out.println(e.getKey() + " to: ");
-			for(Byte b : e.getValue()) {
-				System.out.println("\t" + b);
-			}
+	private void send(Byte node, Byte[] data) throws CallbackException {
+		if(sendMethod != null) {
+			sendMethod.invoke(node, toByteArray(data));
 		}
 	}
 	

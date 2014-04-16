@@ -8,6 +8,7 @@ import routing.RoutingInterface;
 import monitoring.NetworkMessage;
 import monitoring.NetworkMonitor;
 import networking.DataPacket;
+import networking.SmallPacket;
 import networking.DatagramDataSizeException;
 import networking.Networker;
 
@@ -26,7 +27,7 @@ public class Communication {
 	public Communication() {
 		
 		try {
-			network = new networking.Networker(new Callback(this, "newPacket"));
+			network = new networking.Networker(this);
 		} catch (SocketException e) {
 			System.out.println("Something terrible happened, Sander screwed up his class: " + e.getMessage());
 			System.exit(0);
@@ -44,43 +45,52 @@ public class Communication {
 //		}).start();
 		
 		this.client = new Client(new Callback(this, "sendMessage"),router);
-		
 		this.monitor = new NetworkMonitor(this.router, new Callback(network, "broadcast"));
 		this.monitor.start();
+		
 		
 	}
 	 
 	public void updateNetwork(Byte source, NetworkMessage type) {
-		
-		this.client.updateNetwork(source, type);
-		if (NetworkMessage.JOINED.equals(type))
+		if (type.equals(NetworkMessage.JOINED)) {
 			this.network.handshake(source);
-		
+		}
+		this.client.updateNetwork(source, type);
 	}
 	
 	public void newPacket(DataPacket packet) {
-		
-		System.out.println(packet.getSource() + "-" + new String(packet.getData()));
-		if (packet.isKeepAlive()) {
-			this.monitor.messageReceived(packet);
+		if(monitor != null || client != null) {
+			
+			if(packet.getData().length > 0)
+				System.out.println(packet.getSource() + "-" + new String(packet.getData()));
+			
+			if (packet.isKeepAlive()) {
+				this.monitor.messageReceived(packet);
+			}
+			else if (packet.isRouting()) {
+				this.router.packetReceived(packet);
+			}
+			else {
+				this.client.packetReceived(packet);
+			}
+		} else {
+			return;
 		}
-		else if (packet.isRouting()) {
-			this.router.packetReceived(packet);
-		}
-		else {
-			this.client.packetReceived(packet);
-		}
-		
 	}
 	
 	public void sendMessage(String message, Byte destination) throws IOException, DatagramDataSizeException {
 		
 		if (destination.equals(Byte.valueOf((byte) 0x0F))) {
-			this.network.broadcast(message.getBytes(), this.router.getLongestRoute(), Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);
-			return;
+			
+			for(Byte knownDestination : router.getDevices()){
+				System.out.println("Know destination: " + knownDestination);
+				if(knownDestination.byteValue() != IntegrationProject.DEVICE)
+					this.network.send(knownDestination, message.getBytes());
+			}
+			
+		} else {
+			this.network.send(destination, message.getBytes());
 		}
-		
-		this.network.send(destination, message.getBytes());
 		
 	}
 

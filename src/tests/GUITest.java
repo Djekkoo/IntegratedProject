@@ -16,7 +16,7 @@ public class GUITest extends TestCase {
 	GUI gui;
 	
     protected void setUp() {
-        gui = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty"))).getGUI();
+        gui = new Client(new Callback(this,"empty"),new LinkStateRouting(new Callback(this,"empty"),null)).getGUI();
     }
     public void empty(String text,Byte ding) {
     	System.out.println(text);

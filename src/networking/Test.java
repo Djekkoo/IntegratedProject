@@ -22,9 +22,9 @@ public class Test {
 	public Test(){
 		System.out.println("--- New Datapacket ---");
 		
-		DataPacket dp = null;
+		SmallPacket dp = null;
 		try {
-			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true, true);
+			dp = new SmallPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true, true);
 		} catch (DatagramDataSizeException e1) {
 			e1.printStackTrace();
 		}
@@ -51,9 +51,9 @@ public class Test {
 		
 		System.out.println("--- Copy Datapacket ---");
 		
-		DataPacket test = null;
+		SmallPacket test = null;
 		try {
-			test = new DataPacket(dp.getRaw());
+			test = new SmallPacket(dp.getRaw());
 		} catch (DatagramDataSizeException e) {
 			e.printStackTrace();
 		}
@@ -77,49 +77,53 @@ public class Test {
 								System.out.println("Faulty destination stored");
 		
 		System.out.println("--- Test Complete ---");
-		System.out.println("--- Networker Tests ---");
-		
-		try {
-			byte[] data = new byte[2048];
-			(new SecureRandom()).nextBytes(data);
-			
-			
-			LinkedList<DataPacket> packets = new LinkedList<DataPacket>();
-			
-			Object networker = null;
-			try {
-				networker = new Networker(new Callback(this, "getbyte"));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			Class[] args = new Class[2];
-			args[0] = Byte.class;
-			args[1] = byte[].class;
-			
-			Method processData = networker.getClass().getDeclaredMethod("processData", args);
-			processData.setAccessible(true);
-			
-			args = new Class[1];
-			args[0] = packets.getClass();
-
-			Method processPackets = networker.getClass().getDeclaredMethod("processPackets", args);
-			processPackets.setAccessible(true);
-			
-			packets = (LinkedList<DataPacket>) processData.invoke(networker, (byte) 15, data);
-			
-			byte[] result = (byte[]) processPackets.invoke(networker, packets);
-			
-			if(!(stringFrombytes(data).equals(stringFrombytes(result))))
-				System.out.println("Packets generating/decoding failed");
-			
-			System.out.println("Was: " + stringFrombytes(result) + "\nS2B: " + stringFrombytes(data));
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
-		}
-
-		System.out.println("--- Test Complete ---");
+//		System.out.println("--- Networker Tests ---");
+//		
+//		try {
+//			byte[] data = new byte[2048];
+//			(new SecureRandom()).nextBytes(data);
+//			
+//			
+//			LinkedList<SmallPacket> packets = new LinkedList<SmallPacket>();
+//			
+//			Object networker = null;
+//			try {
+//				networker = new Networker(new Callback(this, "getbyte"));
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			
+//			Class[] args = new Class[6];
+//			args[0] = Byte.class;
+//			args[1] = Byte.class;
+//			args[2] = byte[].class;
+//			args[3] = Boolean.TYPE;
+//			args[4] = Boolean.TYPE;
+//			args[5] = Boolean.TYPE;
+//			
+//			Method processData = networker.getClass().getDeclaredMethod("processData", args);
+//			processData.setAccessible(true);
+//			
+//			args = new Class[1];
+//			args[0] = packets.getClass();
+//
+//			Method processPackets = networker.getClass().getDeclaredMethod("processPackets", args);
+//			processPackets.setAccessible(true);
+//			
+//			packets = (LinkedList<SmallPacket>) processData.invoke(networker, (byte) 15, (byte) 15, data, false, false, false);
+//			
+//			byte[] result = (byte[]) processPackets.invoke(networker, packets);
+//			
+//			if(!(stringFrombytes(data).equals(stringFrombytes(result))))
+//				System.out.println("Packets generating/decoding failed");
+//			
+//			System.out.println("Was: " + stringFrombytes(result) + "\nS2B: " + stringFrombytes(data));
+//		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+//			e.printStackTrace();
+//		}
+//
+//		System.out.println("--- Test Complete ---");
 	}
 	
 	public static void main(String[] args) {

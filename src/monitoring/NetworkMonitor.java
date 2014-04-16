@@ -2,6 +2,8 @@ package monitoring;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -9,6 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import routing.RoutingInterface;
 import networking.DataPacket;
+import networking.SmallPacket;
 import main.Callback;
 import main.CallbackException;
 
@@ -66,15 +69,22 @@ public class NetworkMonitor extends Thread {
 			keys = this.activity.keySet();
 			i    = keys.iterator();
 			threshold = System.currentTimeMillis() - dumpDelay;
+			
+			List<Byte> l = new LinkedList<Byte>();
+			
 			while(i.hasNext()) {
 				key = i.next();
 				
 				// Keep-alive not received
 				if (this.activity.get(key) <= threshold) {
-					this.activity.remove(key);
-					this.router.networkMessage(key, NetworkMessage.NOKEEPALIVE);
+					l.add(key);
 				}
 				
+			}
+			
+			for(Byte b : l){
+				this.activity.remove(b);
+				this.router.networkMessage(b, NetworkMessage.NOKEEPALIVE);
 			}
 			
 			this.lock.unlock();
@@ -93,23 +103,24 @@ public class NetworkMonitor extends Thread {
 	}
 	
 	// Received a new notification, putting heads-up at the data
-	public void messageReceived(DataPacket p) {
+	public void messageReceived(DataPacket packet) {
 		
-		if (!p.isKeepAlive()) {
+		if (!packet.isKeepAlive()) {
 			System.out.println("Error, packet delivered at network monitor is NOT a keep-alive packet!");
 			return;
 		}
 		
-		Byte source = p.getSource();
+		Byte source = packet.getSource();
 		this.lock.lock();
 		
 		// shutdown?
-		if (p.isRouting()) {
+		if (packet.isRouting()) {
 			if (this.activity.containsKey(source)) {
 				this.activity.remove(source);
 				this.router.networkMessage(source, NetworkMessage.DROPPED);
 			}
 			
+			this.lock.unlock();
 			return;
 		}
 		
@@ -118,6 +129,7 @@ public class NetworkMonitor extends Thread {
 			this.activity.put(source, System.currentTimeMillis());
 			this.router.networkMessage(source, NetworkMessage.NEWKEEPALIVE);
 			
+			this.lock.unlock();
 			return;
 		}
 		

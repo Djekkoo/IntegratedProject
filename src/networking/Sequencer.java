@@ -57,15 +57,27 @@ public class Sequencer extends Thread{
 	}
 	
 	public void setSequenceFrom(Byte source, Byte sequence) {
+		this.lock.lock();
 		this.packets.put(source, new HashMap<Byte, DataPacket>());
-		this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(this.oneToOne.get(source).getKey(), sequence));
-		this.ACK.put(source, sequence);
-		this.RET.put(source, sequence);
+		if(this.oneToOne.containsKey(source)) {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(this.oneToOne.get(source).getKey(),sequence));
+		} else {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>((byte)0,sequence));
+		}
+		this.ACK.put(source, this.prevSEQ(sequence));
+		this.RET.put(source, this.prevSEQ(sequence));
+		this.lock.unlock();
 	}
 	
 	public void setSequenceTo(Byte source, Byte sequence) {
-		this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, this.oneToOne.get(source).getValue()));
-		this.ACKReceived.put(source, sequence);
+		this.lock.lock();
+		if(this.oneToOne.containsKey(source)) {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, this.oneToOne.get(source).getValue()));
+		} else {
+			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(sequence, (byte)0));
+		}
+		this.ACKReceived.put(source, this.prevSEQ(sequence));
+		this.lock.unlock();
 	}
 	
 	// check for ACK's waiting too long
@@ -85,7 +97,14 @@ public class Sequencer extends Thread{
 				rStack = iter.next();
 				resend = true;
 				tAck = this.ACKReceived.get(rStack);
-				byte temp = tAck;
+				
+				byte temp = 0;
+				if(tAck != null){
+					temp = tAck;
+				} else {
+					System.out.println("tAck == null");
+					continue;
+				}
 				
 				for (int i = 0; i < retransmitThreshold; i++) {
 					if ((byte) tAck == (byte)this.oneToOne.get(rStack).getKey()) {
@@ -117,8 +136,9 @@ public class Sequencer extends Thread{
 	
 	public Byte getTo(Byte node){
 		lock.lock();
-		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getValue() == (byte)0 || this.oneToOne.get(node).getKey() == (byte) 0) {
-			System.out.println("Dropped packet, ACK's are not registered");
+
+		if (this.oneToOne.containsKey(node) == false || this.oneToOne.get(node).getKey() == (byte)0) {
+			System.out.println("No sequence available, ACK's are not registered");
 			lock.unlock();
 			return null;
 		}
@@ -130,7 +150,7 @@ public class Sequencer extends Thread{
 		return b;
 	}
 	
-	public LinkedList<DataPacket> getPackets(Byte source, Boolean broadcast) {
+	public LinkedList<DataPacket> getPackets(Byte source) {
 		
 		byte rStack = source;
 		LinkedList<DataPacket> res = new LinkedList<DataPacket>();
@@ -146,13 +166,17 @@ public class Sequencer extends Thread{
 		byte temp = 0x00;
 		LinkedList<DataPacket> tList = new LinkedList<DataPacket>();
 		
-		while(packets.containsKey(bRet)) {
+		while(packets.containsKey(this.nextSEQ(bRet))) {
+			
+			bRet = this.nextSEQ(bRet);
 			
 			if (!packets.get(bRet).hasMore()) {
 				
 				// End of multi-packet data
 				if (temp != (byte) 0x00) {
 					temp = 0x00;
+
+					tList.add(packets.get(bRet));
 					
 					Iterator<DataPacket> i = tList.iterator();
 					while(i.hasNext()) {
@@ -162,7 +186,6 @@ public class Sequencer extends Thread{
 					}
 					
 					tList = new LinkedList<DataPacket>();
-					bRet = this.nextSEQ(bRet);
 					
 					continue;
 				}
@@ -181,15 +204,13 @@ public class Sequencer extends Thread{
 				
 			}
 			
-			bRet = this.nextSEQ(bRet);
-			
 		}
 
 		if (temp != (byte) 0x00) {
-			bRet = temp;
+			bRet = this.prevSEQ(temp);
 		}
 		
-		this.RET.put(rStack, this.prevSEQ(bRet));
+		this.RET.put(rStack, bRet);
 		
 		this.lock.unlock();
 		
@@ -202,16 +223,12 @@ public class Sequencer extends Thread{
 	public Byte put(DataPacket packet) {
 		
 		byte ackStack = 0x00;
-		if (packet.getDestination() == (byte) 0x0F) {
-			ackStack |= 0xF0;
-		}
-		
 		ackStack |= packet.getSource();
 		
 		this.lock.lock();
 		
 		//
-		if (this.oneToOne.containsKey(ackStack) == false || this.oneToOne.get(ackStack).getValue() == (byte)0 || this.oneToOne.get(ackStack).getKey() == (byte) 0) {
+		if (this.oneToOne.containsKey(ackStack) == false/* || this.oneToOne.get(ackStack).getValue() == (byte)0*/ || this.oneToOne.get(ackStack).getValue() == (byte) 0) {
 			
 			System.out.println("Dropped packet, ACK's are not registered");
 			this.lock.unlock();
@@ -222,6 +239,7 @@ public class Sequencer extends Thread{
 		if (packet.isAck()) {
 			
 			this.ACKReceived.put(ackStack, packet.getSequenceNumber());
+			System.out.println("RECEIVED ACK: " + ackStack + ":" + packet.getSequenceNumber());
 			this.lock.unlock();
 			return null;
 			
@@ -229,8 +247,6 @@ public class Sequencer extends Thread{
 		
 		if (!this.packets.containsKey(ackStack)) {
 			this.packets.put(ackStack, new HashMap<Byte, DataPacket>());
-			this.ACK.put(ackStack, (byte) 0);
-			this.RET.put(ackStack, (byte) 0);
 		}
 		
 		if ((this.ACK.get(ackStack) < packet.getSequenceNumber() && packet.getSequenceNumber() - this.ACK.get(ackStack) >= 127)
@@ -243,16 +259,16 @@ public class Sequencer extends Thread{
 			
 			HashMap<Byte, DataPacket> packets = this.packets.get(ackStack);
 			packets.put(packet.getSequenceNumber(), packet);
-		
+			System.out.println("Package received with seq="+packet.getSequenceNumber());
+			this.packets.put(ackStack, packets);
 		}
 		
 		// get last ACK
 		byte lAck = this.ACK.get(ackStack);
-		while(packets.containsKey(lAck)) {
+		while(packets.get(ackStack).containsKey(this.nextSEQ(lAck))) {
 			lAck = this.nextSEQ(lAck);
-		}
+		} 
 		
-		lAck = this.prevSEQ(lAck);
 		this.ACK.put(ackStack, lAck);
 		
 		this.lock.unlock();

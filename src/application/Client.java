@@ -7,8 +7,10 @@ import java.util.Map.Entry;
 import routing.LinkStateRouting;
 import routing.RoutingInterface;
 import networking.DataPacket;
+import networking.SmallPacket;
 import main.Callback;
 import main.CallbackException;
+import main.FileTransferHandler;
 import main.IntegrationProject;
 import monitoring.NetworkMessage;
 
@@ -23,12 +25,13 @@ public class Client {
 	private Callback sendMsg;
 	private GUI gui;
 	private String name;
+	private String filename = "file";
 	private Map<Byte,String> table;
 	private RoutingInterface router;
 	private boolean hardcoremode;
 	
 	public Client(Callback sendMsg, RoutingInterface router) {
-		hardcoremode = false;
+		hardcoremode = true;
 		this.sendMsg = sendMsg;
 		this.router = router;
 		table = new HashMap<Byte,String>();
@@ -76,6 +79,10 @@ public class Client {
 					msg = msg + " " + splitdata[i];
 				}
 				gui.updateChat(msg);
+				//Check for commands
+				if (data.contains("/send")) {
+					this.filename = gui.saveDialog(data.split("/send ")[1]);
+				}
 				break;
 			case "USER":
 				String usermsg = "";
@@ -86,6 +93,21 @@ public class Client {
 				System.out.println(usermsg + " detected.");
 				updateUsers();
 				break;
+			case "FILE":
+				System.out.println("FILE INCOMING");
+				try {
+					FileTransferHandler fth = new FileTransferHandler();
+					byte[] filedata = new byte[packet.getData().length-5];
+					System.arraycopy(packet.getData(), 5, filedata, 0, filedata.length);
+					byte[] file = fth.parsePacket(filedata);
+					// TODO Save shit
+					String filename = this.filename;
+					fth.setFile(filename, "rw");
+					fth.writeFile(file);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.out.println("FILE WRITED");
 			default:
 				System.out.println("The received command does not exist.");
 				break;
@@ -94,53 +116,67 @@ public class Client {
 	}
 
 	public void sendChat(String text) {
-		if (text.split(" ")[0].contains("/")) {
-			switch (text.split(" ")[0]) {
-			case "/pvt":
-				//DIRECT SEND
-				Byte dest = 0x00;
-				for (Entry<Byte, String> entry : table.entrySet()) {
-					//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-					if (entry.getValue().contains(text.split(" ")[1])) {
-						dest = entry.getKey();
+		if (!text.equals("")) {
+			if (text.split(" ")[0].contains("/")) {
+				switch (text.split(" ")[0]) {
+				case "/pvt":
+					//DIRECT SEND
+					Byte dest = 0x00;
+					for (Entry<Byte, String> entry : table.entrySet()) {
+						//System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+						if (entry.getValue().contains(text.split(" ")[1])) {
+							dest = entry.getKey();
+						}
 					}
+					//parse
+					String chat = "(PM "+getName() + "): " + text.split(":")[1];
+					gui.updateChat("Private Message send to "+ text.split(":")[0]);
+
+					try {
+						sendMsg.invoke("CHAT " + chat,dest);
+					} catch (CallbackException e) {
+						System.out.println(e.getMessage());
+					}
+					break;
+				case "/send":
+					String sendje = getName() + ": " + text;
+					gui.updateChat(sendje);
+					try {
+						sendMsg.invoke("CHAT " + sendje,Byte.valueOf((byte) 0x0F));
+					} catch (CallbackException e) {
+						System.out.println(e.getMessage());
+					}
+					break;
+				case "/shownetwork":
+					gui.updateChat("Showing network in the console");
+					((LinkStateRouting) router).showNetwork();
+					break;
+				case "/users":
+					gui.updateChat("Showing the user table in Client:");
+					for (Entry<Byte, String> entry : table.entrySet()) {
+						gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
+					}
+					break;
+				case "/showkeys":
+					gui.updateChat("JoeyIsEchtGeenVirus.jpg.exe not found error");
+					break;
+				case "/hardcore":
+					if (hardcoremode) {
+						hardcoremode = false;
+					} else {
+						hardcoremode = true;
+					}
+					break;
 				}
-				String chat = getName() + "(pvt): " + text;
+				} else {
+				String chat = getName() + ": " + text;
 				gui.updateChat(chat);
+
 				try {
-					sendMsg.invoke("CHAT " + chat,dest);
+					sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
 				} catch (CallbackException e) {
 					System.out.println(e.getMessage());
 				}
-				break;
-			case "/shownetwork":
-				gui.updateChat("Showing network in the console");
-				((LinkStateRouting) router).showNetwork();
-				break;
-			case "/users":
-				gui.updateChat("Showing the user table in Client:");
-				for (Entry<Byte, String> entry : table.entrySet()) {
-					gui.updateChat("Source = " + entry.getKey() + ", Name = " + entry.getValue());
-				}
-				break;
-			case "/hardcore":
-				if (hardcoremode) {
-					hardcoremode = false;
-				} else {
-					hardcoremode = true;
-				}
-				break;
-			}
-			} else {
-			//BROADCAST
-			String chat = getName() + ": " + text;
-			gui.updateChat(chat);
-			
-			//TODO Unicast toevoegen
-			try {
-				sendMsg.invoke("CHAT " + chat,Byte.valueOf((byte) 0x0F));
-			} catch (CallbackException e) {
-				System.out.println(e.getMessage());
 			}
 		}
 	}
@@ -151,6 +187,16 @@ public class Client {
 		try {	sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));} catch (CallbackException e) { System.out.println(e.getMessage());}
 		updateUsers();
 	}
+	
+	public void sendFile(String filename) {
+		try {
+			FileTransferHandler fthr = new FileTransferHandler(filename,"r");
+			sendMsg.invoke("FILE " + fthr.getPacket(),Byte.valueOf((byte) 0x0F));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
 
 	public void updateUsers() {
 		String[] lijstje = new String[table.size()];
@@ -169,6 +215,7 @@ public class Client {
 			updateUsers();
 		} else if (type == NetworkMessage.JOINED) {
 			System.out.println("Someone from source "+source+" joined.");
+			updateUsers();
 			if (hardcoremode) {
 				try {
 					sendMsg.invoke("USER " + name,Byte.valueOf((byte) 0x0F));

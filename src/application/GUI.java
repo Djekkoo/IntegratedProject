@@ -5,13 +5,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.ListModel;
 import javax.swing.text.DefaultCaret;
 
 import java.awt.event.KeyEvent;
-
+import java.io.File;
 /** 
  * @author      Florian Fikkert <f.a.j.fikkert@student.utwente.nl>
  * @version     0.7
@@ -28,7 +29,7 @@ public class GUI extends javax.swing.JFrame {
 		this.client = client;
 		String name = "";
 		while (name.equals("")) {
-			name = JOptionPane.showInputDialog("Hoe wil je heten?","0779 Cappuchino");
+			name = JOptionPane.showInputDialog("Hoe wil je heten?","");
 			if (name == null) {
 				System.exit(0);
 			}
@@ -56,7 +57,7 @@ public class GUI extends javax.swing.JFrame {
 		userList = new javax.swing.JList<String>();
 		ChatPanel = new javax.swing.JPanel();
 		chatScrollpane = new javax.swing.JScrollPane();
-		chatTextPane = new javax.swing.JTextPane();
+		chatTextPane = new javax.swing.JTextArea();
 		SendPanel = new javax.swing.JPanel();
 		inputText = new javax.swing.JTextField();
 		sendBtn = new javax.swing.JButton();
@@ -95,7 +96,7 @@ public class GUI extends javax.swing.JFrame {
 		          int index = theList.locationToIndex(mouseEvent.getPoint());
 		          if (index >= 0) {
 		            Object o = theList.getModel().getElementAt(index);
-		            inputText.setText("/pvt "+o.toString()+" ");
+		            inputText.setText("/pvt "+o.toString()+": ");
 		            inputText.requestFocusInWindow();
 		          }
 		        }
@@ -118,14 +119,7 @@ public class GUI extends javax.swing.JFrame {
 				userScrollpane, javax.swing.GroupLayout.DEFAULT_SIZE, 328,
 				Short.MAX_VALUE));
 
-		chatScrollpane.setAutoscrolls(true);
-
-		chatTextPane.setFont(standardFont); // NOI18N
-		chatTextPane
-				.setText("                                                               Chat Venster");
-		chatScrollpane.setViewportView(chatTextPane);
-		DefaultCaret caret = (DefaultCaret)chatTextPane.getCaret();
-		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+				
 		javax.swing.GroupLayout ChatPanelLayout = new javax.swing.GroupLayout(
 				ChatPanel);
 		ChatPanel.setLayout(ChatPanelLayout);
@@ -135,9 +129,17 @@ public class GUI extends javax.swing.JFrame {
 		ChatPanelLayout.setVerticalGroup(ChatPanelLayout.createParallelGroup(
 				javax.swing.GroupLayout.Alignment.LEADING).addComponent(
 				chatScrollpane));
-
+		chatScrollpane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		chatScrollpane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		SendPanel.setOpaque(false);
 
+		chatTextPane.setEditable(false);
+        DefaultCaret caret = (DefaultCaret)chatTextPane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        chatScrollpane.setViewportView(chatTextPane);
+		chatTextPane.setFont(standardFont); // NOI18N
+		chatTextPane.setLineWrap(true);
+		
 		inputText.setFont(standardFont); // NOI18N
 		inputText.setText("");
 		inputText.setFocusable(true);
@@ -153,7 +155,7 @@ public class GUI extends javax.swing.JFrame {
 		});
 
 		sendBtn.setFont(standardFont); // NOI18N
-		sendBtn.setText("Send!");
+		sendBtn.setText("+");
 		sendBtn.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				sendBtnActionPerformed(evt);
@@ -283,7 +285,29 @@ public class GUI extends javax.swing.JFrame {
 	}
 
 	private void sendBtnActionPerformed(java.awt.event.ActionEvent evt) {
-		sendChat(inputText.getText());
+		JFileChooser chooser = new JFileChooser();
+	    int returnVal = chooser.showOpenDialog(this);
+	    if(returnVal == JFileChooser.APPROVE_OPTION) {
+	    	client.sendChat("/send " + chooser.getSelectedFile().getName());
+	    	try {	Thread.sleep(10000);	} catch(Exception e) {	}; //TODO ack dingetje
+	    	client.sendFile(chooser.getSelectedFile().getAbsolutePath());
+	    } else {
+	    	inputText.setText("FUCK ME, SEND A FILE");
+	    }
+	}
+	
+	public String saveDialog(String receivename) {
+		JFileChooser chooser = new JFileChooser();
+		File file = new File(receivename);
+		chooser.setSelectedFile(file);
+        int option = chooser.showSaveDialog(GUI.this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+          //statusbar.setText("You saved " + ((chooser.getSelectedFile()!=null)?chooser.getSelectedFile().getName():"nothing"));
+        }
+        else {
+          //statusbar.setText("You canceled.");
+        }
+        return ((chooser.getSelectedFile()!=null)?chooser.getSelectedFile().getAbsolutePath():"nothing");
 	}
 
 	private void SendPanelKeyPressed(java.awt.event.KeyEvent evt) {
@@ -305,9 +329,9 @@ public class GUI extends javax.swing.JFrame {
 		String[] chatArr = chatTextPane.getText().split("\n");
 		String result = "";
 		for (int i=0;i<chatArr.length;i++) {
-			result = result + chatArr[i] + '\n';
+			result = result + chatArr[i].trim() + '\n';
 		}
-		chatTextPane.setText(result + lastmsg);
+		chatTextPane.setText((result + lastmsg).trim());
 	}
 	
 	public String[] getChat() {
@@ -331,7 +355,7 @@ public class GUI extends javax.swing.JFrame {
 	private javax.swing.JPanel UserPanel;
 	private javax.swing.JLabel backgroundLabel;
 	private javax.swing.JScrollPane chatScrollpane;
-	private javax.swing.JTextPane chatTextPane;
+	private javax.swing.JTextArea chatTextPane;
 	private javax.swing.JTextField inputText;
 	private javax.swing.JPasswordField jPasswordField1;
 	@SuppressWarnings("unused")
@@ -340,4 +364,4 @@ public class GUI extends javax.swing.JFrame {
 	private javax.swing.JList<String> userList;
 	private javax.swing.JScrollPane userScrollpane;
 	// End of variables declaration
-}
+	}
