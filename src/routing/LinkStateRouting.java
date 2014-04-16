@@ -518,6 +518,7 @@ public class LinkStateRouting implements RoutingInterface {
 					}
 					for(Byte nb : oldNeighbours) {
 						networkTreeMap.get(host).remove((byte)nb);
+						networkTreeMap.get((byte)nb).remove(host);
 						updated = true;
 						System.out.println("Host removed.");
 					}
