@@ -60,7 +60,6 @@ public class Communication {
 	
 	public void newPacket(DataPacket packet) {
 		if(monitor != null || client != null) {
-			System.out.println("Communication liked receiving :D");
 			
 			if(packet.getData().length > 0)
 				System.out.println(packet.getSource() + "-" + new String(packet.getData()));
