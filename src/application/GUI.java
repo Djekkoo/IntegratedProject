@@ -339,7 +339,7 @@ public class GUI extends javax.swing.JFrame {
 		String[] chatArr = chatTextPane.getText().split("\n");
 		String result = "";
 		for (int i=0;i<chatArr.length;i++) {
-			result = result + chatArr[i] + '\n';
+			result = result + chatArr[i].trim() + '\n';
 		}
 		chatTextPane.setText(result + lastmsg);
 	}
