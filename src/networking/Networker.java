@@ -44,7 +44,7 @@ public class Networker {
 	
 	ReentrantLock lock;
 
-	HashMap<Byte, HashMap<Byte, DataPacket>> sends = new HashMap<Byte, HashMap<Byte, DataPacket>>();
+	HashMap<Byte, HashMap<Byte, SmallPacket>> sends = new HashMap<Byte, HashMap<Byte, SmallPacket>>();
 	
 	/**
 	 * 
@@ -85,7 +85,7 @@ public class Networker {
 	public void broadcast(byte[] data, Byte hops, Boolean nonSequence,
 			Boolean routing, Boolean keepalive) throws IOException, DatagramDataSizeException{
 		
-		DataPacket dp = new DataPacket(IntegrationProject.DEVICE, (byte) 0x0F,
+		SmallPacket dp = new SmallPacket(IntegrationProject.DEVICE, (byte) 0x0F,
 				(byte) 0x0, (byte) 0x0, data, false, routing, keepalive,
 				false);
 		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
@@ -100,7 +100,7 @@ public class Networker {
 	 * @throws IOException When the socket can be reached
 	 */
 
-	public void broadcast(DataPacket dp) throws IOException {
+	public void broadcast(SmallPacket dp) throws IOException {
 		
 		mSock.send(new DatagramPacket(dp.getRaw(), dp.getRaw().length,
 				multicastAddress, MULTIPORT));
@@ -116,7 +116,7 @@ public class Networker {
 	 */
 	@SuppressWarnings("unchecked")
 	public void send(Byte destination, byte[] data) throws IOException {
-		HashMap<Byte, DataPacket> entry;
+		HashMap<Byte, SmallPacket> entry;
 
 		Entry<Byte, Byte> connection = null;
 
@@ -129,16 +129,16 @@ public class Networker {
 			return; // Route not found
 		}
 
-		LinkedList<DataPacket> packets = processData(destination,
+		LinkedList<SmallPacket> packets = processData(destination,
 				connection.getValue(), data, false, false, false);
 		
 		if(sends.containsKey(destination)){
 			entry = sends.get(destination);
 		} else {
-			entry = new HashMap<Byte, DataPacket>();
+			entry = new HashMap<Byte, SmallPacket>();
 		}
 
-		for (DataPacket p : packets) {
+		for (SmallPacket p : packets) {
 			entry.put(p.getSequenceNumber(), p);
 			
 			dSock.send(new DatagramPacket(p.getRaw(), p.getRaw().length,
@@ -156,16 +156,16 @@ public class Networker {
 	 * @throws IOException When the socket can be reached
 	 */
 	@SuppressWarnings("unchecked")
-	public void send(DataPacket dp) throws IOException, BigPacketSentException {
+	public void send(SmallPacket dp) throws IOException, BigPacketSentException {
 		
 		if (dp instanceof BigPacket)
 			throw new BigPacketSentException();
 		
-		HashMap<Byte, DataPacket> entry;
+		HashMap<Byte, SmallPacket> entry;
 		if(sends.containsKey(dp.getDestination())){
 			entry = sends.get(dp.getDestination());
 		} else {
-			entry = new HashMap<Byte, DataPacket>();
+			entry = new HashMap<Byte, SmallPacket>();
 		}
 		entry.put(dp.getSequenceNumber(), dp);
 		sends.put(dp.getDestination(), entry);
@@ -189,16 +189,16 @@ public class Networker {
 		
 	}
 	
-	public void send(DataPacket dp, InetAddress port) throws BigPacketSentException, IOException{
+	public void send(SmallPacket dp, InetAddress port) throws BigPacketSentException, IOException{
 		
 		if (dp instanceof BigPacket)
 			throw new BigPacketSentException();
 		
-		HashMap<Byte, DataPacket> entry;
+		HashMap<Byte, SmallPacket> entry;
 		if(sends.containsKey(dp.getDestination())){
 			entry = sends.get(dp.getDestination());
 		} else {
-			entry = new HashMap<Byte, DataPacket>();
+			entry = new HashMap<Byte, SmallPacket>();
 		}
 		entry.put(dp.getSequenceNumber(), dp);
 		sends.put(dp.getDestination(), entry);
@@ -214,7 +214,7 @@ public class Networker {
 	 */
 	
 	@SuppressWarnings("unchecked")
-	public void receive(DataPacket d, Inet4Address port) throws IOException {
+	public void receive(SmallPacket d, Inet4Address port) throws IOException {
 		if (d.getDestination() == (byte) 0x0F) {// Multicast
 			try {
 				packetReceived.invoke(d);
@@ -237,7 +237,7 @@ public class Networker {
 				if(d.getSource() == port.getAddress()[3]){
 					byte ack = offer(d);
 					if(ack != (byte) 0)
-						send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
+						send(new SmallPacket(IntegrationProject.DEVICE, d.getSource(),
 								(byte) 0x0, ack, new byte[0], true, false,
 								false, false), port);
 				} else {
@@ -255,7 +255,7 @@ public class Networker {
 					byte ack = offer(d);
 					
 					if(ack != (byte) 0)
-						send(new DataPacket(IntegrationProject.DEVICE, d.getSource(),
+						send(new SmallPacket(IntegrationProject.DEVICE, d.getSource(),
 								connection.getValue(), ack, new byte[0], true, false,
 								false, false));
 				}
@@ -330,9 +330,9 @@ public class Networker {
 			return;
 		}
 		
-		DataPacket dp;
+		SmallPacket dp;
 		try {
-			dp = new DataPacket(IntegrationProject.DEVICE, destination, connection.getValue(), (byte) 0x0, new byte[]{sequence}, false, false, false, false);
+			dp = new SmallPacket(IntegrationProject.DEVICE, destination, connection.getValue(), (byte) 0x0, new byte[]{sequence}, false, false, false, false);
 			send(dp); // We cannot assume
 			send(dp); // the first packet
 			send(dp); // actually arrives
@@ -355,10 +355,10 @@ public class Networker {
 		
 	}
 
-	private BigPacket processPackets(LinkedList<DataPacket> packets) {
-		DataPacket first = packets.peek();
+	private BigPacket processPackets(LinkedList<SmallPacket> packets) {
+		SmallPacket first = packets.peek();
 
-		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
+		int maxChunkSize = 1024 - SmallPacket.HEADER_LENGTH;
 		int length = 0;
 		if(packets.size() > 0)
 			length = packets.size() * maxChunkSize
@@ -379,15 +379,15 @@ public class Networker {
 				first.isAck(), first.isRouting(), first.isKeepAlive(), false);
 	}
 
-	private LinkedList<DataPacket> processData(Byte destination, Byte hops,
+	private LinkedList<SmallPacket> processData(Byte destination, Byte hops,
 			byte[] data, boolean ack, boolean routing, boolean keepalive) {
-		LinkedList<DataPacket> result = new LinkedList<DataPacket>();
+		LinkedList<SmallPacket> result = new LinkedList<SmallPacket>();
 		lock.lock();
-		DataPacket dp;
+		SmallPacket dp;
 
 		boolean moar = false;
 
-		int maxChunkSize = 1024 - DataPacket.HEADER_LENGTH;
+		int maxChunkSize = 1024 - SmallPacket.HEADER_LENGTH;
 		byte[] chunk = new byte[maxChunkSize];
 
 		for (int i = 0; i <= Math.ceil(data.length / maxChunkSize); i++) {
@@ -404,7 +404,7 @@ public class Networker {
 			try {
 				Byte sequencenr = sequencer.getTo(destination);
 				if(!(sequencenr == null)){
-					dp = new DataPacket(IntegrationProject.DEVICE, destination,
+					dp = new SmallPacket(IntegrationProject.DEVICE, destination,
 							hops, sequencenr, chunk, ack,
 							routing, keepalive, moar);
 					result.add(dp);
@@ -436,19 +436,19 @@ public class Networker {
 		return null;
 	}
 
-	private byte offer(DataPacket d) throws CallbackException{
+	private byte offer(SmallPacket d) throws CallbackException{
 		System.out.println("Offering");
 		Byte ack = sequencer.put(d);
 		
 		if(ack == null) return 0;
 
 		System.out.println("Getting packets");
-		LinkedList<DataPacket> readyPackets = sequencer.getPackets(
+		LinkedList<SmallPacket> readyPackets = sequencer.getPackets(
 				d.getSource());
 		
 		System.out.println("YAY! " + readyPackets.size() + " packets to process! WOOOO!");
 		
-		LinkedList<DataPacket> buffer = new LinkedList<DataPacket>();
+		LinkedList<SmallPacket> buffer = new LinkedList<SmallPacket>();
 
 		System.out.println("Looping packets");
 		while (!readyPackets.isEmpty()) {

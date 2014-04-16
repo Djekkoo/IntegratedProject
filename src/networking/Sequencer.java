@@ -20,7 +20,7 @@ import main.CallbackException;
 public class Sequencer extends Thread{
 	private HashMap<Byte, Entry<Byte, Byte>> oneToOne; 	// <node, <sequencenr to, sequencenr from>>
 	
-	private HashMap<Byte, HashMap<Byte, DataPacket>> packets = new HashMap<Byte, HashMap<Byte, DataPacket>>();
+	private HashMap<Byte, HashMap<Byte, SmallPacket>> packets = new HashMap<Byte, HashMap<Byte, SmallPacket>>();
 	private HashMap<Byte, Byte> ACK = new HashMap<Byte, Byte>();
 	private HashMap<Byte, Byte> RET = new HashMap<Byte, Byte>();
 	private HashMap<Byte, Byte> ACKReceived = new HashMap<Byte, Byte>();
@@ -58,7 +58,7 @@ public class Sequencer extends Thread{
 	
 	public void setSequenceFrom(Byte source, Byte sequence) {
 		this.lock.lock();
-		this.packets.put(source, new HashMap<Byte, DataPacket>());
+		this.packets.put(source, new HashMap<Byte, SmallPacket>());
 		if(this.oneToOne.containsKey(source)) {
 			this.oneToOne.put(source, new SimpleEntry<Byte, Byte>(this.oneToOne.get(source).getKey(),sequence));
 		} else {
@@ -150,21 +150,21 @@ public class Sequencer extends Thread{
 		return b;
 	}
 	
-	public LinkedList<DataPacket> getPackets(Byte source) {
+	public LinkedList<SmallPacket> getPackets(Byte source) {
 		
 		byte rStack = source;
-		LinkedList<DataPacket> res = new LinkedList<DataPacket>();
+		LinkedList<SmallPacket> res = new LinkedList<SmallPacket>();
 		
 		this.lock.lock();
 		
-		HashMap<Byte, DataPacket> packets = new HashMap<Byte, DataPacket>();
+		HashMap<Byte, SmallPacket> packets = new HashMap<Byte, SmallPacket>();
 		if (this.packets.containsKey(rStack))
 			packets.putAll(this.packets.get(rStack));
 		
 		
 		byte bRet = this.RET.get(rStack);
 		byte temp = 0x00;
-		LinkedList<DataPacket> tList = new LinkedList<DataPacket>();
+		LinkedList<SmallPacket> tList = new LinkedList<SmallPacket>();
 		
 		while(packets.containsKey(this.nextSEQ(bRet))) {
 			
@@ -175,15 +175,17 @@ public class Sequencer extends Thread{
 				// End of multi-packet data
 				if (temp != (byte) 0x00) {
 					temp = 0x00;
+
+					tList.add(packets.get(bRet));
 					
-					Iterator<DataPacket> i = tList.iterator();
+					Iterator<SmallPacket> i = tList.iterator();
 					while(i.hasNext()) {
-						DataPacket dp = i.next();
+						SmallPacket dp = i.next();
 						res.add(dp);
 						this.packets.get(rStack).remove(dp.getSequenceNumber());
 					}
 					
-					tList = new LinkedList<DataPacket>();
+					tList = new LinkedList<SmallPacket>();
 					
 					continue;
 				}
@@ -205,7 +207,7 @@ public class Sequencer extends Thread{
 		}
 
 		if (temp != (byte) 0x00) {
-			bRet = temp;
+			bRet = this.prevSEQ(temp);
 		}
 		
 		this.RET.put(rStack, bRet);
@@ -218,7 +220,7 @@ public class Sequencer extends Thread{
 	}
 	
 	// returns ACK-number
-	public Byte put(DataPacket packet) {
+	public Byte put(SmallPacket packet) {
 		
 		byte ackStack = 0x00;
 		ackStack |= packet.getSource();
@@ -244,7 +246,7 @@ public class Sequencer extends Thread{
 		} 
 		
 		if (!this.packets.containsKey(ackStack)) {
-			this.packets.put(ackStack, new HashMap<Byte, DataPacket>());
+			this.packets.put(ackStack, new HashMap<Byte, SmallPacket>());
 		}
 		
 		if ((this.ACK.get(ackStack) < packet.getSequenceNumber() && packet.getSequenceNumber() - this.ACK.get(ackStack) >= 127)
@@ -255,7 +257,7 @@ public class Sequencer extends Thread{
 			
 		} else {
 			
-			HashMap<Byte, DataPacket> packets = this.packets.get(ackStack);
+			HashMap<Byte, SmallPacket> packets = this.packets.get(ackStack);
 			packets.put(packet.getSequenceNumber(), packet);
 			System.out.println("Package received with seq="+packet.getSequenceNumber());
 			this.packets.put(ackStack, packets);

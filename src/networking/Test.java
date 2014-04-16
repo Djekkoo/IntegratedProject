@@ -22,9 +22,9 @@ public class Test {
 	public Test(){
 		System.out.println("--- New Datapacket ---");
 		
-		DataPacket dp = null;
+		SmallPacket dp = null;
 		try {
-			dp = new DataPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true, true);
+			dp = new SmallPacket((byte) 12, (byte) 14, (byte) 8, (byte) 16, new byte[]{0, 5, 19}, true, true, true, true);
 		} catch (DatagramDataSizeException e1) {
 			e1.printStackTrace();
 		}
@@ -51,9 +51,9 @@ public class Test {
 		
 		System.out.println("--- Copy Datapacket ---");
 		
-		DataPacket test = null;
+		SmallPacket test = null;
 		try {
-			test = new DataPacket(dp.getRaw());
+			test = new SmallPacket(dp.getRaw());
 		} catch (DatagramDataSizeException e) {
 			e.printStackTrace();
 		}
@@ -84,7 +84,7 @@ public class Test {
 			(new SecureRandom()).nextBytes(data);
 			
 			
-			LinkedList<DataPacket> packets = new LinkedList<DataPacket>();
+			LinkedList<SmallPacket> packets = new LinkedList<SmallPacket>();
 			
 			Object networker = null;
 			try {
@@ -111,7 +111,7 @@ public class Test {
 			Method processPackets = networker.getClass().getDeclaredMethod("processPackets", args);
 			processPackets.setAccessible(true);
 			
-			packets = (LinkedList<DataPacket>) processData.invoke(networker, (byte) 15, (byte) 15, data, false, false, false);
+			packets = (LinkedList<SmallPacket>) processData.invoke(networker, (byte) 15, (byte) 15, data, false, false, false);
 			
 			byte[] result = (byte[]) processPackets.invoke(networker, packets);
 			

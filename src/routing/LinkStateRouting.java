@@ -14,7 +14,7 @@ import java.util.TreeSet;
 
 import dijkstra.DijkstraAlgorithm;
 import dijkstra.model.*;
-import networking.DataPacket;
+import networking.SmallPacket;
 import main.Callback;
 import main.CallbackException;
 import main.IntegrationProject;
@@ -106,7 +106,7 @@ public class LinkStateRouting implements RoutingInterface {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void packetReceived(DataPacket p) {
+	public void packetReceived(SmallPacket p) {
 		// TODO Handle packet receives
 		boolean updated = parsePacket(p.getData());
 		if(updated) {

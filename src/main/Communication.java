@@ -7,7 +7,7 @@ import application.Client;
 import routing.RoutingInterface;
 import monitoring.NetworkMessage;
 import monitoring.NetworkMonitor;
-import networking.DataPacket;
+import networking.SmallPacket;
 import networking.DatagramDataSizeException;
 import networking.Networker;
 
@@ -57,7 +57,7 @@ public class Communication {
 		this.client.updateNetwork(source, type);
 	}
 	
-	public void newPacket(DataPacket packet) {
+	public void newPacket(SmallPacket packet) {
 		
 		if(packet.getData().length > 0)
 			System.out.println(packet.getSource() + "-" + new String(packet.getData()));

@@ -40,7 +40,7 @@ public class UniMonitor extends Thread {
 				
 				System.arraycopy(dpack.getData(), dpack.getOffset(), temp, 0, dpack.getLength());
 				
-				received.invoke(new DataPacket(temp), dpack.getAddress());
+				received.invoke(new SmallPacket(temp), dpack.getAddress());
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (DatagramDataSizeException e) {
