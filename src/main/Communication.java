@@ -45,9 +45,9 @@ public class Communication {
 //		}).start();
 		
 		this.client = new Client(new Callback(this, "sendMessage"),router);
-		
 		this.monitor = new NetworkMonitor(this.router, new Callback(network, "broadcast"));
 		this.monitor.start();
+		
 		
 	}
 	 
@@ -59,22 +59,24 @@ public class Communication {
 	}
 	
 	public void newPacket(DataPacket packet) {
-		
-		System.out.println("Communication liked receiving :D");
-		
-		if(packet.getData().length > 0)
-			System.out.println(packet.getSource() + "-" + new String(packet.getData()));
-		
-		if (packet.isKeepAlive()) {
-			this.monitor.messageReceived(packet);
+		if(monitor != null || client != null) {
+			System.out.println("Communication liked receiving :D");
+			
+			if(packet.getData().length > 0)
+				System.out.println(packet.getSource() + "-" + new String(packet.getData()));
+			
+			if (packet.isKeepAlive()) {
+				this.monitor.messageReceived(packet);
+			}
+			else if (packet.isRouting()) {
+				this.router.packetReceived(packet);
+			}
+			else {
+				this.client.packetReceived(packet);
+			}
+		} else {
+			return;
 		}
-		else if (packet.isRouting()) {
-			this.router.packetReceived(packet);
-		}
-		else {
-			this.client.packetReceived(packet);
-		}
-		
 	}
 	
 	public void sendMessage(String message, Byte destination) throws IOException, DatagramDataSizeException {
