@@ -77,53 +77,53 @@ public class Test {
 								System.out.println("Faulty destination stored");
 		
 		System.out.println("--- Test Complete ---");
-		System.out.println("--- Networker Tests ---");
-		
-		try {
-			byte[] data = new byte[2048];
-			(new SecureRandom()).nextBytes(data);
-			
-			
-			LinkedList<SmallPacket> packets = new LinkedList<SmallPacket>();
-			
-			Object networker = null;
-			try {
-				networker = new Networker(new Callback(this, "getbyte"));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			Class[] args = new Class[6];
-			args[0] = Byte.class;
-			args[1] = Byte.class;
-			args[2] = byte[].class;
-			args[3] = Boolean.TYPE;
-			args[4] = Boolean.TYPE;
-			args[5] = Boolean.TYPE;
-			
-			Method processData = networker.getClass().getDeclaredMethod("processData", args);
-			processData.setAccessible(true);
-			
-			args = new Class[1];
-			args[0] = packets.getClass();
-
-			Method processPackets = networker.getClass().getDeclaredMethod("processPackets", args);
-			processPackets.setAccessible(true);
-			
-			packets = (LinkedList<SmallPacket>) processData.invoke(networker, (byte) 15, (byte) 15, data, false, false, false);
-			
-			byte[] result = (byte[]) processPackets.invoke(networker, packets);
-			
-			if(!(stringFrombytes(data).equals(stringFrombytes(result))))
-				System.out.println("Packets generating/decoding failed");
-			
-			System.out.println("Was: " + stringFrombytes(result) + "\nS2B: " + stringFrombytes(data));
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
-		}
-
-		System.out.println("--- Test Complete ---");
+//		System.out.println("--- Networker Tests ---");
+//		
+//		try {
+//			byte[] data = new byte[2048];
+//			(new SecureRandom()).nextBytes(data);
+//			
+//			
+//			LinkedList<SmallPacket> packets = new LinkedList<SmallPacket>();
+//			
+//			Object networker = null;
+//			try {
+//				networker = new Networker(new Callback(this, "getbyte"));
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			
+//			Class[] args = new Class[6];
+//			args[0] = Byte.class;
+//			args[1] = Byte.class;
+//			args[2] = byte[].class;
+//			args[3] = Boolean.TYPE;
+//			args[4] = Boolean.TYPE;
+//			args[5] = Boolean.TYPE;
+//			
+//			Method processData = networker.getClass().getDeclaredMethod("processData", args);
+//			processData.setAccessible(true);
+//			
+//			args = new Class[1];
+//			args[0] = packets.getClass();
+//
+//			Method processPackets = networker.getClass().getDeclaredMethod("processPackets", args);
+//			processPackets.setAccessible(true);
+//			
+//			packets = (LinkedList<SmallPacket>) processData.invoke(networker, (byte) 15, (byte) 15, data, false, false, false);
+//			
+//			byte[] result = (byte[]) processPackets.invoke(networker, packets);
+//			
+//			if(!(stringFrombytes(data).equals(stringFrombytes(result))))
+//				System.out.println("Packets generating/decoding failed");
+//			
+//			System.out.println("Was: " + stringFrombytes(result) + "\nS2B: " + stringFrombytes(data));
+//		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+//			e.printStackTrace();
+//		}
+//
+//		System.out.println("--- Test Complete ---");
 	}
 	
 	public static void main(String[] args) {
