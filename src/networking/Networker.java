@@ -335,7 +335,7 @@ public class Networker {
 				e.printStackTrace();
 			}
 		} else { // Must pass it on
-			System.out.println("Will the middleman");
+			System.out.println("Will be the middleman");
 			if (d.getHops() > 0) {
 				d.decreaseHops();
 				System.out.println("Going to be the middleman");
