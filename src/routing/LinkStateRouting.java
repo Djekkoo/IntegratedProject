@@ -423,7 +423,9 @@ public class LinkStateRouting implements RoutingInterface {
 		for(Entry<Byte,TreeSet<Byte>> neighbour : networkTreeMap.entrySet()) {
 			for(Byte b : neighbour.getValue()) {
 				String name = b.toString() + neighbour.getKey().toString();
-				edges.add(new Edge(name,vertexArray[neighbour.getKey()],vertexArray[b],1));
+				if(vertexArray[b] != null && vertexArray[neighbour.getKey()] != null) {
+					edges.add(new Edge(name,vertexArray[neighbour.getKey()],vertexArray[b],1));
+				}
 			}
 		}
 		Graph network = new Graph(vertices, edges);
