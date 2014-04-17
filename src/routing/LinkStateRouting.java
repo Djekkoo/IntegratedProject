@@ -268,8 +268,12 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	public void removePath(Byte A, Byte B) {
-		networkTreeMap.get((byte)A).remove((byte)B);
-		networkTreeMap.get((byte)B).remove((byte)A);
+		if(networkTreeMap.containsKey(A)) {
+			networkTreeMap.get(A).remove(B);
+		}
+		if(networkTreeMap.containsKey(B)) {
+			networkTreeMap.get(B).remove(A);
+		}
 		if(autoUpdate) {
 			update();
 		}
@@ -295,7 +299,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-10
 	 */
 	public void removeNode(Byte N) {
-		if(networkTreeMap.get(N) != null){
+		if(networkTreeMap.containsKey(N)){
 			for(Object nb : networkTreeMap.get(N)) {
 				removePath((Byte)nb, N);
 			}
