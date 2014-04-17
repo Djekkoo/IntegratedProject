@@ -78,6 +78,22 @@ public class Communication {
 		}
 	}
 	
+	public void sendMessage(byte[] message, Byte destination) throws IOException, DatagramDataSizeException {
+		
+		if (destination.equals(Byte.valueOf((byte) 0x0F))) {
+			
+			for(Byte knownDestination : router.getDevices()){
+				System.out.println("Know destination: " + knownDestination);
+				if(knownDestination.byteValue() != IntegrationProject.DEVICE)
+					this.network.send(knownDestination, message);
+			}
+			
+		} else {
+			this.network.send(destination, message);
+		}
+		
+	}
+	
 	public void sendMessage(String message, Byte destination) throws IOException, DatagramDataSizeException {
 		
 		if (destination.equals(Byte.valueOf((byte) 0x0F))) {

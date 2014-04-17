@@ -193,7 +193,7 @@ public class Client {
 	public void sendFile(String filename) {
 		try {
 			FileTransferHandler fthr = new FileTransferHandler(filename,"r");
-			sendMsg.invoke("FILE " + fthr.getPacket(),Byte.valueOf((byte) 0x0F));
+			sendMsg.invoke(fthr.getPacket(),Byte.valueOf((byte) 0x0F));
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
