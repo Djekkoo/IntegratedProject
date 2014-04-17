@@ -503,38 +503,38 @@ public class LinkStateRouting implements RoutingInterface {
 					for(Object nb : networkTreeMap.get(host).toArray()) {
 						oldNeighbours.add((Byte)nb);
 					}
-					
-					for(byte nb : neighbours) {
-						//Do we have a host that we have no record of?
-						if(networkTreeMap.containsKey(host)) {
-							if(!networkTreeMap.get(host).contains(nb)){
+					if(host != this.deviceID) {
+						for(byte nb : neighbours) {
+							//Do we have a host that we have no record of?
+							if(networkTreeMap.containsKey(host)) {
+								if(!networkTreeMap.get(host).contains(nb)){
+									this.addPath(host, nb);
+									System.out.println("New path.");
+									updated = true;
+								}
+								oldNeighbours.remove(nb);
+							} else {
+								System.out.println("New host.");
+								this.addNode(host);
 								this.addPath(host, nb);
-								System.out.println("New path.");
+								this.userNotification(nb,true);
+								oldNeighbours.remove(nb);
 								updated = true;
 							}
-							oldNeighbours.remove(nb);
-						} else {
-							System.out.println("New host.");
-							this.addNode(host);
-							this.addPath(host, nb);
-							this.userNotification(nb,true);
-							oldNeighbours.remove(nb);
+						}
+						for(Byte nb : oldNeighbours) {
+							if(networkTreeMap.containsKey(host) && nb != this.deviceID) {
+									networkTreeMap.get(host).remove((byte)nb);
+							}
 							updated = true;
+							System.out.println("Host removed.");
 						}
-					}
-					for(Byte nb : oldNeighbours) {
-						if(networkTreeMap.containsKey(host) && !networkTreeMap.get(host).contains(this.deviceID) &&
-								!networkTreeMap.get(this.deviceID).contains(host)) {
-								networkTreeMap.get(host).remove((byte)nb);
-						}
-						updated = true;
-						System.out.println("Host removed.");
-					}
-					for(Object eObj : networkTreeMap.entrySet().toArray()) {
-						Entry<Byte,TreeSet<Byte>> e = (Entry<Byte,TreeSet<Byte>>)eObj;
-						Byte n = e.getKey();
-						if(e.getValue().isEmpty()) {
-							this.removeNode(n);
+						for(Object eObj : networkTreeMap.entrySet().toArray()) {
+							Entry<Byte,TreeSet<Byte>> e = (Entry<Byte,TreeSet<Byte>>)eObj;
+							Byte n = e.getKey();
+							if(e.getValue().isEmpty()) {
+								this.removeNode(n);
+							}
 						}
 					}
 				} catch(CallbackException e) {
