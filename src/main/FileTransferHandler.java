@@ -102,16 +102,16 @@ public class FileTransferHandler {
 	public byte[] parsePacket(byte[] packet) throws IOException {
 		try {
 			MessageDigest md5 = MessageDigest.getInstance("MD5");
-			byte[] preamble = new byte[5]; //Always "DATA "
+//			byte[] preamble = new byte[5]; //Always "DATA "
             byte[] checksum = new byte[16];
             
-            byte filenameLength = packet[5+16];
+            byte filenameLength = packet[16];
             byte[] filename = new byte[filenameLength];
-            byte[] data = new byte[packet.length-(16+5+1+filenameLength)];
+            byte[] data = new byte[packet.length-(16+1+filenameLength)];
             
             int offset = 0;
-            System.arraycopy(packet, 0, preamble, 0, 5);
-            offset += 5;
+//            System.arraycopy(packet, 0, preamble, 0, 5);
+//            offset += 5;
 			System.arraycopy(packet, offset, checksum, 0, 16);
 			offset += 16 + 1; //Because of the filenameLength byte.
 			System.arraycopy(packet, offset, filename, 0, filenameLength);
@@ -120,16 +120,17 @@ public class FileTransferHandler {
             
             System.out.println("\'" + new String(filename) + "\' file size: " + data.length);
             
-            byte[] preambleCompare = "FILE ".getBytes();
-            boolean preambleMatch = true;
-            for(int i = 0; i < 5; i++) {
-            	if(preamble[i] != preambleCompare[i]) {
-            		preambleMatch = false;
-            	}
-            }
-            if(!preambleMatch) {
-            	throw new IOException("Incorrect preamble, should be \"FILE \".");
-            }
+//            byte[] preambleCompare = "FILE ".getBytes();
+//            boolean preambleMatch = true;
+//            for(int i = 0; i < 5; i++) {
+//            	if(preamble[i] != preambleCompare[i]) {
+//            		preambleMatch = false;
+//            	}
+//            }
+//            if(!preambleMatch) {
+//            	byte[] newPacket = new byte[packet+7];
+//            	throw new IOException("Incorrect preamble, should be \"FILE \".");
+//            }
             byte[] checksumCompare = md5.digest(data);
             boolean checksumMatch = true;
             for(int i = 0; i < 16; i++) {
