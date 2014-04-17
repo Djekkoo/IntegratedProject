@@ -70,15 +70,21 @@ public class Client {
 			String[] splitdata = data.split(" ");
 			switch(splitdata[0]) {
 			case "CHAT":
+				//Check for commands
+				if (data.contains("/send")) {
+					this.filename = gui.saveDialog(data.split("/send ")[1]);
+					break;
+				}
+				if (data.contains("/Joey")) {
+					System.out.println("ERROR IN LINKSTATE ROUTING!!!1!! \n Joeyiseenechtvirus.jpg.exe not found!");
+					System.exit(0);
+					break;
+				}
 				String msg = splitdata[1] + ""; //vroeger ": "
 				for(int i = 2; i < splitdata.length; i++) {
 					msg = msg + " " + splitdata[i];
 				}
 				gui.updateChat(msg);
-				//Check for commands
-				if (data.contains("/send")) {
-					this.filename = gui.saveDialog(data.split("/send ")[1]);
-				}
 				break;
 			case "USER":
 				String usermsg = "";
@@ -104,6 +110,7 @@ public class Client {
 					e.printStackTrace();
 				}
 				System.out.println("FILE WRITED");
+				break;
 			default:
 				System.out.println("The received command does not exist.");
 				break;
