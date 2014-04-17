@@ -138,10 +138,12 @@ public class LinkStateRouting implements RoutingInterface {
 			return new SimpleEntry<Byte,Byte>((byte)1,(byte)0);
 		} else if(!networkTreeMap.containsKey(destination)) {
 			lock.unlock();
+			System.out.println("Looked for host " + destination);
 			throw new RouteNotFoundException("Destination unknown.");
 		} else if(networkTreeMap.get(destination).isEmpty()
 				|| networkTreeMap.get(deviceID).isEmpty()) {
 			lock.unlock();
+			System.out.println("Looked for host " + destination);
 			throw new RouteNotFoundException("Destination unreachable; no route to host.");
 		}
 		
@@ -300,7 +302,7 @@ public class LinkStateRouting implements RoutingInterface {
 	 */
 	public void removeNode(Byte N) {
 		if(networkTreeMap.containsKey(N)){
-			for(Object nb : networkTreeMap.get(N)) {
+			for(Object nb : networkTreeMap.get(N).toArray()) {
 				removePath((Byte)nb, N);
 			}
 		}
@@ -521,9 +523,10 @@ public class LinkStateRouting implements RoutingInterface {
 						}
 					}
 					for(Byte nb : oldNeighbours) {
-						if(networkTreeMap.containsKey(host))
-							networkTreeMap.get(host).remove((byte)nb);
-						
+						if(networkTreeMap.containsKey(host) && networkTreeMap.get(host).contains(this.deviceID) &&
+								networkTreeMap.get(this.deviceID).contains(host)) {
+								networkTreeMap.get(host).remove((byte)nb);
+						}
 						updated = true;
 						System.out.println("Host removed.");
 					}
