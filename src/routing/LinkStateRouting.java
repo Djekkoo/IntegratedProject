@@ -451,7 +451,7 @@ public class LinkStateRouting implements RoutingInterface {
 			if(neighbours != null){
 				for(Byte nb : neighbours) {
 					send(nb, data);
-					System.out.println("Sending to neighbour: " + nb);
+//					System.out.println("Sending to neighbour: " + nb);
 				}
 			}
 		} catch (CallbackException e) {
@@ -471,8 +471,8 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-08
 	 */
 	private boolean parsePacket(byte[] p) {
-		//Retrieve the timestamp from the packet
-		System.out.println("Routing packet received, info.");
+//		Retrieve the timestamp from the packet
+//		System.out.println("Routing packet received, info.");
 		long timestamp = 0;
 	    ByteBuffer buffer = ByteBuffer.wrap(p,0,8);
 	    timestamp = buffer.getLong();
