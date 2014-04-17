@@ -628,13 +628,11 @@ public class LinkStateRouting implements RoutingInterface {
 	 * @since	2014-04-09
 	 */
 	private byte[] toByteArray(Byte[] byteObjects) {
-		//A really hacky way to cast Byte[] to byte[]
 		byte[] bytes = new byte[byteObjects.length];
-		int i = 0;
-		for(Byte bObj : byteObjects) {
-			Byte b = bObj.byteValue();
-			bytes[i++] = b;
-		}
+		
+		for(int i = 0; i < byteObjects.length; i++)
+			bytes[i] = byteObjects[i].byteValue();
+		
 		return bytes;
 	}
 }
