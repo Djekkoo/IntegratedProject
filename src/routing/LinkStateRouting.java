@@ -523,8 +523,8 @@ public class LinkStateRouting implements RoutingInterface {
 						}
 					}
 					for(Byte nb : oldNeighbours) {
-						if(networkTreeMap.containsKey(host) && networkTreeMap.get(host).contains(this.deviceID) &&
-								networkTreeMap.get(this.deviceID).contains(host)) {
+						if(networkTreeMap.containsKey(host) && !networkTreeMap.get(host).contains(this.deviceID) &&
+								!networkTreeMap.get(this.deviceID).contains(host)) {
 								networkTreeMap.get(host).remove((byte)nb);
 						}
 						updated = true;
